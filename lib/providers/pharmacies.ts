@@ -155,5 +155,5 @@ export const pharmacyProvider:PlacesProvider={async search(params){
     return parseIzmirPharmacies(payload,params,new Date());
   }
   const official=getPharmacySource(params.city);
-  return {places:[],source:official.name,fetchedAt:new Date().toISOString(),coverage:'Bu ilde otomatik nöbet bağlantısı henüz yok. '+(official.kind==='duty-list'?'Resmî nöbet listesini':official.kind==='chamber'?'İlgili eczacı odasının sitesini':'Türk Eczacıları Birliği kaynak rehberini')+' aşağıdaki bağlantıdan açabilirsin.',warnings:['Genel eczane kayıtları nöbetçi eczane olarak gösterilmez.']};
+  return {places:[],coverageStatus:'unsupported',source:official.name,fetchedAt:new Date().toISOString(),coverage:'Bu ilde otomatik nöbet bağlantısı henüz yok. '+(official.kind==='duty-list'?'Resmî nöbet listesini':official.kind==='chamber'?'İlgili eczacı odasının sitesini':'Türk Eczacıları Birliği kaynak rehberini')+' aşağıdaki bağlantıdan açabilirsin.',warnings:['Genel eczane kayıtları nöbetçi eczane olarak gösterilmez.']};
 }};
