@@ -87,3 +87,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;-w
 .guide-article{padding-top:32px;margin:auto}.location-start h2{font-size:27px;font-weight:500;letter-spacing:-.7px;margin:0 0 12px}
 @media(min-width:801px){.location-dialog{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;translate:none!important;transform:translate(-50%,-50%)!important}}
 @media(max-width:800px){.location-dialog{top:auto!important;left:8px!important;right:8px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;translate:none!important;transform:none!important;max-height:calc(100dvh - 24px - env(safe-area-inset-bottom))!important;overflow-y:auto!important;overscroll-behavior:contain;scroll-padding:20px}.location-panel-heading{padding-right:42px}.location-panel-heading h2{font-size:19px!important}.location-privacy{font-size:10px;line-height:1.6}.location-shortcuts{margin-top:15px}.location-dialog .region-picker{padding-top:14px}}
+/* Normal-sized secondary text must retain WCAG AA contrast on warm surfaces. */
+:root{--muted-foreground:#687168}
+.dark{--muted-foreground:#a6b1a7}
