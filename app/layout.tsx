@@ -1,7 +1,7 @@
 import type {Metadata,Viewport} from 'next';
 import {siteOrigin,siteDescription,siteIndexable} from '@/lib/site-config';
 import './globals.css';
-export const viewport:Viewport={width:'device-width',initialScale:1,themeColor:'#285c4b'};
+export const viewport:Viewport={width:'device-width',initialScale:1,themeColor:'#194D3B'};
 export const metadata:Metadata={
  metadataBase:new URL(siteOrigin),
  title:{default:'Nöbetçi Eczane Bul — Yakınındaki Eczaneler | Şimdi Açık',template:'%s | Şimdi Açık'},
