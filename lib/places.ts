@@ -2,7 +2,7 @@ export const categoryNames=['Eczane'] as const;
 export type Category=typeof categoryNames[number];
 export type Place={id:string;name:string;category:Category;lat:number;lng:number;address:string;phone?:string;website?:string;hours?:string;status:'open'|'closed'|'unknown';closes?:string;allDay:boolean;distance:number;rating?:number;reviewCount?:number;price?:number;photo?:string;reviews?:{author:string;rating:number;text:string;date:string}[];source:string;sourceUrl?:string;fetchedAt:string;demo?:boolean;duty?:boolean;dutyDate?:string;verifiedUntil?:string;verification?:'official-duty'|'provider-duty'|'provider-hours'|'listed-only'};
 export type SearchParams={lat:number;lng:number;radius:number;query:string;category:string;demo:boolean;city?:string};
-export type PlacesResult={places:Place[];fetchedAt:string;source:string;cached?:boolean;partial?:boolean;warnings?:string[];coverage?:string};
+export type PlacesResult={places:Place[];fetchedAt:string;source:string;cached?:boolean;partial?:boolean;warnings?:string[];coverage?:string;coverageStatus?:'supported'|'unsupported'};
 export interface PlacesProvider{search(params:SearchParams):Promise<PlacesResult>}
 export function distanceKm(a:number,b:number,c:number,d:number){const r=Math.PI/180;const h=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))}
 export const normalized=(x:string)=>x.toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i');

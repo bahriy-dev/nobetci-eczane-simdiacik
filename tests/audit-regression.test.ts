@@ -1,0 +1,10 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {parseResolvedLocation,validTurkeyCoordinates} from '../lib/location-validation';
+import {pharmacyProvider} from '../lib/providers/pharmacies';
+import {GET as locationGET} from '../app/api/location/route';
+import {readFileSync} from 'node:fs';
+test('rejects non-finite, foreign and incomplete geocoder results',()=>{for(const p of [[NaN,29],[41,Infinity],[10,20]])assert.equal(validTurkeyCoordinates(...p as [number,number]),false);assert.equal(parseResolvedLocation({display_name:'Place',lat:'NaN',lon:'29',address:{city:'İstanbul'}}),undefined);assert.equal(parseResolvedLocation({display_name:'Place',lat:'41',lon:'29'}),undefined);assert.deepEqual(parseResolvedLocation({display_name:'Konak, İzmir',lat:'38.4',lon:'27.1',address:{province:'İzmir ili'}}),{label:'Konak, İzmir',city:'İzmir',lat:38.4,lng:27.1});});
+test('unsupported province is a coverage state, not absence of duty pharmacies',async()=>{const data=await pharmacyProvider.search({city:'Bursa',lat:40.19,lng:29.06,radius:10,category:'Eczane',demo:false,query:''});assert.equal(data.coverageStatus,'unsupported');assert.equal(data.places.length,0);});
+test('geocoding rejects invalid request coordinates before external access',async()=>{assert.equal((await locationGET(new Request('https://example.test/api/location?lat=NaN&lng=29'))).status,400);assert.equal((await locationGET(new Request('https://example.test/api/location?q=x'))).status,400);});
+test('skip-link target survives the unselected location state and home links have real targets',()=>{const page=readFileSync(new URL('../app/page.tsx',import.meta.url),'utf8');assert.match(page,/<main[^>]+id="eczaneler"/);assert.doesNotMatch(page,/className="brand" href="#"/);const footer=readFileSync(new URL('../components/site-footer.tsx',import.meta.url),'utf8');assert.doesNotMatch(footer,/className="brand" href="#"/);});

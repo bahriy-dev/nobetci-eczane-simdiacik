@@ -1,5 +1,5 @@
 'use client';
-import {X,Heart,MapPin,Phone,Navigation,Share2,Copy,CalendarDays} from 'lucide-react';
+import {X,MapPin,Phone,Navigation,Share2,Copy,CalendarDays} from 'lucide-react';
 import {SheetTitle,SheetDescription} from './ui/sheet';
 import {PharmacyStatus} from './pharmacy-status';
 import {pharmacyDistance,pharmacyDirections,pharmacyPhoneLink,pharmacyDutyDate} from '@/lib/pharmacy-presentation';
