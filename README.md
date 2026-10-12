@@ -78,3 +78,14 @@ React + TypeScript + Tailwind; Next uyumlu Vinext; REST sunucu rotaları; Cloudf
 - [Nominatim kullanım ilkeleri](https://operations.osmfoundation.org/policies/nominatim/)
 
 Yayımlanan sürüm sahibiyle sınırlı özel erişimdedir. Paylaşım kitlesi kullanıcı talebi olmadan genişletilmez.
+
+## Railway dağıtımı
+
+Depoda `railway.json` bulunur. Railway servisini bu GitHub deposuna bağlayınca derleme komutu `npm run build:railway`, başlatma komutu `npm run start:railway` olarak uygulanır. Node sunucusu Railway'in `PORT` değerinde ve `0.0.0.0` adresinde dinler. `/api/health` sağlık kontrolü için kullanılır. API anahtarı gerekmez.
+
+Yerel üretim kontrolü:
+
+```sh
+npm run build:railway
+PORT=3000 npm run start:railway
+```
