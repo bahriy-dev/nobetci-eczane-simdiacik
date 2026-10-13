@@ -332,6 +332,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .map-legend .legend-pharmacy { width: 8px; height: 8px; border-radius: 50%; background: #17614f; }
 .map-legend .legend-location { width: 8px; height: 8px; margin-left: 7px; border-radius: 50%; background: #4b8bc6; }
 .map-error, .map-empty { border-color: var(--border); border-radius: 12px; box-shadow: 0 8px 22px rgba(27, 50, 38, .1); }
+.map-empty-loading { left: 50%; right: auto; bottom: 50%; display: flex; width: min(310px, calc(100% - 32px)); min-height: 76px; align-items: center; gap: 13px; padding: 15px 17px; transform: translate(-50%, 50%); border: 1px solid rgba(220, 228, 218, .9); border-radius: 16px; background: rgba(255, 254, 250, .96); text-align: left; backdrop-filter: blur(12px); }
+.map-loading-mark { display: grid; width: 40px; height: 40px; flex: 0 0 40px; place-items: center; border-radius: 12px; background: #e7f1e6; color: #17614f; }
+.map-loading-copy { display: grid; gap: 4px; }
+.map-loading-copy b { color: #19362f; font-size: 12px; font-weight: 650; }
+.map-loading-copy small { color: #64736b; font-size: 10px; line-height: 1.45; }
 .search-map-area { top: 78px; left: 50%; transform: translateX(-50%); min-height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 99px; background: var(--card); color: var(--primary); box-shadow: var(--shadow-soft); }
 .place-marker .pin-index { border: 2px solid #fff; background: #1b604d; box-shadow: 0 5px 13px rgba(17, 55, 39, .24); font-family: inherit; }
 .place-marker > span { background: #1b604d; }
