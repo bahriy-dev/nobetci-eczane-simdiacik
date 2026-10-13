@@ -28,7 +28,7 @@
   --color-text-primary: #20352C;
   --color-text-secondary: #526359;
   --color-accent-gold: #D7B875;
-  --color-error: #B85C50;
+  --color-error: #B5574B;
 
   /* UI Tokens */
   --background: #F7F7F0;
@@ -45,7 +45,7 @@
   --muted-foreground: #526359;
   --accent: #EBF3ED;
   --accent-foreground: #194D3B;
-  --destructive: #B85C50;
+  --destructive: #B5574B;
   --destructive-foreground: #FFFFFF;
   --border: #E6EAE5;
   --input: #E6EAE5;
@@ -1898,7 +1898,7 @@ h1, h2, h3, p {
   place-items: center;
   flex-shrink: 0;
   background: #FDF0EF;
-  color: #B85C50;
+  color: #B5574B;
   border: 1.5px solid #F5D6D8;
   border-radius: 15px;
   font-weight: 800;
