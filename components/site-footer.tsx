@@ -48,7 +48,7 @@ export function SiteFooter({
   };
 
   return (
-    <footer className="site-footer pharmacy-main">
+    <footer className="site-footer">
       {/* Üst Güven ve Acil Durum Bilgilendirme Kartları */}
       <div className="footer-highlights" aria-label="Güven ve acil durum bilgilendirmesi">
         <div className="highlight-item">

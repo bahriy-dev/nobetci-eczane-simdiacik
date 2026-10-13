@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type {Metadata} from 'next';
 import {Plus,ArrowLeft,MapPin} from 'lucide-react';
+import {SiteFooter} from '@/components/site-footer';
 
 export const metadata:Metadata={
   title:'Sayfa bulunamadı | Şimdi Açık',
@@ -30,11 +31,7 @@ export default function NotFound(){
           Nöbetçi eczaneleri bul
         </Link>
       </main>
-      <footer className="legal-footer">
-        <span>© {new Date().getFullYear()} Şimdi Açık</span>
-        <a href="mailto:info@simdiacik.com">info@simdiacik.com</a>
-        <Link href="/">Ana sayfaya dön</Link>
-      </footer>
+      <SiteFooter />
     </>
   );
 }
