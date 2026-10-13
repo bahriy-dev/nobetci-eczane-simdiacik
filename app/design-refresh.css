@@ -214,10 +214,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .results-toolbar .refresh-button:hover, .results-toolbar .mobile-filter:hover { border-color: var(--primary); background: var(--accent); }
 .results-toolbar .mobile-filter { display: inline-flex; }
-.results-toolbar .results-summary { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; gap: 0; min-height: 24px; margin: 0 0 19px; }
-.results-toolbar .results-count { padding: 0 17px 0 0; color: var(--foreground); font-size: 13px; font-weight: 650; line-height: 22px; }
-.results-toolbar .results-nearest { display: flex; align-items: center; gap: 8px; padding-left: 17px; border-left: 1px solid var(--border); color: var(--muted-foreground); font-size: 12px; }
-.results-toolbar .results-nearest b { color: var(--primary); font-size: 13px; font-weight: 700; }
+.results-toolbar .results-summary { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; gap: 6px; min-height: 24px; margin: 0 0 19px; }
+.results-toolbar .results-count { padding: 5px 11px; background: var(--primary); color: #fff; border-radius: 20px; font-size: 11.5px; font-weight: 700; }
+.results-toolbar .results-nearest { display: flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 20px; background: var(--secondary); border: 1px solid rgba(77,139,104,.18); color: var(--muted-foreground); font-size: 11.5px; border-left: none; }
+.results-toolbar .results-nearest b { color: var(--primary); font-size: 11.5px; font-weight: 700; }
 .results-toolbar .pharmacy-search-row { grid-column: 1; grid-row: 3; display: block; min-width: 0; margin: 0; }
 .results-toolbar .search { width: 100%; max-width: none; min-height: 50px; padding: 0 15px; border: 1px solid var(--border); border-radius: 11px; background: var(--background); }
 .results-toolbar .search > svg { color: var(--muted-foreground); }
@@ -348,33 +348,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .floating-map button { min-height: 43px; gap: 8px; padding: 0 18px; border-radius: 99px; color: var(--muted-foreground); font-size: 12px; font-weight: 650; }
 .floating-map button.on { background: var(--primary); box-shadow: 0 3px 8px rgba(23, 97, 79, .19); color: white; }
 
-.site-footer {
-  position: relative;
-  isolation: isolate;
-  display: block;
-  max-width: none;
-  width: 100%;
-  margin-top: 84px;
-  padding: 54px max(32px, calc((100vw - 1216px) / 2)) 24px;
-  border: 0;
-  background: #173d33;
-  box-shadow: 0 0 0 100vmax #173d33;
-  clip-path: inset(0 -100vmax);
-  color: #eff4ed;
-}
-.site-footer .footer-grid { display: grid; grid-template-columns: 1.4fr .8fr .95fr .8fr; gap: clamp(24px, 5vw, 72px); padding-bottom: 42px; }
-.site-footer .brand-icon { width: 37px; height: 39px; border: 1px solid rgba(255,255,255,.22); background: #e7f1e6; color: #173d33; }
-.site-footer .brand-name, .site-footer .brand-name > span { color: #fff; }
-.site-footer .brand-name small { color: #b8cfc1; }
-.footer-brand p { max-width: 270px; margin-top: 19px; color: #cfddd3; font-size: 13px; line-height: 1.7; }
-.footer-group h3 { margin: 3px 0 16px; color: #a9c3b2; font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
-.footer-toggle { display: none; }
-.footer-links { display: grid; gap: 12px; }
-.footer-links a, .footer-links button { width: fit-content; padding: 0; color: #f2f5f0; font-size: 12px; text-align: left; }
-.footer-links a:hover, .footer-links button:hover, .footer-bottom a:hover { color: #b7dbbf; }
-.footer-links a svg { display: inline; vertical-align: -3px; }
-.footer-bottom { display: flex; justify-content: space-between; gap: 20px; padding-top: 19px; border-top: 1px solid rgba(255,255,255,.16); color: #c0d1c5; font-size: 11px; }
-.footer-bottom a { color: #eff4ed; }
+
 
 .location-dialog, .detail-sheet, .filter-sheet, .menu-sheet {
   border: 1px solid var(--border) !important;
@@ -482,8 +456,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .results-toolbar .distance-label { display: none; }
   .results-toolbar .quick-distances { min-width: 260px; }
   .map-column { min-height: 470px; }
-  .site-footer { padding-right: 30px; padding-left: 30px; }
-  .site-footer .footer-grid { gap: 28px; }
 }
 @media (max-width: 800px) {
   html { scroll-padding-top: 78px; }
@@ -512,10 +484,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .results-toolbar .refresh-button { display: inline-flex; width: 43px; min-width: 43px; min-height: 43px; padding: 0; border-color: transparent; background: transparent; }
   .results-toolbar .mobile-filter { width: 43px; min-width: 43px; min-height: 43px; padding: 0; border-radius: 11px; }
   .results-toolbar .mobile-filter > span { display: none; }
-  .results-toolbar .results-summary { margin-bottom: 14px; }
-  .results-toolbar .results-count { padding-right: 12px; font-size: 12px; }
-  .results-toolbar .results-nearest { gap: 6px; padding-left: 12px; font-size: 11px; }
-  .results-toolbar .results-nearest b { font-size: 12px; }
+  .results-toolbar .results-summary { margin-bottom: 14px; gap: 5px; }
+  .results-toolbar .results-count { padding: 4px 9px; font-size: 11px; }
+  .results-toolbar .results-nearest { gap: 5px; padding: 4px 9px; font-size: 11px; }
+  .results-toolbar .results-nearest b { font-size: 11px; }
   .results-toolbar .pharmacy-search-row { margin-bottom: 14px; }
   .results-toolbar .search { min-height: 48px; padding: 0 12px; }
   .results-toolbar .search input { min-height: 46px; font-size: 16px; }
@@ -547,19 +519,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .map-tools button { width: 36px; height: 36px; }
   .map-legend { bottom: 10px; left: 10px; padding: 8px 10px; font-size: 9px; }
   .floating-map { position: fixed; left: 50%; display: flex; transform: translateX(-50%); }
-  .site-footer { margin-top: 55px; padding: 34px 20px max(20px, env(safe-area-inset-bottom)); }
-  .site-footer .footer-grid { grid-template-columns: 1fr; gap: 0; padding-bottom: 20px; }
-  .site-footer .footer-brand { padding-bottom: 22px; }
-  .footer-brand p { max-width: 280px; margin-top: 12px; font-size: 12px; }
-  .footer-group { border-top: 1px solid rgba(255,255,255,.16); }
-  .footer-group h3 { display: none; }
-  .footer-toggle { display: flex; width: 100%; min-height: 53px; align-items: center; justify-content: space-between; padding: 0; color: #f2f5f0; font-size: 12px; font-weight: 600; text-align: left; }
-  .footer-toggle svg { transition: transform .2s; }
-  .footer-group[data-open="true"] .footer-toggle svg { transform: rotate(180deg); }
-  .footer-links { display: none; gap: 12px; padding: 0 0 18px; }
-  .footer-group[data-open="true"] .footer-links { display: grid; }
-  .footer-links a, .footer-links button { min-height: 30px; font-size: 12px; }
-  .footer-bottom { padding-top: 16px; font-size: 10px; }
   .location-dialog { top: auto !important; right: 8px !important; bottom: calc(8px + env(safe-area-inset-bottom)) !important; left: 8px !important; width: auto !important; max-width: none !important; max-height: calc(100dvh - 24px - env(safe-area-inset-bottom)) !important; padding: 25px 18px 18px !important; transform: none !important; overflow-y: auto !important; overscroll-behavior: contain; border-radius: 23px !important; }
   .location-dialog .location-panel-heading { margin: 6px 42px 17px 0; }
   .location-panel-heading > span { width: 42px; height: 42px; border-radius: 13px; }
