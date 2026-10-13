@@ -658,3 +658,126 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .location-accuracy-note { margin-top: -4px; }
   .detail-utility-actions { justify-content: space-between; }
 }
+
+/* Province browsing and compact recovery actions. */
+.source-quality-note { margin: -5px 0 12px; padding: 9px 12px; border-left: 2px solid #bd9a55; color: var(--muted-foreground); font-size: 11px; line-height: 1.5; }
+.source-quality-note button { color: var(--primary); font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }
+.empty-state-actions { display: grid; width: min(100%, 320px); gap: 7px; margin-top: 3px; }
+.empty-state-actions > * { min-height: 43px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); font-size: 12px; font-weight: 600; }
+.empty-state-actions > .primary { border-color: var(--primary); background: var(--primary); color: #fff; }
+.province-directory { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .72fr); gap: 22px 42px; width: min(1120px, calc(100% - 64px)); margin: 62px auto 0; padding: 32px 36px 24px; border: 1px solid var(--border); border-radius: 20px; background: var(--card); box-shadow: var(--shadow-soft); }
+.province-directory-copy { align-self: center; }
+.province-directory-kicker { display: inline-flex; align-items: center; gap: 7px; color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+.province-directory-copy h2 { margin: 12px 0 8px; font: 500 clamp(24px, 3vw, 33px)/1.18 Georgia, "Times New Roman", serif; letter-spacing: -.035em; }
+.province-directory-copy p { max-width: 460px; color: var(--muted-foreground); font-size: 12px; line-height: 1.7; }
+.province-directory-picker { display: grid; align-content: center; gap: 8px; }
+.province-directory-picker label { color: var(--muted-foreground); font-size: 10px; font-weight: 650; }
+.province-directory-picker select { width: 100%; min-height: 47px; padding: 0 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--background); color: var(--foreground); font-size: 12px; }
+.province-directory-source { min-height: 16px; color: var(--muted-foreground); font-size: 10px; line-height: 1.5; }
+.province-directory-link { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; padding: 0 15px; border-radius: 10px; background: var(--primary); color: #fff; font-size: 11px; font-weight: 650; }
+.province-directory-note { grid-column: 1/-1; padding-top: 15px; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: 10px; line-height: 1.6; }
+
+.consent-banner {
+  position: relative;
+  z-index: 1;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  display: flex;
+  width: min(760px, calc(100% - 40px));
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 20px auto 30px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: var(--shadow-float);
+}
+.consent-copy { min-width: 0; }
+.consent-copy b { display: block; margin-bottom: 5px; font-size: 13px; }
+.consent-copy p { color: var(--muted-foreground); font-size: 11px; line-height: 1.6; }
+.consent-copy a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.consent-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+.consent-actions button,.cookie-settings-button { min-height: 42px; padding: 0 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--foreground); font-size: 11px; font-weight: 600; }
+.consent-actions button:hover,.cookie-settings-button:hover { border-color: var(--primary); background: var(--accent); }
+.consent-actions .consent-analytics { border-color: var(--primary); background: var(--primary); color: var(--primary-foreground); }
+.consent-actions .consent-analytics:hover { filter: brightness(.95); }
+.cookie-settings-button { color: var(--primary); }
+
+
+.map-boundary { height: 100%; min-height: 420px; }
+.map-fallback { display: grid; min-height: 420px; place-content: center; gap: 12px; padding: 28px; border: 1px solid var(--border); border-radius: 20px; background: var(--card); text-align: center; }
+.map-fallback p { font-weight: 650; }
+.map-fallback span { max-width: 290px; color: var(--muted-foreground); font-size: 13px; line-height: 1.6; }
+.map-fallback button { min-height: 44px; padding: 0 15px; border-radius: 10px; background: var(--primary); color: var(--primary-foreground); }
+.map-error button { min-height: 44px; color: var(--primary); font-weight: 650; text-decoration: underline; }
+.pharmacy-address > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.card-copy-address { position: relative; z-index: 2; display: grid; width: 44px; min-width: 44px; height: 44px; place-items: center; margin-top: -9px; border-radius: 10px; color: var(--primary); }
+.card-copy-address svg { margin: 0; color: inherit; }
+.card-copy-address:hover { background: var(--accent); }
+.pharmacy-name,.detail-title { overflow-wrap: anywhere; }
+.detail-source { margin-top: 14px; font-size: 12px; line-height: 1.7; color: var(--muted-foreground); }
+.detail-source summary { cursor: pointer; min-height: 44px; padding: 12px 0; color: var(--foreground); }
+.detail-source summary:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+.detail-source a { display: inline-block; padding: 5px 0; color: var(--primary); text-decoration: underline; }
+.detail-confirm { margin: 8px 0 12px; color: var(--muted-foreground); font-size: 11px; }
+.detail-utility-actions button,.detail-utility-actions a,.detail-copy { min-height: 44px; }
+.location-recovery { width: min(100%,540px); margin: -8px 0 28px; padding: 22px; border: 1px solid var(--border); border-radius: 18px; background: var(--card); }
+.region-search-label { display: grid; gap: 7px; margin-bottom: 12px; color: var(--muted-foreground); font-size: 11px; font-weight: 650; }
+.region-search-label input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--foreground); font-size: 13px; }
+.region-search-empty { margin: 10px 0; color: var(--muted-foreground); font-size: 12px; line-height: 1.5; }
+.remember-region { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 8px; font-size: 12px; color: var(--muted-foreground); }
+.remember-region input { width: 18px; height: 18px; accent-color: var(--primary); }
+.forget-location { min-height: 44px; padding: 8px 0; margin-top: 5px; color: var(--muted-foreground); font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
+.region-selects,.region-selects label { min-width: 0; }
+.dark .floating-map,.dark .map-heading,.dark .map-tools,.dark .map-empty,.dark .map-error { background: var(--card); color: var(--foreground); border-color: var(--border); }
+.dark .map-loading-copy b,.dark .map-heading b { color: var(--foreground); }
+.dark .map-loading-copy small,.dark .map-heading small { color: var(--muted-foreground); }
+.dark .map-loading-mark { background: var(--accent); color: var(--primary); }
+.province-directory-link,.empty-state-actions > .primary { color: var(--primary-foreground); }
+@media (max-width: 800px) {
+  .province-directory { grid-template-columns: 1fr; gap: 17px; width: calc(100% - 36px); margin-top: 38px; padding: 23px 20px; border-radius: 17px; }
+  .province-directory-copy h2 { font-size: 27px; }
+  .consent-banner { right: auto; left: auto; bottom: auto; width: calc(100% - 36px); flex-direction: column; align-items: stretch; gap: 12px; padding: 17px; border-radius: 16px; }
+  .consent-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .consent-actions button { min-height: 44px; padding: 0 8px; }
+  .pharmacy-actions > *,.region-selects select { min-height: 44px; }
+  .map-boundary,.map-fallback { min-height: 420px; }
+  .location-recovery { margin: 0 0 24px; padding: 18px; }
+  .results-layout { padding-bottom: max(85px,env(safe-area-inset-bottom)); }
+}
+@media (max-width: 370px) {
+  .location-start-actions { align-items: stretch; flex-direction: column; gap: 5px; }
+  .location-start .primary { width: 100%; }
+  .location-manual { min-height: 44px; }
+  .pharmacy-actions { margin-left: 0; }
+}
+.dark body { background: var(--background); }
+.dark .location-start { background: var(--card); border-color: var(--border); box-shadow: var(--shadow-soft); }
+.dark .location-start h2 { color: var(--foreground); }
+.dark .location-start p { color: var(--muted-foreground); }
+.dark .results-toolbar .search input::placeholder { color: var(--muted-foreground); }
+.dark .closest,.dark .map-heading-icon,.dark .detail-avatar,.dark .detail-row-icon { background: var(--accent); color: var(--primary); }
+.dark .location-gps,.dark .location-gps:hover { background: var(--accent); color: var(--primary); border-color: var(--border); }
+.dark .map-legend,.dark .pharmacy-map-tooltip { background: var(--card); color: var(--foreground); border-color: var(--border); }
+.dark .map-tools button { color: var(--primary); }
+.results-checked { color: var(--muted-foreground); }
+.map-tools button,.header .icon,.header .location,.results-toolbar .quick-distances button { min-height: 44px; }
+.map-tools button { min-width: 44px; }
+.place-marker .pin-index { color: #fff; min-width: 22px; min-height: 22px; font-weight: 700; }
+.results-toolbar .results-location { flex-wrap: wrap; white-space: normal; }
+.results-toolbar .results-location > span { overflow: visible; text-overflow: clip; white-space: normal; }
+.results-toolbar .results-checked { flex-basis: 100%; margin: 3px 0 0 20px; font-size: 11px; }
+@media (max-width:800px) {
+  .pharmacy-address { font-size: 13px; line-height: 1.65; }
+  .pharmacy-actions .primary,.directions-button { font-size: 12px; }
+  .card-status-row,.card-status-row .status { font-size: 11px; }
+}
+.service-error { width: min(560px,calc(100% - 36px)); margin: 80px auto; padding: 28px; border: 1px solid var(--border); border-radius: 20px; background: var(--card); }
+.service-error-brand { display: inline-block; margin-bottom: 28px; color: var(--primary); font-weight: 750; }
+.service-error h1 { font: 500 32px/1.2 Georgia,serif; }
+.service-error p { margin: 15px 0 24px; color: var(--muted-foreground); line-height: 1.7; }
+.service-error > div { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.service-error .primary { min-height: 44px; padding: 0 18px; border-radius: 10px; }
