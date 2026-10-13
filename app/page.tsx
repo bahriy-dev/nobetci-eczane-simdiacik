@@ -741,16 +741,6 @@ export default function Home() {
             <small>NÖBETÇİ ECZANE</small>
           </span>
         </Link>
-        <nav className="header-nav" aria-label="Hızlı rehber bağlantıları">
-          <Link href="/nobetci-eczane-rehberi">Rehber</Link>
-          <button
-            type="button"
-            className="header-nav-btn"
-            onClick={() => setHelpOpen(true)}
-          >
-            Nasıl kullanılır?
-          </button>
-        </nav>
         <div className="header-actions">
           <button
             className="location"
