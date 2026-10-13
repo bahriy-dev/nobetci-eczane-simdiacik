@@ -54,7 +54,7 @@ export default function Home(){
     const attempt=selectionGuard.current.begin();
     if(!navigator.geolocation){setGeoState('Bu tarayıcı konumu desteklemiyor. İl veya ilçe seçerek devam edebilirsin.');return;}
     setLocationPending(true);
-    setGeoState('Yakınındaki eczaneler aranıyor…');
+    setGeoState('Yakın çevren taranıyor…');
     void getPositionWithTimeoutRetry(navigator.geolocation,()=>{
       if(selectionGuard.current.isCurrent(attempt))setGeoState('Konum aranıyor… Biraz daha bekleyelim.');
     }).then(async p=>{
