@@ -32,6 +32,7 @@ export default function Home(){
   const [filterOpen,setFilterOpen]=useState(false),[mapMobile,setMapMobile]=useState(false),[now,setNow]=useState(()=>Date.now()),[limit,setLimit]=useState(8),[focused,setFocused]=useState<string|null>(null),[helpOpen,setHelpOpen]=useState(false);
   const locationChosen=Boolean(location.city);
   const dark=useSyncExternalStore(subscribeTheme,readTheme,serverTheme),online=useSyncExternalStore(subscribeNetwork,readNetwork,serverNetwork);
+  const wasOnline=useRef(online);
   const requestKey=JSON.stringify([location.lat,location.lng,location.city,radius,refresh]);
   const [resource,setResource]=useState<{key:string;data:PlacesResult|null;error:string}>({key:'',data:null,error:''});
   const loading=locationChosen&&resource.key!==requestKey;
@@ -70,6 +71,7 @@ export default function Home(){
     if('serviceWorker'in navigator)void navigator.serviceWorker.register('/sw.js').catch(()=>{});
     const tick=setInterval(()=>setNow(Date.now()),15000);return()=>{clearInterval(tick);};
   },[]);
+  useEffect(()=>{if(online&&!wasOnline.current&&locationChosen)setRefresh(value=>value+1);wasOnline.current=online;},[online,locationChosen]);
   useEffect(()=>{const t=setTimeout(()=>setDebounced(query),300);return()=>clearTimeout(t);},[query]);
   useEffect(()=>{document.documentElement.classList.toggle('dark',dark);},[dark]);
   useEffect(()=>{
