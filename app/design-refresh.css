@@ -416,13 +416,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .region-selects select { min-height: 47px; padding: 0 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--card); color: var(--foreground); font-size: 13px; }
 .region-picker > .primary { width: 100%; }
 .region-picker > .region-error { padding: 11px 13px; border: 1px solid #efd8cf; border-radius: 11px; background: #fff4ef; color: #873e31; }
-.location-shortcuts { padding-top: 16px; border-top: 1px solid var(--border); }
-.location-shortcuts > span { display: block; margin-bottom: 10px; color: var(--muted-foreground); font-size: 11px; font-weight: 600; }
-.location-shortcuts > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.location-shortcuts button { display: grid; min-height: 58px; align-content: center; gap: 3px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 11px; background: var(--card); text-align: left; transition: border-color .18s, background .18s, transform .18s; }
-.location-shortcuts button:hover { transform: translateY(-1px); border-color: #b6cfb9; background: var(--accent); }
-.location-shortcuts button b { color: var(--foreground); font-size: 11px; font-weight: 650; }
-.location-shortcuts button small { color: var(--muted-foreground); font-size: 10px; }
 .location-search { min-height: 48px; align-items: center; padding-left: 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--background); }
 .location-search button { align-self: stretch; margin: 4px; padding: 0 16px; border-radius: 8px; background: var(--primary); }
 .location-results { max-height: 210px; margin-top: 8px; }
@@ -593,12 +586,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .region-selects label { font-size: 10px; }
   .region-selects select { min-height: 43px; padding: 0 8px; font-size: 12px; }
   .region-picker > .primary { min-height: 44px; }
-  .location-shortcuts { padding-top: 12px; }
-  .location-shortcuts > span { margin-bottom: 8px; font-size: 10px; }
-  .location-shortcuts > div { gap: 6px; }
-  .location-shortcuts button { min-height: 48px; padding: 6px 8px; border-radius: 9px; }
-  .location-shortcuts button b { font-size: 10px; }
-  .location-shortcuts button small { font-size: 9px; }
   .detail-sheet { top: auto !important; right: 8px !important; bottom: calc(8px + env(safe-area-inset-bottom)) !important; left: 8px !important; width: auto !important; max-width: none !important; max-height: calc(88dvh - env(safe-area-inset-bottom)) !important; transform: none !important; border-radius: 23px !important; }
   .pharmacy-detail-content { padding: 28px 20px 20px; }
   .detail-title { font-size: 25px !important; }
@@ -628,7 +615,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .pharmacy-address { margin-left: 43px; }
   .pharmacy-actions { margin-left: 43px; }
   .results-toolbar .quick-distances button { font-size: 10px; }
-  .location-shortcuts button { padding-right: 5px; padding-left: 5px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
