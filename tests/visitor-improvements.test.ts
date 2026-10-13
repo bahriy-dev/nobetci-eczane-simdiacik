@@ -1,3 +1,4 @@
+import { requestDeadline } from "../lib/retry-fetch";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -220,4 +221,25 @@ test("map provider configuration uses HTTPS and cannot inject attribution HTML",
     ).attribution,
     /&lt;script&gt;/,
   );
+});
+
+test("request deadline propagates cancellation without AbortSignal static methods", () => {
+  const parent = new AbortController();
+  const deadline = requestDeadline(parent.signal, 1000);
+  const reason = new DOMException("Cancelled", "AbortError");
+  parent.abort(reason);
+  assert.equal(deadline.signal.aborted, true);
+  assert.equal(deadline.signal.reason, reason);
+  deadline.dispose();
+});
+
+test("request deadline times out and disposal prevents late cancellation", async () => {
+  const parent = new AbortController();
+  const expired = requestDeadline(parent.signal, 5);
+  const disposed = requestDeadline(parent.signal, 5);
+  disposed.dispose();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(expired.signal.reason.name, "TimeoutError");
+  assert.equal(disposed.signal.aborted, false);
+  expired.dispose();
 });

@@ -1,3 +1,25 @@
+/** Request deadlines without newer AbortSignal static methods. */
+export function requestDeadline(parent: AbortSignal, timeoutMs: number) {
+  const controller = new AbortController();
+  const cancel = () =>
+    controller.abort(
+      parent.reason ?? new DOMException("Aborted", "AbortError"),
+    );
+  const timer = setTimeout(
+    () =>
+      controller.abort(new DOMException("Request timed out", "TimeoutError")),
+    timeoutMs,
+  );
+  parent.addEventListener("abort", cancel, { once: true });
+  const dispose = () => {
+    clearTimeout(timer);
+    parent.removeEventListener("abort", cancel);
+  };
+  controller.signal.addEventListener("abort", dispose, { once: true });
+  if (parent.aborted) cancel();
+  return { signal: controller.signal, dispose };
+}
+
 class HttpFailure extends Error {
   constructor(
     public status: number,
@@ -38,10 +60,12 @@ export async function fetchJsonWithRetry<T>(
   } = {},
 ): Promise<T> {
   for (let attempt = 0; attempt < attempts; attempt++) {
-    signal.throwIfAborted();
+    if (signal.aborted)
+      throw signal.reason ?? new DOMException("Aborted", "AbortError");
+    const deadline = requestDeadline(signal, timeoutMs);
     try {
       const response = await fetcher(url, {
-        signal: AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]),
+        signal: deadline.signal,
         cache: "no-store",
       });
       const payload = (await response.json()) as T & { error?: string };
@@ -57,6 +81,7 @@ export async function fetchJsonWithRetry<T>(
         );
       return payload;
     } catch (error) {
+      deadline.dispose();
       if (signal.aborted) throw signal.reason;
       const transient =
         error instanceof HttpFailure
@@ -73,6 +98,8 @@ export async function fetchJsonWithRetry<T>(
         ),
         signal,
       );
+    } finally {
+      deadline.dispose();
     }
   }
   throw new Error("Güncel listeye ulaşılamadı.");

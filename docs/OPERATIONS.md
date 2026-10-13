@@ -49,3 +49,5 @@ Bu değerler istemciye açıktır; gizli anahtar konulmaz. Değişiklik yeni bui
 ## Dışarıdan tamamlanması gerekenler
 
 KVKK işletmeci kimliği/başvuru adresi, kurum kaynaklarının ticari yeniden yayınlama hakkı, gerçek cihaz/ekran okuyucu testleri ve trafik kapasitesi kodun başarılı derlenmesiyle doğrulanmış sayılmaz. Kabul raporunda bunlar açıkça ayrılmıştır.
+
+Client request deadlines use basic AbortController and timers, avoiding AbortSignal.any (introduced in Safari 17.4). Automated checks cover cancellation and timeout cleanup; physical old-iPhone validation remains pending.

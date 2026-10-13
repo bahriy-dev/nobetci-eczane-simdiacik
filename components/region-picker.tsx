@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { requestDeadline } from "@/lib/retry-fetch";
 import { normalized } from "@/lib/places";
 import type { ProvinceDTO, DistrictDTO, RegionsResult } from "@/lib/regions";
 
@@ -50,8 +51,9 @@ export function RegionPicker({
 
   useEffect(() => {
     const controller = new AbortController();
+    const deadline = requestDeadline(controller.signal, 12000);
     fetch("/api/regions", {
-      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(12000)]),
+      signal: deadline.signal,
     })
       .then(async (response) => {
         const result = (await response.json()) as RegionsResult & {
@@ -79,16 +81,21 @@ export function RegionPicker({
         }
       })
       .finally(() => {
+        deadline.dispose();
         if (!controller.signal.aborted) setLoadedProvinceKey(provinceKey);
       });
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      deadline.dispose();
+    };
   }, [city, retry, provinceKey]);
 
   useEffect(() => {
     if (!provinceId) return;
     const controller = new AbortController();
+    const deadline = requestDeadline(controller.signal, 12000);
     fetch("/api/regions?provinceId=" + provinceId, {
-      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(12000)]),
+      signal: deadline.signal,
     })
       .then(async (response) => {
         const result = (await response.json()) as RegionsResult & {
@@ -119,12 +126,16 @@ export function RegionPicker({
         }
       })
       .finally(() => {
+        deadline.dispose();
         if (!controller.signal.aborted)
           setDistrictResource((prev) =>
             prev.key === districtKey ? prev : { key: districtKey, rows: [] },
           );
       });
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      deadline.dispose();
+    };
   }, [provinceId, retry, districtKey, city, district]);
 
   const select = async () => {
@@ -134,6 +145,7 @@ export function RegionPicker({
     selectionRequest.current?.abort();
     const controller = new AbortController();
     selectionRequest.current = controller;
+    const deadline = requestDeadline(controller.signal, 15000);
     setSelecting(true);
     setError("");
     try {
@@ -151,10 +163,7 @@ export function RegionPicker({
       // Districts have no coordinates in TürkiyeAPI; resolve only on a user click.
       const q = district.name + ", " + province.name;
       const response = await fetch("/api/location?q=" + encodeURIComponent(q), {
-        signal: AbortSignal.any([
-          controller.signal,
-          AbortSignal.timeout(15000),
-        ]),
+        signal: deadline.signal,
       });
       const result = (await response.json()) as Location[] & { error?: string };
       if (!response.ok)
@@ -185,6 +194,7 @@ export function RegionPicker({
         setErrorStage("location");
       }
     } finally {
+      deadline.dispose();
       if (!controller.signal.aborted) setSelecting(false);
     }
   };
