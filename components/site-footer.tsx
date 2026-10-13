@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { legalLinks } from '@/lib/legal-content';
 import {
   Plus,
@@ -15,20 +16,21 @@ import {
 } from 'lucide-react';
 
 type Props = {
-  sourceUrl: string;
-  onDiscover: () => void;
-  onMap: () => void;
-  onLocation: () => void;
-  onHelp: () => void;
+  sourceUrl?: string;
+  onDiscover?: () => void;
+  onMap?: () => void;
+  onLocation?: () => void;
+  onHelp?: () => void;
 };
 
 export function SiteFooter({
-  sourceUrl,
+  sourceUrl = 'https://teb.org.tr/odalar',
   onDiscover,
   onMap,
   onLocation,
   onHelp
 }: Props) {
+  const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
 
   const toggleGroup = (key: string) => {
@@ -118,13 +120,33 @@ export function SiteFooter({
             <ChevronDown size={18} />
           </button>
           <nav id="footer-find-links" className="footer-links" aria-label="Eczane bağlantıları">
-            <a href="#eczaneler" onClick={onDiscover}>
+            <Link
+              href="/#eczaneler"
+              onClick={e => {
+                if (onDiscover) {
+                  e.preventDefault();
+                  onDiscover();
+                }
+              }}
+            >
               Nöbetçi eczaneler
-            </a>
-            <button type="button" onClick={onMap}>
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (onMap) onMap();
+                else router.push('/?view=map');
+              }}
+            >
               Haritada göster
             </button>
-            <button type="button" onClick={onLocation}>
+            <button
+              type="button"
+              onClick={() => {
+                if (onLocation) onLocation();
+                else router.push('/');
+              }}
+            >
               İl ve ilçe seç
             </button>
             <Link href="/nobetci-eczane/istanbul">İstanbul eczaneleri</Link>
@@ -147,7 +169,13 @@ export function SiteFooter({
             <ChevronDown size={18} />
           </button>
           <nav id="footer-help-links" className="footer-links" aria-label="Bilgi ve yardım">
-            <button type="button" onClick={onHelp}>
+            <button
+              type="button"
+              onClick={() => {
+                if (onHelp) onHelp();
+                else router.push('/nobetci-eczane-rehberi');
+              }}
+            >
               Nasıl kullanılır?
             </button>
             <Link href="/nobetci-eczane-rehberi">Nöbetçi eczane rehberi</Link>
