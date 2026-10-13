@@ -36,7 +36,7 @@ test('current source links and the verified Konya and Gaziantep overrides are pr
     ['İzmir', 'https://www.izmir.bel.tr/tr/NobetciEczane/27'],
     ['Kayseri', 'https://cbs.kayseri.bel.tr/kayseri-nobetci-eczaneler'],
     ['Konya', 'https://www.konyanobetcieczaneleri.com'],
-    ['Gaziantep', 'https://www.gaziantepeo.org.tr/nobet-karti'],
+    ['Gaziantep', 'https://www.gaziantepeo.org.tr/nobetci-eczaneler/'],
   ]) {
     assert.equal(getPharmacySource(city).url, url);
     assert.equal(getPharmacySource(city).kind, 'duty-list');
