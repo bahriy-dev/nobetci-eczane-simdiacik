@@ -25,7 +25,7 @@ export default function Home(){
   const [query,setQuery]=useState(''),[debounced,setDebounced]=useState(''),[hasPhone,setHasPhone]=useState(false),[radius,setRadius]=useState('10'),[sort,setSort]=useState('distance');
   const [location,setLocationValue]=useState<Location>({label:"",city:"",lat:0,lng:0}),[scrollTarget,setScrollTarget]=useState<string|null>(null),[geoState,setGeoState]=useState(''),[refresh,setRefresh]=useState(0);
   const [selectedValue,setSelected]=useState<Place|null>(null),[hover,setHover]=useState<string|null>(null);
-  const [locationTab,setLocationTab]=useState<'region'|'address'>('region'),[locOpen,setLocOpen]=useState(false),[locQuery,setLocQuery]=useState(''),[locResults,setLocResults]=useState<Location[]>([]),[locLoading,setLocLoading]=useState(false),[locError,setLocError]=useState('');
+  const [locationTab,setLocationTab]=useState<'region'|'address'>('region'),[locOpen,setLocOpen]=useState(false),[locQuery,setLocQuery]=useState(''),[locResults,setLocResults]=useState<Location[]>([]),[locLoading,setLocLoading]=useState(false),[locError,setLocError]=useState(''),[locationPending,setLocationPending]=useState(false);
   const [filterOpen,setFilterOpen]=useState(false),[mapMobile,setMapMobile]=useState(false),[now,setNow]=useState(()=>Date.now()),[limit,setLimit]=useState(8),[focused,setFocused]=useState<string|null>(null),[helpOpen,setHelpOpen]=useState(false);
   const locationChosen=Boolean(location.city);
   const dark=useSyncExternalStore(subscribeTheme,readTheme,serverTheme),online=useSyncExternalStore(subscribeNetwork,readNetwork,serverNetwork);
@@ -36,23 +36,25 @@ export default function Home(){
   const selected=selectedValue&&(!selectedValue.verifiedUntil||Date.parse(selectedValue.verifiedUntil)>now)?selectedValue:null;
   const changeRadius=(next:string)=>{setRadius(next);setSelected(null);setHover(null);setFocused(null);setScrollTarget(null);};
   const selectionGuard=useRef(new SelectionGuard());
-  const setLocation=useCallback((next:Location)=>{selectionGuard.current.invalidate();setLocationValue(next);setSelected(null);setHover(null);setFocused(null);setScrollTarget(null);},[]);
+  const setLocation=useCallback((next:Location)=>{selectionGuard.current.invalidate();setLocationPending(false);setLocationValue(next);setSelected(null);setHover(null);setFocused(null);setScrollTarget(null);},[]);
   const switchLocationTab=(tab:'region'|'address')=>{setLocationTab(tab);requestAnimationFrame(()=>document.getElementById(tab+'-tab')?.focus());};
   const locationTabKeys=(event:React.KeyboardEvent<HTMLButtonElement>)=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();switchLocationTab(event.key==='Home'?'region':event.key==='End'?'address':locationTab==='region'?'address':'region');}};
   const locationRequest=useRef<AbortController|null>(null);
   useEffect(()=>()=>{selectionGuard.current.invalidate();locationRequest.current?.abort();},[]);
   const requestDeviceLocation=useCallback(()=>{
+    if(locationPending)return;
     const attempt=selectionGuard.current.begin();
-    if(!navigator.geolocation){setGeoState('Konum desteklenmiyor; il ve ilçe seçebilirsin.');setLocOpen(true);return;}
+    if(!navigator.geolocation){setGeoState('Bu tarayıcı konumu desteklemiyor. İl veya ilçe seçerek devam edebilirsin.');return;}
+    setLocationPending(true);
     setGeoState('Yakınındaki eczaneler aranıyor…');
     navigator.geolocation.getCurrentPosition(async p=>{
       if(!selectionGuard.current.isCurrent(attempt))return;
       const lat=p.coords.latitude,lng=p.coords.longitude;
-      if(!Number.isFinite(lat)||!Number.isFinite(lng)||lat<35||lat>43||lng<25||lng>45){setGeoState('Türkiye içindeki konumlar destekleniyor.');setLocOpen(true);return;}
+      if(!Number.isFinite(lat)||!Number.isFinite(lng)||lat<35||lat>43||lng<25||lng>45){setGeoState('Türkiye içindeki konumlar destekleniyor. İl veya ilçe seçerek devam edebilirsin.');setLocationPending(false);return;}
       try{const r=await fetch(`/api/location?lat=${lat}&lng=${lng}`);const d=await r.json() as Location&{error?:string};if(!r.ok||!d.city)throw new Error();if(!selectionGuard.current.isCurrent(attempt))return;setLocation({...d,lat,lng});setGeoState('');setLocOpen(false);}
-      catch{if(!selectionGuard.current.isCurrent(attempt))return;setGeoState('İl bilgisi alınamadı. Lütfen bölgeni seç.');setLocOpen(true);}
-    },failure=>{if(!selectionGuard.current.isCurrent(attempt))return;setGeoState(failure.code===1?'Konum izni verilmedi. İl ve ilçe seçerek devam edebilirsin.':failure.code===3?'Konum alma süresi doldu. İl ve ilçe seçebilirsin.':'Konum alınamadı. İl ve ilçe seçebilirsin.');setLocOpen(true);},{timeout:10000,maximumAge:60000});
-  },[setLocation]);
+      catch{if(!selectionGuard.current.isCurrent(attempt))return;setGeoState('Konumun bölgesi bulunamadı. İl veya ilçe seçerek devam edebilirsin.');setLocationPending(false);}
+    },failure=>{if(!selectionGuard.current.isCurrent(attempt))return;setGeoState(failure.code===1?'Konum izni verilmedi. İl veya ilçe seçerek devam edebilirsin.':failure.code===3?'Konum alma süresi doldu. İl veya ilçe seçebilirsin.':'Konum alınamadı. İl veya ilçe seçebilirsin.');setLocationPending(false);},{timeout:10000,maximumAge:60000});
+  },[locationPending,setLocation]);
   const initialLocationRequest=useRef(false);
   useEffect(()=>{if(initialLocationRequest.current)return;initialLocationRequest.current=true;if(navigator.permissions)void navigator.permissions.query({name:'geolocation'}).then(permission=>{if(permission.state==='granted')requestDeviceLocation();}).catch(()=>{});},[requestDeviceLocation]);
   useEffect(()=>{
@@ -94,7 +96,7 @@ export default function Home(){
   const copyAddress=async(p:Place)=>{try{await navigator.clipboard.writeText(p.address);toast.success("Adres kopyalandı.");}catch{toast.error("Adres kopyalanamadı.");}};
   return <><Toaster position="top-center" richColors/>
     <a className="skip-link" href="#eczaneler">Eczane sonuçlarına geç</a><header className="header"><Link className="brand" href="/" aria-label="Şimdi Açık ana sayfa"><span className="brand-icon"><Plus size={25} strokeWidth={3}/></span><span className="brand-name">şimdi<span>açık</span><small>NÖBETÇİ ECZANE</small></span></Link><button className="location" onClick={()=>setLocOpen(true)}><MapPin size={16}/><span>{locationChosen?location.label.split(",").slice(0,2).join(","):"Konum seç"}</span><ChevronDown size={14}/></button><button className="icon" onClick={changeTheme} aria-label={dark?'Açık temaya geç':'Koyu temaya geç'}>{dark?<Sun size={19}/>:<Moon size={19}/>}</button></header>
-    <main className="pharmacy-main" id="eczaneler" tabIndex={-1}><h1 className="sr-only">Yakınındaki nöbetçi eczaneleri bul</h1>{!locationChosen&&<div className="location-start"><h2>Yakınındaki nöbetçi eczaneler</h2><p>Konumunu seç, en yakın nöbetçi eczaneleri hemen gör.</p><button className="primary" onClick={()=>setLocOpen(true)}><MapPin size={17}/>Konum seç</button></div>}
+    <main className="pharmacy-main" id="eczaneler" tabIndex={-1}><h1 className="sr-only">Yakınındaki nöbetçi eczaneleri bul</h1>{!locationChosen&&<section className="location-start" aria-labelledby="location-start-title"><div className="location-start-copy"><h2 id="location-start-title">Yakınındaki nöbetçi eczaneler</h2><p>Konumunu kullan, yakındaki eczaneleri hemen gör.</p></div><div className="location-start-actions"><button className="primary" disabled={locationPending} onClick={requestDeviceLocation}><LocateFixed size={17}/>{locationPending?'Konum aranıyor…':'Konumumu kullan'}</button><button className="location-manual" onClick={()=>{setLocationTab('region');setLocOpen(true);}}>İl / ilçe seç</button></div>{geoState&&<p className="location-start-status" role="status">{geoState}</p>}</section>}
       {locationChosen&&<section className="pharmacy-results">
         <div className="results-toolbar">
         <div className="section-heading"><div className="results-heading-copy"><h2>Nöbetçi eczaneler</h2><p className="results-location"><MapPin size={13}/><span>{locationChosen?location.label.split(',').slice(0,2).join(','):'Bölgeni seç'}</span></p></div><div className="view-controls"><button className="refresh-button" disabled={loading} onClick={()=>setRefresh(v=>v+1)} aria-label="Eczaneleri yenile"><RefreshCw size={16} className={loading?'spin':''}/></button><button className="mobile-filter" onClick={()=>setFilterOpen(true)} aria-label="Eczane filtrelerini aç"><SlidersHorizontal size={17}/><span>Filtrele</span></button></div></div><div className="results-summary" aria-live="polite"><span className="results-count">{loading?'Aranıyor…':error?'Liste alınamadı':unsupported?'Resmî liste':results.length+' eczane'}</span>{!loading&&results[0]&&<span className="results-nearest"><span>En yakın</span><b>{distance(results.reduce((a,b)=>a.distance<b.distance?a:b))}</b></span>}</div>
