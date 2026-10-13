@@ -1,1 +1,1 @@
-export function GET(){return Response.json({status:'ok'},{headers:{'Cache-Control':'no-store'}});}
+export function GET(){const commit=process.env.RAILWAY_GIT_COMMIT_SHA;return Response.json({status:'ok',...(commit&&/^[a-f0-9]{40}$/.test(commit)?{commit}:{}),runtime:process.version},{headers:{'Cache-Control':'no-store'}});}

@@ -1,3 +1,4 @@
+import {requestSource} from '../source-request';
 import { distanceKm, normalized, type Place, type PlacesProvider, type PlacesResult, type SearchParams } from '../places';
 
 export const GAZIANTEP_SOURCE_URL = 'https://www.gaziantep.bel.tr/tr/nobetci-eczaneler';
@@ -143,8 +144,7 @@ export function parseGaziantepPharmacies(payload: unknown, params: SearchParams,
 export async function searchGaziantepPharmacies(params: SearchParams): Promise<PlacesResult> {
   const url = new URL(GAZIANTEP_SOURCE_URL);
   url.searchParams.set('date', turkeyDay(new Date()));
-  const response = await fetch(url, { headers: { Accept: 'text/html' }, cache: 'no-store', signal: AbortSignal.timeout(12_000) });
-  if (!response.ok) throw new Error('Gaziantep Belediyesi nöbet kaynağına ulaşılamadı.');
+  const response = await requestSource(url, {headers:{Accept:'text/html'}});
   return parseGaziantepPharmacies(await response.text(), params, new Date());
 }
 
