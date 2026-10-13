@@ -504,7 +504,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .results-toolbar .section-heading h2 { max-width: 255px; margin-bottom: 7px; font-size: 25px; }
   .results-toolbar .results-location { font-size: 11px !important; }
   .results-toolbar .view-controls { gap: 4px; }
-  .results-toolbar .refresh-button { display: none; }
+  .results-toolbar .refresh-button { display: inline-flex; width: 43px; min-width: 43px; min-height: 43px; padding: 0; border-color: transparent; background: transparent; }
   .results-toolbar .mobile-filter { width: 43px; min-width: 43px; min-height: 43px; padding: 0; border-radius: 11px; }
   .results-toolbar .mobile-filter > span { display: none; }
   .results-toolbar .results-summary { margin-bottom: 14px; }
