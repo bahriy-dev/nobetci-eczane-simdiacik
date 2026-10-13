@@ -8,11 +8,18 @@ function createStorage(){
 }
 
 const sample={label:'Kadıköy, İstanbul',city:'İstanbul',lat:40.99,lng:29.02};
+const preciseSample={...sample,accuracy:140};
 
 test('returns a saved location while browser permission remains valid',()=>{
   const storage=createStorage(),now=1_800_000_000_000;
   writeLocationCache(sample,storage,now);
   assert.deepEqual(readLocationCache(storage,now+1000),sample);
+});
+
+test('preserves optional GPS accuracy for the approximate-location hint',()=>{
+  const storage=createStorage(),now=1_800_000_000_000;
+  writeLocationCache(preciseSample,storage,now);
+  assert.deepEqual(readLocationCache(storage,now+1000),preciseSample);
 });
 
 test('expires and removes stale or malformed location data',()=>{

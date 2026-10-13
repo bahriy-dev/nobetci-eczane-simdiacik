@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {pharmacyDutyDate,pharmacyTimestamp,pharmacyMapLink,pharmacyDirections,pharmacyPhoneLink} from '../lib/pharmacy-presentation';
+import {pharmacyDutyDate,pharmacyTimestamp,pharmacyMapLink,pharmacyDirections,pharmacyAppleDirections,pharmacyPhoneLink} from '../lib/pharmacy-presentation';
 test('duty dates stay source calendar dates without being replaced by query timestamps',()=>{
  assert.equal(pharmacyDutyDate('2026-10-06'),'06.10.2026');
  assert.equal(pharmacyDutyDate(undefined),undefined);
@@ -14,5 +14,6 @@ test('sharing points to the selected pharmacy rather than a province duty list',
  assert.equal(share.searchParams.get('query'),'40.9875,29.0278');
  assert.equal(share.pathname,'/maps/search/');
  assert.equal(new URL(pharmacyDirections(p)).searchParams.get('destination'),'40.9875,29.0278');
+ assert.equal(new URL(pharmacyAppleDirections(p)).searchParams.get('daddr'),'40.9875,29.0278');
  assert.equal(pharmacyPhoneLink('0216 565 64 41'),'tel:02165656441');
 });
