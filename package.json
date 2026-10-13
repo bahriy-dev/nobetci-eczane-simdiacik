@@ -14,7 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "build:railway": "next build --webpack",
     "start:railway": "node scripts/start-railway.mjs",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "monitor:sources": "node scripts/check-live-sources.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
