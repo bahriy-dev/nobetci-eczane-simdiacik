@@ -1,4 +1,5 @@
 import type {Metadata,Viewport} from 'next';
+import Script from 'next/script';
 import {siteOrigin,siteDescription,siteIndexable} from '@/lib/site-config';
 import './globals.css';
 import './design-refresh.css';
@@ -19,4 +20,5 @@ const schema={'@context':'https://schema.org','@graph':[
  {'@type':'WebSite','@id':siteOrigin+'/#website',name:'Şimdi Açık',url:siteOrigin,inLanguage:'tr-TR',description:siteDescription},
  {'@type':'WebApplication','@id':siteOrigin+'/#application',name:'Şimdi Açık',url:siteOrigin,applicationCategory:'UtilitiesApplication',operatingSystem:'Web',inLanguage:'tr-TR',isAccessibleForFree:true,description:siteDescription,featureList:['Konuma göre nöbetçi eczane arama','İl ve ilçe seçimi','Harita ve yol tarifi','Eczaneye telefonla ulaşma']}
 ]};
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="tr"><body><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}}/>{children}</body></html>}
+const tagManager='(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({\'gtm.start\':new Date().getTime(),event:\'gtm.js\'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!==\'dataLayer\'?\'&l=\'+l:\'\';j.async=true;j.src=\'https://www.googletagmanager.com/gtm.js?id=\'+i+dl;f.parentNode.insertBefore(j,f);})(window,document,\'script\',\'dataLayer\',\'GTM-W9HWBWGB\');';
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="tr"><body><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}}/><Script id="google-tag-manager" strategy="afterInteractive" dangerouslySetInnerHTML={{__html:tagManager}}/><noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W9HWBWGB" height="0" width="0" style={{display:'none',visibility:'hidden'}} title="Google Tag Manager"/></noscript>{children}</body></html>}
