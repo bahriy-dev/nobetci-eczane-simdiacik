@@ -17,6 +17,7 @@ import {pharmacyDistance as distance,pharmacyMapLink} from '@/lib/pharmacy-prese
 import {getPharmacySource} from '@/lib/pharmacy-sources';
 import {fetchJsonWithRetry} from '@/lib/retry-fetch';
 import {SelectionGuard} from '@/lib/selection-guard';
+import {getPositionWithTimeoutRetry} from '@/lib/geolocation';
 import {clearLocationCache,readLocationCache,writeLocationCache} from '@/lib/location-cache';
 import {parseSharedCoordinates} from '@/lib/shared-location';
 import {subscribeTheme,readTheme,serverTheme,writeTheme,subscribeNetwork,readNetwork,serverNetwork} from '@/lib/browser-preferences';
@@ -53,13 +54,15 @@ export default function Home(){
     if(!navigator.geolocation){setGeoState('Bu tarayıcı konumu desteklemiyor. İl veya ilçe seçerek devam edebilirsin.');return;}
     setLocationPending(true);
     setGeoState('Yakınındaki eczaneler aranıyor…');
-    navigator.geolocation.getCurrentPosition(async p=>{
+    void getPositionWithTimeoutRetry(navigator.geolocation,()=>{
+      if(selectionGuard.current.isCurrent(attempt))setGeoState('Konum aranıyor… Biraz daha bekleyelim.');
+    }).then(async p=>{
       if(!selectionGuard.current.isCurrent(attempt))return;
       const lat=p.coords.latitude,lng=p.coords.longitude;
       if(!Number.isFinite(lat)||!Number.isFinite(lng)||lat<35||lat>43||lng<25||lng>45){setGeoState('Türkiye içindeki konumlar destekleniyor. İl veya ilçe seçerek devam edebilirsin.');setLocationPending(false);return;}
       try{const r=await fetch(`/api/location?lat=${lat}&lng=${lng}`);const d=await r.json() as Location&{error?:string};if(!r.ok||!d.city)throw new Error();if(!selectionGuard.current.isCurrent(attempt))return;const resolved={...d,lat,lng,accuracy:p.coords.accuracy};writeLocationCache(resolved);setLocation(resolved);setGeoState('');setLocOpen(false);}
       catch{if(!selectionGuard.current.isCurrent(attempt))return;setGeoState('Konumun bölgesi bulunamadı. İl veya ilçe seçerek devam edebilirsin.');setLocationPending(false);}
-    },failure=>{if(!selectionGuard.current.isCurrent(attempt))return;if(failure.code===1)clearLocationCache();setGeoState(failure.code===1?'Konum izni verilmedi. İl veya ilçe seçerek devam edebilirsin.':failure.code===3?'Konum alma süresi doldu. İl veya ilçe seçebilirsin.':'Konum alınamadı. İl veya ilçe seçebilirsin.');setLocationPending(false);},{timeout:10000,maximumAge:5*60*1000});
+    }).catch((failure:GeolocationPositionError)=>{if(!selectionGuard.current.isCurrent(attempt))return;if(failure.code===1)clearLocationCache();setGeoState(failure.code===1?'Konum izni verilmedi. İl veya ilçe seçerek devam edebilirsin.':failure.code===3?'Konum alınamadı. Tekrar deneyebilir veya il/ilçe seçebilirsin.':'Konum alınamadı. İl veya ilçe seçebilirsin.');setLocationPending(false);});
   },[locationPending,setLocation]);
   useEffect(()=>{if(sharedLocationRequest.current)return;sharedLocationRequest.current=true;const coordinates=parseSharedCoordinates(window.location.search);if(!coordinates)return;initialLocationRequest.current=true;const attempt=selectionGuard.current.begin();void fetch(`/api/location?lat=${coordinates.lat}&lng=${coordinates.lng}`).then(r=>r.json() as Promise<Location>).then(d=>{if(d.city&&selectionGuard.current.isCurrent(attempt))setLocation({...d,...coordinates});}).catch(()=>{});},[setLocation]);
   useEffect(()=>{let active=true;let permissionStatus:PermissionStatus|undefined;let cached:Location|null=null;if(!restoredLocationCache.current){restoredLocationCache.current=true;cached=readLocationCache();}void(async()=>{if(!navigator.permissions){await Promise.resolve();if(active&&cached)setLocation(cached);return;}try{const permission=await navigator.permissions.query({name:'geolocation'});if(!active)return;permissionStatus=permission;const resume=()=>{if(permission.state==='granted'){if(!initialLocationRequest.current){if(cached)setLocation(cached);requestDeviceLocation();}}else if(permission.state==='denied')clearLocationCache();};resume();permission.onchange=resume;}catch{}})();return()=>{active=false;if(permissionStatus)permissionStatus.onchange=null;};},[requestDeviceLocation,setLocation]);
