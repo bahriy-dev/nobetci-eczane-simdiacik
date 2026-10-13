@@ -741,30 +741,42 @@ export default function Home() {
             <small>NÖBETÇİ ECZANE</small>
           </span>
         </Link>
-        <button
-          className="location"
-          onClick={() => setLocOpen(true)}
-          aria-label={
-            locationChosen
-              ? "Seçili bölge: " + location.label + ". Bölgeyi değiştir."
-              : "Konum seç"
-          }
-        >
-          <MapPin size={16} />
-          <span>
-            {locationChosen
-              ? location.label.split(",").slice(0, 2).join(",")
-              : "Konum seç"}
-          </span>
-          <ChevronDown size={14} />
-        </button>
-        <button
-          className="icon"
-          onClick={changeTheme}
-          aria-label={dark ? "Açık temaya geç" : "Koyu temaya geç"}
-        >
-          {dark ? <Sun size={19} /> : <Moon size={19} />}
-        </button>
+        <nav className="header-nav" aria-label="Hızlı rehber bağlantıları">
+          <Link href="/nobetci-eczane-rehberi">Rehber</Link>
+          <button
+            type="button"
+            className="header-nav-btn"
+            onClick={() => setHelpOpen(true)}
+          >
+            Nasıl kullanılır?
+          </button>
+        </nav>
+        <div className="header-actions">
+          <button
+            className="location"
+            onClick={() => setLocOpen(true)}
+            aria-label={
+              locationChosen
+                ? "Seçili bölge: " + location.label + ". Bölgeyi değiştir."
+                : "Konum seç"
+            }
+          >
+            <MapPin size={16} />
+            <span>
+              {locationChosen
+                ? location.label.split(",").slice(0, 2).join(",")
+                : "Konum seç"}
+            </span>
+            <ChevronDown size={14} />
+          </button>
+          <button
+            className="icon"
+            onClick={changeTheme}
+            aria-label={dark ? "Açık temaya geç" : "Koyu temaya geç"}
+          >
+            {dark ? <Sun size={19} /> : <Moon size={19} />}
+          </button>
+        </div>
       </header>
       <main className="pharmacy-main" id="eczaneler" tabIndex={-1}>
         <h1 className="sr-only">Yakınındaki nöbetçi eczaneleri bul</h1>
