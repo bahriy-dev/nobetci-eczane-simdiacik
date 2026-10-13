@@ -1,6 +1,7 @@
 /** Railway uses Next.js; the retained Sites preview uses vite.config.ts. */
 const nextConfig={
  poweredByHeader:false,
+ async redirects(){return [{source:'/:path*',has:[{type:'host',value:'www.simdiacik.com'}],destination:'https://simdiacik.com/:path*',permanent:true}];},
  async headers(){return [{source:'/:path*',headers:[
   {key:'X-Content-Type-Options',value:'nosniff'},
   {key:'X-Frame-Options',value:'DENY'},

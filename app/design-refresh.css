@@ -114,12 +114,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .pharmacy-main { width: min(1280px, 100%); padding: 0 32px; }
 .location-start {
   position: relative;
-  display: grid;
-  align-content: center;
-  min-height: 410px;
+  display: flex;
+  min-height: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
   max-width: none;
-  margin: 42px 0 64px;
-  padding: clamp(34px, 7vw, 76px);
+  margin: 24px 0 34px;
+  padding: clamp(25px, 4vw, 42px);
   overflow: hidden;
   border: 1px solid #d9e5d9;
   border-radius: 28px;
@@ -128,37 +130,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     linear-gradient(125deg, #fffefa 15%, #f4f7ef 100%);
   box-shadow: var(--shadow-soft);
 }
-.location-start::after {
-  position: absolute;
-  right: 8%;
-  bottom: -125px;
-  width: 330px;
-  height: 330px;
-  border: 1px solid rgba(23, 97, 79, .13);
-  border-radius: 50%;
-  box-shadow: 0 0 0 30px rgba(23, 97, 79, .035), 0 0 0 64px rgba(23, 97, 79, .025);
-  content: "";
-  pointer-events: none;
-}
-.location-start::before {
-  position: absolute;
-  right: 17%;
-  bottom: 16%;
-  width: 90px;
-  height: 90px;
-  border: 1px solid rgba(23, 97, 79, .17);
-  border-radius: 50%;
-  background: rgba(255, 254, 250, .45);
-  content: "";
-}
+.location-start::after, .location-start::before { display: none; }
 .location-start h2 {
   position: relative;
   z-index: 1;
   max-width: 620px;
-  margin: 0 0 16px;
+  margin: 0 0 10px;
   color: #19362f;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(38px, 5.2vw, 66px);
+  font-size: clamp(30px, 3.8vw, 46px);
   font-weight: 500;
   letter-spacing: -.052em;
   line-height: 1.04;
@@ -167,13 +147,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   position: relative;
   z-index: 1;
   max-width: 430px;
-  margin: 0 0 27px;
+  margin: 0;
   color: #61736a;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.65;
 }
-.location-start .primary { position: relative; z-index: 1; width: fit-content; min-height: 52px; padding: 0 22px; border-radius: 12px; }
+.location-start-copy, .location-start-actions { position: relative; z-index: 1; }
+.location-start-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 16px; }
+.location-start .primary { width: fit-content; min-height: 48px; padding: 0 19px; border-radius: 12px; }
 .location-start .primary:hover { transform: translateY(-1px); }
+.location-manual { min-height: 44px; padding: 0 2px; color: var(--primary); font-size: 12px; font-weight: 650; text-decoration: underline; text-decoration-color: rgba(23, 97, 79, .35); text-underline-offset: 4px; }
+.location-start-status { position: absolute !important; right: 42px; bottom: 8px; max-width: 48% !important; color: #8a4d2b !important; font-size: 11px !important; text-align: right; }
 
 .primary {
   min-height: 46px;
@@ -508,12 +492,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .header .location > svg:last-child { display: none; }
   .header .icon { width: 38px; min-width: 38px; height: 38px; border-color: transparent; background: transparent; }
   .pharmacy-main { padding: 0 18px; }
-  .location-start { min-height: 360px; margin: 18px 0 42px; padding: 34px 27px; border-radius: 22px; }
-  .location-start::after { right: -102px; bottom: -120px; width: 255px; height: 255px; }
-  .location-start::before { right: 18px; bottom: 39px; width: 72px; height: 72px; }
-  .location-start h2 { max-width: 420px; font-size: clamp(38px, 10vw, 52px); }
-  .location-start p { max-width: 300px; font-size: 14px; }
-  .location-start .primary { min-height: 48px; }
+  .location-start { align-items: flex-start; flex-direction: column; gap: 18px; margin: 14px 0 24px; padding: 24px 20px; border-radius: 19px; }
+  .location-start h2 { max-width: 420px; font-size: clamp(30px, 8vw, 38px); }
+  .location-start p { max-width: 300px; font-size: 13px; }
+  .location-start-actions { width: 100%; align-items: center; gap: 17px; }
+  .location-start .primary { min-height: 46px; }
+  .location-start-status { position: relative !important; right: auto; bottom: auto; max-width: 100% !important; margin-top: -8px !important; text-align: left; }
   .pharmacy-results { padding-top: 20px; }
   .results-toolbar { display: block; margin-bottom: 20px; padding: 19px 17px 16px; border-radius: 17px; }
   .results-toolbar .section-heading { align-items: flex-start; margin-bottom: 12px !important; }

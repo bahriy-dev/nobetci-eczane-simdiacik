@@ -10,7 +10,7 @@ export const metadata:Metadata={
  alternates:{canonical:'/'},
  icons:{icon:'/favicon.svg',shortcut:'/favicon.svg',apple:'/apple-touch-icon.png'},
  robots:{index:siteIndexable,follow:true,googleBot:{index:siteIndexable,follow:true,'max-image-preview':'large','max-snippet':-1,'max-video-preview':-1}},
- ...(process.env.GOOGLE_SITE_VERIFICATION?{verification:{google:process.env.GOOGLE_SITE_VERIFICATION}}:{}),
+ verification:{google:'3_NL8HsP20TrL6eNlKwpIYvkSYAkSb1vxV1-P6xrX3I'},
  openGraph:{type:'website',locale:'tr_TR',url:siteOrigin,siteName:'Şimdi Açık',title:'Yakınındaki nöbetçi eczaneyi bul',description:siteDescription,images:[{url:'/og-image.png',width:1200,height:630,alt:'Şimdi Açık — Yakınındaki nöbetçi eczaneler'}]},
  twitter:{card:'summary_large_image',title:'Şimdi Açık — Nöbetçi Eczane Bul',description:siteDescription,images:['/og-image.png']},
  referrer:'strict-origin-when-cross-origin',formatDetection:{telephone:false}
