@@ -124,7 +124,7 @@ export const VERIFIED_PHARMACY_DUTY_SOURCES: readonly Readonly<VerifiedDutyList 
   {provinceId: 7, name: 'Antalya Eczacı Odası', url: 'https://www.antalyaeo.org.tr/tr/nobetci-eczaneler', evidenceUrl: 'https://www.antalyaeo.org.tr/tr/nobetci-eczaneler'},
   {provinceId: 16, name: 'Bursa Eczacı Odası', url: 'https://www.beo.org.tr/nobetci-eczaneler', evidenceUrl: 'https://www.beo.org.tr/nobetci-eczaneler'},
   {provinceId: 26, name: 'Eskişehir Eczacı Odası', url: 'https://www.eskisehireo.org.tr/nobetkarti', evidenceUrl: 'https://www.eskisehireo.org.tr/nobetkarti'},
-  {provinceId: 27, name: 'Gaziantep Eczacı Odası', url: 'https://www.gaziantepeo.org.tr/nobet-karti', evidenceUrl: 'https://www.gaziantepeo.org.tr/nobet-karti'},
+  {provinceId: 27, name: 'Gaziantep Eczacı Odası', url: 'https://www.gaziantepeo.org.tr/nobetci-eczaneler/', evidenceUrl: 'https://www.gaziantepeo.org.tr/nobet-karti'},
   {provinceId: 33, name: 'Mersin Eczacı Odası', url: 'https://www.mersineczaciodasi.org.tr/nobetci-eczaneler', evidenceUrl: 'https://www.mersineczaciodasi.org.tr/nobetci-eczaneler'},
   {provinceId: 34, name: 'İstanbul Eczacı Odası', url: 'https://www.istanbuleczaciodasi.org.tr/nobetci-eczane/', evidenceUrl: 'https://www.istanbuleczaciodasi.org.tr/nobetci-eczane/'},
   {provinceId: 35, name: 'İzmir Büyükşehir Belediyesi', url: 'https://www.izmir.bel.tr/tr/NobetciEczane/27', evidenceUrl: 'https://www.izmir.bel.tr/tr/NobetciEczane/27'},

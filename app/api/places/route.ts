@@ -1,5 +1,63 @@
-import {z} from 'zod';
-import {categoryNames} from '@/lib/places';
-import {searchPlaces} from '@/lib/providers';
-const schema=z.object({lat:z.coerce.number().min(35).max(43),lng:z.coerce.number().min(25).max(45),radius:z.coerce.number().min(.5).max(20).default(10),category:z.enum(categoryNames).default('Eczane'),city:z.string().trim().min(2).max(60).default('İstanbul')});
-export async function GET(request:Request){const params=new URL(request.url).searchParams;if(params.getAll('category').some(category=>category!=='Eczane'))return Response.json({error:'Bu hizmet yalnızca nöbetçi eczaneleri gösterir.'},{status:400});const parsed=schema.safeParse(Object.fromEntries(params));if(!parsed.success)return Response.json({error:'Türkiye içinde geçerli bir konum ve 0,5–20 km mesafe seç.'},{status:400});try{const data=await searchPlaces({...parsed.data,demo:false,query:''});return Response.json(data,{headers:{'Cache-Control':'no-store'}})}catch(error){console.error('places_source_failed',{city:parsed.data.city,category:parsed.data.category,reason:error instanceof Error?error.name:'Unknown',message:error instanceof Error?error.message.slice(0,160):'Source failed'});return Response.json({error:'Güncel nöbet kaynağına ulaşamadık. Eski veya örnek eczane bilgisi gösterilmiyor. Resmî kaynağı açabilir ya da tekrar deneyebilirsin.'},{status:502})}}
+import { z } from "zod";
+import { categoryNames } from "@/lib/places";
+import { searchPlaces } from "@/lib/providers";
+import { classifySourceFailure } from "@/lib/source-request";
+import { getPharmacySource } from "@/lib/pharmacy-sources";
+import {
+  createRequestRateLimiter,
+  rateLimitResponse,
+  requestRateLimitKey,
+} from "@/lib/request-rate-limit";
+const schema = z.object({
+  lat: z.coerce.number().min(35).max(43),
+  lng: z.coerce.number().min(25).max(45),
+  radius: z.coerce.number().min(0.5).max(20).default(10),
+  category: z.enum(categoryNames).default("Eczane"),
+  city: z.string().trim().min(2).max(60).default("İstanbul"),
+});
+const allowSearch = createRequestRateLimiter({ limit: 60, windowMs: 60_000 });
+export async function GET(request: Request) {
+  const params = new URL(request.url).searchParams;
+  if (params.getAll("category").some((category) => category !== "Eczane"))
+    return Response.json(
+      { error: "Bu hizmet yalnızca nöbetçi eczaneleri gösterir." },
+      { status: 400 },
+    );
+  const parsed = schema.safeParse(Object.fromEntries(params));
+  if (!parsed.success)
+    return Response.json(
+      { error: "Türkiye içinde geçerli bir konum ve 0,5–20 km mesafe seç." },
+      { status: 400 },
+    );
+  const rate = allowSearch(requestRateLimitKey(request));
+  if (!rate.allowed) return rateLimitResponse(rate.retryAfterSeconds);
+  try {
+    const data = await searchPlaces({ ...parsed.data, demo: false, query: "" });
+    return Response.json(data, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    const failure = classifySourceFailure(error);
+    const official = getPharmacySource(parsed.data.city);
+    console.error("places_source_failed", {
+      city: parsed.data.city,
+      kind: failure.kind,
+    });
+    return Response.json(
+      {
+        state: "source-error",
+        errorKind: failure.kind,
+        sourceUrl: official.url,
+        error:
+          "Güncel eczane kayıtları alınamadı. Tekrar dene veya resmî nöbet listesini aç.",
+      },
+      {
+        status: 502,
+        headers: {
+          "Cache-Control": "no-store",
+          ...(failure.retryAfter
+            ? { "Retry-After": String(failure.retryAfter) }
+            : {}),
+        },
+      },
+    );
+  }
+}

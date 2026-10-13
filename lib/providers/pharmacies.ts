@@ -1,16 +1,17 @@
+import {requestSource} from '../source-request';
 import {z} from 'zod';
 import {distanceKm,normalized,type Place,type PlacesProvider,type PlacesResult,type SearchParams} from '../places';
 import {searchAnkaraPharmacies} from './ankara';
 import {kayseriPharmacyProvider} from './kayseri';
 import {konyaPharmacyProvider} from './konya';
 import {samsunPharmacyProvider} from './samsun';
-import {gaziantepPharmacyProvider} from './gaziantep';
+import {searchGaziantepChamber} from './gaziantep-chamber';
 import {getPharmacySource} from '../pharmacy-sources';
 
 export const ISTANBUL_SOURCE_URL='https://www.istanbuleczaciodasi.org.tr/nobetci-eczane/';
 export const IZMIR_SOURCE_URL='https://www.izmir.bel.tr/tr/NobetciEczane/27';
 const izmirEndpoint='https://openapi.izmir.bel.tr/api/ibb/nobetcieczaneler';
-const get=async(url:string,init?:RequestInit)=>{const response=await fetch(url,{...init,cache:'no-store',signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error('Resmî nöbet kaynağına ulaşılamadı.');return response};
+const get=requestSource;
 const text=(maximum:number,required=true)=>z.string().trim().min(required?1:0).max(maximum).refine(value=>!/^(?:undefined|null)$/i.test(value));
 const object=(value:unknown):value is Record<string,unknown>=>Boolean(value)&&typeof value==='object'&&!Array.isArray(value);
 const istanbulEnvelope=z.object({error:z.literal(0),eczaneler:z.array(z.unknown()).max(2000)});
@@ -141,7 +142,7 @@ export const pharmacyProvider:PlacesProvider={async search(params){
   if(city==='kayseri')return kayseriPharmacyProvider.search(params);
   if(city==='konya')return konyaPharmacyProvider.search(params);
   if(city==='samsun'||city==='sinop')return samsunPharmacyProvider.search(params);
-  if(city==='gaziantep')return gaziantepPharmacyProvider.search(params);
+  if(city==='gaziantep')return searchGaziantepChamber(params);
   if(city==='istanbul'||city==='yalova'){
     const html=await(await get(ISTANBUL_SOURCE_URL)).text();
     const token=html.match(/id="h"\s+value="([^"]+)"/)?.[1];
