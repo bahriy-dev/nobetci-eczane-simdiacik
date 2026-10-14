@@ -53,6 +53,7 @@ export function SiteFooter({
       <div
         className="footer-highlights"
         aria-label="Güven ve acil durum bilgilendirmesi"
+        tabIndex={0}
       >
         <div className="highlight-item">
           <span className="highlight-icon">

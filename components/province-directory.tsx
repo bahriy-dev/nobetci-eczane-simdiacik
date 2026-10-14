@@ -9,7 +9,11 @@ const provinces = [...PHARMACY_CHAMBERS].sort((a, b) =>
   a.province.localeCompare(b.province, "tr"),
 );
 
-export function ProvinceDirectory() {
+export function ProvinceDirectory({
+  locationGranted = false,
+}: {
+  locationGranted?: boolean;
+}) {
   const [provinceId, setProvinceId] = useState("");
   const selected = provinces.find(
     (province) => String(province.provinceId) === provinceId,
@@ -25,11 +29,16 @@ export function ProvinceDirectory() {
       aria-labelledby="province-directory-title"
     >
       <div className="province-directory-copy">
-        <span className="province-directory-kicker">
-          <MapPin size={14} /> Konum izni gerekmez
-        </span>
+        {!locationGranted && (
+          <span className="province-directory-kicker">
+            <MapPin size={14} /> Konum izni gerekmez
+          </span>
+        )}
         <h2 id="province-directory-title">İline göre nöbetçi eczane bul</h2>
-        <p>İlini seç, güncel nöbet listesine ulaş. Konum paylaşman gerekmez.</p>
+        <p>
+          İlini seç, güncel nöbet listesine ulaş.
+          {!locationGranted && " Konum paylaşman gerekmez."}
+        </p>
       </div>
       <div className="province-directory-picker">
         <label htmlFor="province-directory-select">İl seç</label>

@@ -25,6 +25,7 @@ import type { Place } from "@/lib/places";
 type Props = {
   place: Place;
   now: number;
+  hideDistance?: boolean;
   onClose: () => void;
   onCopy: () => void;
   onCopyPhone: () => void;
@@ -34,6 +35,7 @@ type Props = {
 export function PharmacyDetail({
   place: p,
   now,
+  hideDistance = false,
   onClose,
   onCopy,
   onCopyPhone,
@@ -51,9 +53,11 @@ export function PharmacyDetail({
         <span className="detail-avatar">E</span>
         <div>
           <PharmacyStatus p={p} now={now} />
-          <span className="detail-distance">
-            {pharmacyDistance(p)} uzaklıkta
-          </span>
+          {!hideDistance && (
+            <span className="detail-distance">
+              {pharmacyDistance(p)} uzaklıkta
+            </span>
+          )}
         </div>
       </div>
       <SheetTitle className="detail-title">{p.name}</SheetTitle>

@@ -1,3 +1,4 @@
+import { istanbulOverview } from "@/lib/default-search";
 import { z } from "zod";
 import { categoryNames } from "@/lib/places";
 import { searchPlaces } from "@/lib/providers";
@@ -13,6 +14,7 @@ const schema = z.object({
   lng: z.coerce.number().min(25).max(45),
   radius: z.coerce.number().min(0.5).max(20).default(10),
   category: z.enum(categoryNames).default("Eczane"),
+  scope: z.enum(["nearby", "province"]).default("nearby"),
   city: z.string().trim().min(2).max(60).default("İstanbul"),
 });
 const allowSearch = createRequestRateLimiter({ limit: 60, windowMs: 60_000 });
@@ -24,7 +26,10 @@ export async function GET(request: Request) {
       { status: 400 },
     );
   const parsed = schema.safeParse(Object.fromEntries(params));
-  if (!parsed.success)
+  if (
+    !parsed.success ||
+    (parsed.data.scope === "province" && parsed.data.city !== "İstanbul")
+  )
     return Response.json(
       { error: "Türkiye içinde geçerli bir konum ve 0,5–20 km mesafe seç." },
       { status: 400 },
@@ -32,7 +37,11 @@ export async function GET(request: Request) {
   const rate = allowSearch(requestRateLimitKey(request));
   if (!rate.allowed) return rateLimitResponse(rate.retryAfterSeconds);
   try {
-    const data = await searchPlaces({ ...parsed.data, demo: false, query: "" });
+    const params =
+      parsed.data.scope === "province"
+        ? { ...parsed.data, ...istanbulOverview }
+        : parsed.data;
+    const data = await searchPlaces({ ...params, demo: false, query: "" });
     return Response.json(data, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     const failure = classifySourceFailure(error);
