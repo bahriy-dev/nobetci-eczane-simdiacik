@@ -1164,3 +1164,29 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .service-error p { margin: 15px 0 24px; color: var(--muted-foreground); line-height: 1.7; }
 .service-error > div { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
 .service-error .primary { min-height: 44px; padding: 0 18px; border-radius: 10px; }
+
+/* Keep live result changes from moving the page to a footer scroll anchor. */
+main, .province-directory, .site-footer { overflow-anchor: none; }
+@media (max-width: 800px) {
+  .site-footer .footer-highlights {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 2px;
+    padding: 3px 2px 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+  .site-footer .footer-highlights .highlight-item {
+    flex: 0 0 min(82%, 310px);
+    min-width: 0;
+    scroll-snap-align: start;
+    align-self: stretch;
+  }
+}
+
+.province-overview-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.province-overview-toolbar .location-manual { padding: 10px 14px; border: 1px solid var(--border); border-radius: 12px; font-size: 12px; white-space: nowrap; text-decoration: none; }

@@ -13,6 +13,7 @@ type Props = {
   now: number;
   highlighted: boolean;
   closest: boolean;
+  hideDistance?: boolean;
   onOpen: () => void;
   onHover: (id: string | null) => void;
   onCopy: () => void;
@@ -23,6 +24,7 @@ export function PharmacyCard({
   now,
   highlighted,
   closest,
+  hideDistance = false,
   onOpen,
   onHover,
   onCopy,
@@ -54,12 +56,14 @@ export function PharmacyCard({
           </h3>
           <div className="card-status-row">
             <PharmacyStatus p={p} now={now} />
-            <span
-              title="Doğrudan ölçülen yaklaşık mesafe; yol uzunluğu farklı olabilir."
-              aria-label={pharmacyDistance(p) + " yaklaşık doğrusal mesafe"}
-            >
-              {pharmacyDistance(p)}
-            </span>
+            {!hideDistance && (
+              <span
+                title="Doğrudan ölçülen yaklaşık mesafe; yol uzunluğu farklı olabilir."
+                aria-label={pharmacyDistance(p) + " yaklaşık doğrusal mesafe"}
+              >
+                {pharmacyDistance(p)}
+              </span>
+            )}
             {closest && <span className="closest">En yakın</span>}
           </div>
         </div>

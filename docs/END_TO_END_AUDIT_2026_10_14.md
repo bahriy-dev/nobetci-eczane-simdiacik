@@ -14,7 +14,7 @@
 
 ## Doğrulama
 
-- 125 otomatik test: tamamı başarılı. Yeni testler sekmeler arası değil aynı sekmede tek kullanımlık bölge geçişini, tekrar okumayı ve geçersiz/gelecek/eski kaydı kapsar.
+- 127 otomatik test: tamamı başarılı. Yeni testler sekmeler arası değil aynı sekmede tek kullanımlık bölge geçişini, tekrar okumayı ve geçersiz/gelecek/eski kaydı kapsar.
 - ESLint: hata ve uyarı yok. Next.js üretim derlemesi ve TypeScript kontrolü başarılı.
 - Üretim bağımlılıkları güvenlik taraması: raporlanan açık yok. Bu, uygulamanın tüm güvenlik risklerinin bittiği anlamına gelmez.
 - 375 px mobil tarayıcı: Ankara → Çankaya → 13 güncel kayıt; seçilen bölge doğru taşındı. Aramayla sıfır sonuç ve filtreleri temizleyerek geri dönüş çalıştı. Google etiketleri analitik izni olmadan yüklenmedi.
@@ -26,3 +26,9 @@
 Dokuz il için doğrudan veri sağlayıcısı vardır; diğer iller resmî oda bağlantılarına yönlendirilir. Resmî kaynakların erişimi ve nöbet tarihi her istekte doğrulanır. 14 Ekim sabahı canlı kontrolde İzmir, Samsun/Sinop ve Gaziantep kaynakları doğrulanamadı; bu durum boş listeye veya eski kayda çevrilmedi. Kaynağın erişimi/tarih bilgisini doğrulamak saha teyidinin yerine geçmez.
 
 KVKK veri sorumlusu resmî unvan/adres bilgisi ve veri kaynaklarının yeniden yayın lisansı dış teyit gerektirir. Gerçek cihazlarla VoiceOver/TalkBack ve saha çalışması yapılmış gibi raporlanmaz.
+
+## Kullanım akışında son düzenlemeler
+
+İlk ziyaret İstanbul genelindeki güncel nöbetçi eczanelerle başlar; konum seçimi kullanıcı eylemiyle açılır. Daha önce seçilip hatırlanan bölge ve verilmiş GPS izni önceliğini korur. İl genelindeki liste 20 km ile kesilmez, İstanbul dışındaki kayıtlar sağlayıcı tarafından filtrelenir; il geneli görünümünde kişiye göre mesafe iddiası gösterilmez.
+
+Konum izni verilmişse il rehberindeki “Konum izni gerekmez” etiketi ve tekrar eden açıklama gizlenir. Mobil footer bilgi kartları dokunmayla yatay kayar ve kart başlangıcına oturur. Konum penceresi kapanırken odak geri dönüşünün aşağı kaydırması önlenir; canlı sonuç değişimleri sayfa kaydırma çıpası oluşturmaz.
