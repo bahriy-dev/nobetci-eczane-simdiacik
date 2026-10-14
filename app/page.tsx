@@ -29,6 +29,8 @@ import {
   ExternalLink,
   ArrowUpRight,
   Share2,
+  Pause,
+  Play,
 } from "lucide-react";
 import {
   Sheet,
@@ -122,6 +124,7 @@ export default function Home() {
   const setHasPhone = (value: boolean) => updateFilters({ hasPhone: value });
   const setRadius = (value: string) => updateFilters({ radius: value });
   const setSort = (value: string) => updateFilters({ sort: value });
+  const [marqueePaused, setMarqueePaused] = useState(false);
   const [provinceOverview, setProvinceOverview] = useState(true);
   const [locationPermissionGranted, setLocationPermissionGranted] =
     useState(false);
@@ -853,27 +856,6 @@ export default function Home() {
               <div className="section-heading">
                 <div className="results-heading-copy">
                   <h2>Nöbetçi eczaneler</h2>
-                  <p className="results-location">
-                    <MapPin size={13} />
-                    <span>
-                      {locationChosen
-                        ? location.label.split(",").slice(0, 2).join(",")
-                        : "Bölgeni seç"}
-                    </span>
-                    {data?.fetchedAt &&
-                      Number.isFinite(Date.parse(data.fetchedAt)) && (
-                        <span className="results-checked" title={data.source}>
-                          Kaynak kontrolü{" "}
-                          {new Date(data.fetchedAt).toLocaleString("tr-TR", {
-                            timeZone: "Europe/Istanbul",
-                            day: "2-digit",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      )}
-                  </p>
                 </div>
                 <div className="view-controls">
                   <button
@@ -900,6 +882,36 @@ export default function Home() {
                     <SlidersHorizontal size={17} />
                     <span>Filtrele</span>
                   </button>
+                </div>
+              </div>
+              <div className="results-context-card">
+                <span className="results-context-icon" aria-hidden="true">
+                  <MapPin size={19} />
+                </span>
+                <div className="results-context-body">
+                  <strong>{location.label}</strong>
+                  {data?.fetchedAt &&
+                  Number.isFinite(Date.parse(data.fetchedAt)) ? (
+                    <span
+                      className="results-context-updated"
+                      title={data.source}
+                    >
+                      Son kontrol <span aria-hidden="true">·</span>{" "}
+                      <time dateTime={data.fetchedAt}>
+                        {new Date(data.fetchedAt).toLocaleString("tr-TR", {
+                          timeZone: "Europe/Istanbul",
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </time>
+                    </span>
+                  ) : (
+                    <span className="results-context-updated">
+                      Liste güncelleniyor…
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="results-summary" aria-live="polite">
@@ -1020,6 +1032,63 @@ export default function Home() {
                 </div>
               )}
             </div>
+            {results.length > 1 && (
+              <div
+                className="pharmacy-marquee"
+                role="region"
+                aria-label="Güncel nöbet listesindeki eczaneler"
+                data-paused={marqueePaused}
+              >
+                <div className="pharmacy-marquee-window">
+                  <div className="pharmacy-marquee-track">
+                    <div className="pharmacy-marquee-group">
+                      {results.slice(0, 12).map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => choosePharmacy(p)}
+                        >
+                          <span aria-hidden="true" />
+                          {p.name
+                            .toLocaleLowerCase("tr-TR")
+                            .replace(/(^|\s)\S/g, (c) =>
+                              c.toLocaleUpperCase("tr-TR"),
+                            )}
+                        </button>
+                      ))}
+                    </div>
+                    <div
+                      className="pharmacy-marquee-group pharmacy-marquee-copy"
+                      aria-hidden="true"
+                    >
+                      {results.slice(0, 12).map((p) => (
+                        <span className="marquee-name" key={p.id}>
+                          <span />
+                          {p.name
+                            .toLocaleLowerCase("tr-TR")
+                            .replace(/(^|\s)\S/g, (c) =>
+                              c.toLocaleUpperCase("tr-TR"),
+                            )}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="marquee-toggle"
+                  onClick={() => setMarqueePaused((v) => !v)}
+                  aria-label={
+                    marqueePaused
+                      ? "Eczane şeridini oynat"
+                      : "Eczane şeridini duraklat"
+                  }
+                  aria-pressed={marqueePaused}
+                >
+                  {marqueePaused ? <Play size={14} /> : <Pause size={14} />}
+                </button>
+              </div>
+            )}
             {!online && (
               <div className="coverage-note" role="status">
                 İnternet bağlantısı yok. Güncel nöbet listesi için yeniden
