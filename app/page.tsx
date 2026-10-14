@@ -76,6 +76,7 @@ import {
   readLocationCache,
   writeLocationCache,
 } from "@/lib/location-cache";
+import { consumeRegionHandoff, readRegionHandoff } from "@/lib/region-handoff";
 import { parseSharedCoordinates } from "@/lib/shared-location";
 import { noResultsRecovery } from "@/lib/no-results-guidance";
 import {
@@ -303,15 +304,26 @@ export default function Home() {
       });
   }, [locationPending, setLocation]);
   useEffect(() => {
+    const parameters = new URLSearchParams(window.location.search);
+    const handoff =
+      parameters.get("selectedRegion") === "1" ? readRegionHandoff() : null;
+    void Promise.resolve().then(() => {
+      if (parameters.get("selectLocation") === "1") setLocOpen(true);
+      if (parameters.get("view") === "map") setMapMobile(true);
+    });
     const coordinates = parseSharedCoordinates(window.location.search);
-    const saved = coordinates ? null : readSavedRegion();
+    const saved = handoff ?? (coordinates ? null : readSavedRegion());
     if (saved) {
       const guard = selectionGuard.current;
       initialLocationRequest.current = true;
       const attempt = guard.begin();
       void Promise.resolve().then(() => {
         if (selectionGuard.current.isCurrent(attempt)) {
-          setRememberRegion(true);
+          if (handoff) {
+            consumeRegionHandoff();
+            clearSavedRegion();
+          }
+          setRememberRegion(!handoff);
           setLocation(saved);
         }
       });
