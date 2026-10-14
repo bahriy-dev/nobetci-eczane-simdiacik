@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { legalLinks } from '@/lib/legal-content';
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { legalLinks } from "@/lib/legal-content";
 import {
   Plus,
   ChevronDown,
@@ -12,8 +12,8 @@ import {
   Zap,
   PhoneCall,
   Mail,
-  ArrowUp
-} from 'lucide-react';
+  ArrowUp,
+} from "lucide-react";
 
 type Props = {
   sourceUrl?: string;
@@ -24,40 +24,43 @@ type Props = {
 };
 
 export function SiteFooter({
-  sourceUrl = 'https://teb.org.tr/odalar',
+  sourceUrl = "https://teb.org.tr/odalar",
   onDiscover,
   onMap,
   onLocation,
-  onHelp
+  onHelp,
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
 
   const toggleGroup = (key: string) => {
-    setOpen(prev => (prev === key ? null : key));
+    setOpen((prev) => (prev === key ? null : key));
   };
 
   const scrollToTop = (e: React.MouseEvent) => {
     e.preventDefault();
-    const anchor = document.getElementById('eczaneler');
+    const anchor = document.getElementById("eczaneler");
     if (anchor) {
-      anchor.scrollIntoView({ behavior: 'smooth' });
+      anchor.scrollIntoView({ behavior: "smooth" });
     } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   return (
     <footer className="site-footer">
       {/* Üst Güven ve Acil Durum Bilgilendirme Kartları */}
-      <div className="footer-highlights" aria-label="Güven ve acil durum bilgilendirmesi">
+      <div
+        className="footer-highlights"
+        aria-label="Güven ve acil durum bilgilendirmesi"
+      >
         <div className="highlight-item">
           <span className="highlight-icon">
             <ShieldCheck size={19} />
           </span>
           <div className="highlight-text">
-            <b>Resmî Teyitli Bilgi</b>
-            <p>Eczacı Odaları ve TEB onaylı nöbetçi listeleridir.</p>
+            <b>Resmî Kaynaklar</b>
+            <p>Eczacı odaları ve belediyelerin yayımladığı nöbet listeleri.</p>
           </div>
         </div>
 
@@ -66,8 +69,8 @@ export function SiteFooter({
             <Zap size={19} />
           </span>
           <div className="highlight-text">
-            <b>Hızlı & Reklamsız</b>
-            <p>Üyeliksiz, anında konumla en yakın eczaneye ulaş.</p>
+            <b>Üyeliksiz Erişim</b>
+            <p>Konumunla veya il ve ilçe seçerek eczaneni bul.</p>
           </div>
         </div>
 
@@ -96,10 +99,15 @@ export function SiteFooter({
             </span>
           </Link>
           <p className="brand-description">
-            Acil ilaç ve sağlık ihtiyaçlarında, bulunduğun konuma en yakın nöbetçi eczaneye saniyeler içinde güvenle ulaş.
+            Acil ilaç ve sağlık ihtiyaçlarında, bulunduğun konuma en yakın
+            nöbetçi eczaneye kolayca ulaş.
           </p>
           <div className="footer-contact">
-            <a href="mailto:info@simdiacik.com" className="footer-email-link" title="E-posta ile bize ulaşın">
+            <a
+              href="mailto:info@simdiacik.com"
+              className="footer-email-link"
+              title="E-posta ile bize ulaşın"
+            >
               <Mail size={15} />
               <span>info@simdiacik.com</span>
             </a>
@@ -107,22 +115,26 @@ export function SiteFooter({
         </div>
 
         {/* Eczaneni Bul */}
-        <div className="footer-group" data-open={open === 'find'}>
+        <div className="footer-group" data-open={open === "find"}>
           <h3>Eczaneni Bul</h3>
           <button
             type="button"
             className="footer-toggle"
-            aria-expanded={open === 'find'}
+            aria-expanded={open === "find"}
             aria-controls="footer-find-links"
-            onClick={() => toggleGroup('find')}
+            onClick={() => toggleGroup("find")}
           >
             <span>Eczaneni Bul</span>
             <ChevronDown size={18} />
           </button>
-          <nav id="footer-find-links" className="footer-links" aria-label="Eczane bağlantıları">
+          <nav
+            id="footer-find-links"
+            className="footer-links"
+            aria-label="Eczane bağlantıları"
+          >
             <Link
               href="/#eczaneler"
-              onClick={e => {
+              onClick={(e) => {
                 if (onDiscover) {
                   e.preventDefault();
                   onDiscover();
@@ -135,7 +147,7 @@ export function SiteFooter({
               type="button"
               onClick={() => {
                 if (onMap) onMap();
-                else router.push('/?view=map');
+                else router.push("/?view=map");
               }}
             >
               Haritada göster
@@ -144,7 +156,7 @@ export function SiteFooter({
               type="button"
               onClick={() => {
                 if (onLocation) onLocation();
-                else router.push('/');
+                else router.push("/?selectLocation=1");
               }}
             >
               İl ve ilçe seç
@@ -156,24 +168,28 @@ export function SiteFooter({
         </div>
 
         {/* Bilgi & Yardım */}
-        <div className="footer-group" data-open={open === 'help'}>
+        <div className="footer-group" data-open={open === "help"}>
           <h3>Bilgi ve Yardım</h3>
           <button
             type="button"
             className="footer-toggle"
-            aria-expanded={open === 'help'}
+            aria-expanded={open === "help"}
             aria-controls="footer-help-links"
-            onClick={() => toggleGroup('help')}
+            onClick={() => toggleGroup("help")}
           >
             <span>Bilgi ve Yardım</span>
             <ChevronDown size={18} />
           </button>
-          <nav id="footer-help-links" className="footer-links" aria-label="Bilgi ve yardım">
+          <nav
+            id="footer-help-links"
+            className="footer-links"
+            aria-label="Bilgi ve yardım"
+          >
             <button
               type="button"
               onClick={() => {
                 if (onHelp) onHelp();
-                else router.push('/nobetci-eczane-rehberi');
+                else router.push("/nobetci-eczane-rehberi");
               }}
             >
               Nasıl kullanılır?
@@ -188,20 +204,24 @@ export function SiteFooter({
         </div>
 
         {/* Yasal Bilgiler */}
-        <div className="footer-group" data-open={open === 'legal'}>
+        <div className="footer-group" data-open={open === "legal"}>
           <h3>Yasal Bilgiler</h3>
           <button
             type="button"
             className="footer-toggle"
-            aria-expanded={open === 'legal'}
+            aria-expanded={open === "legal"}
             aria-controls="footer-legal-links"
-            onClick={() => toggleGroup('legal')}
+            onClick={() => toggleGroup("legal")}
           >
             <span>Yasal Bilgiler</span>
             <ChevronDown size={18} />
           </button>
-          <nav id="footer-legal-links" className="footer-links" aria-label="Yasal bilgiler">
-            {legalLinks.map(link => (
+          <nav
+            id="footer-legal-links"
+            className="footer-links"
+            aria-label="Yasal bilgiler"
+          >
+            {legalLinks.map((link) => (
               <Link key={link.href} href={link.href}>
                 {link.label}
               </Link>
@@ -209,7 +229,11 @@ export function SiteFooter({
             <button
               type="button"
               className="cookie-settings-btn"
-              onClick={() => window.dispatchEvent(new Event('simdiacik:open-cookie-settings'))}
+              onClick={() =>
+                window.dispatchEvent(
+                  new Event("simdiacik:open-cookie-settings"),
+                )
+              }
             >
               Çerez tercihleri
             </button>
@@ -220,10 +244,21 @@ export function SiteFooter({
       {/* Alt Çubuk */}
       <div className="footer-bottom">
         <div className="footer-bottom-copy">
-          <span>© {new Date().getFullYear()} Şimdi Açık · Türkiye Nöbetçi Eczane Bulucu</span>
-          <small>Veriler ilgili Eczacı Odaları ve kamu açık veri servislerince sağlanır.</small>
+          <span>
+            © {new Date().getFullYear()} Şimdi Açık · Türkiye Nöbetçi Eczane
+            Bulucu
+          </span>
+          <small>
+            Veriler ilgili Eczacı Odaları ve kamu açık veri servislerince
+            sağlanır.
+          </small>
         </div>
-        <a href="#eczaneler" onClick={scrollToTop} className="footer-back-top" aria-label="Sayfanın başına dön">
+        <a
+          href="#eczaneler"
+          onClick={scrollToTop}
+          className="footer-back-top"
+          aria-label="Sayfanın başına dön"
+        >
           <span>Yukarı çık</span>
           <ArrowUp size={15} />
         </a>
