@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { istanbulOverview } from "@/lib/default-search";
 import {
   useEffect,
   useMemo,
@@ -121,12 +122,16 @@ export default function Home() {
   const setHasPhone = (value: boolean) => updateFilters({ hasPhone: value });
   const setRadius = (value: string) => updateFilters({ radius: value });
   const setSort = (value: string) => updateFilters({ sort: value });
+  const [provinceOverview, setProvinceOverview] = useState(true);
+  const [locationPermissionGranted, setLocationPermissionGranted] =
+    useState(false);
+  const locationOpener = useRef<HTMLElement | null>(null);
   const [rememberRegion, setRememberRegion] = useState(false);
   const [location, setLocationValue] = useState<Location>({
-      label: "",
-      city: "",
-      lat: 0,
-      lng: 0,
+      label: istanbulOverview.label,
+      city: istanbulOverview.city,
+      lat: istanbulOverview.lat,
+      lng: istanbulOverview.lng,
     }),
     [scrollTarget, setScrollTarget] = useState<string | null>(null),
     [geoState, setGeoState] = useState(""),
@@ -161,6 +166,7 @@ export default function Home() {
     location.lat,
     location.lng,
     location.city,
+    provinceOverview,
     radius,
     refresh,
   ]);
@@ -168,6 +174,7 @@ export default function Home() {
     location.lat,
     location.lng,
     location.city,
+    provinceOverview,
     radius,
   ]);
   const [resource, setResource] = useState<{
@@ -186,6 +193,7 @@ export default function Home() {
       ? selectedValue
       : null;
   const changeRadius = (next: string) => {
+    setProvinceOverview(false);
     setRadius(next);
     setLimit(8);
     setSelected(null);
@@ -196,6 +204,7 @@ export default function Home() {
   const selectionGuard = useRef(new SelectionGuard());
   const locationRequest = useRef<AbortController | null>(null);
   const setLocation = useCallback((next: Location) => {
+    setProvinceOverview(false);
     selectionGuard.current.invalidate();
     locationRequest.current?.abort();
     setLocationPending(false);
@@ -253,6 +262,7 @@ export default function Home() {
     })
       .then(async (p) => {
         if (!selectionGuard.current.isCurrent(attempt)) return;
+        setLocationPermissionGranted(true);
         const lat = p.coords.latitude,
           lng = p.coords.longitude;
         if (
@@ -369,6 +379,7 @@ export default function Home() {
         if (!active) return;
         permissionStatus = permission;
         const resume = () => {
+          setLocationPermissionGranted(permission.state === "granted");
           if (permission.state === "granted") {
             if (!initialLocationRequest.current) {
               if (cached) setLocation(cached);
@@ -417,6 +428,7 @@ export default function Home() {
           radius,
           city: location.city,
           category: "Eczane",
+          scope: provinceOverview ? "province" : "nearby",
         }),
       controller.signal,
     )
@@ -450,6 +462,7 @@ export default function Home() {
     location.lat,
     location.lng,
     location.city,
+    provinceOverview,
     radius,
     requestKey,
     searchContext,
@@ -500,7 +513,7 @@ export default function Home() {
     () =>
       filterPlaces(data?.places || [], {
         category: "Eczane",
-        radius: Number(radius),
+        radius: provinceOverview ? istanbulOverview.radius : Number(radius),
         onlyOpen: true,
         hasPhone,
         favoritesOnly: false,
@@ -508,11 +521,11 @@ export default function Home() {
         query: debounced,
         now,
       }).sort((a, b) =>
-        sort === "name"
+        provinceOverview || sort === "name"
           ? a.name.localeCompare(b.name, "tr")
           : a.distance - b.distance,
       ),
-    [data, radius, hasPhone, debounced, now, sort],
+    [data, radius, provinceOverview, hasPhone, debounced, now, sort],
   );
   const mapCenter = useMemo<[number, number]>(
     () => [location.lat, location.lng],
@@ -553,7 +566,7 @@ export default function Home() {
     unsupported,
     expired,
     hasFilters: Boolean(query.trim() || hasPhone),
-    radiusKm: Number(radius),
+    radiusKm: provinceOverview ? istanbulOverview.radius : Number(radius),
   });
   const sourceDelayed = Boolean(
     data?.fetchedAt &&
@@ -599,7 +612,9 @@ export default function Home() {
     clearSavedRegion();
     setRememberRegion(false);
     initialLocationRequest.current = true;
-    setLocation({ label: "", city: "", lat: 0, lng: 0 });
+    setLocation(istanbulOverview);
+    setProvinceOverview(true);
+    setLocOpen(false);
     setGeoState("");
     const url = new URL(window.location.href);
     url.searchParams.delete("lat");
@@ -658,24 +673,28 @@ export default function Home() {
         <Switch checked={hasPhone} onCheckedChange={setHasPhone} />
         Telefonu olanlar
       </label>
-      <Select value={radius} onValueChange={changeRadius}>
-        <SelectTrigger aria-label="Arama mesafesi" className="filter-select">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {["2", "5", "10", "20"].map((v) => (
-            <SelectItem key={v} value={v}>
-              {v} km içinde
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={sort} onValueChange={setSort}>
+      {!provinceOverview && (
+        <Select value={radius} onValueChange={changeRadius}>
+          <SelectTrigger aria-label="Arama mesafesi" className="filter-select">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {["2", "5", "10", "20"].map((v) => (
+              <SelectItem key={v} value={v}>
+                {v} km içinde
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+      <Select value={provinceOverview ? "name" : sort} onValueChange={setSort}>
         <SelectTrigger aria-label="Eczane sıralaması" className="filter-select">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="distance">En yakın</SelectItem>
+          {!provinceOverview && (
+            <SelectItem value="distance">En yakın</SelectItem>
+          )}
           <SelectItem value="name">A–Z</SelectItem>
         </SelectContent>
       </Select>{" "}
@@ -893,7 +912,7 @@ export default function Home() {
                         ? "Resmî liste"
                         : results.length + " eczane"}
                 </span>
-                {!loading && results[0] && (
+                {!provinceOverview && !loading && results[0] && (
                   <span
                     className="results-nearest"
                     title="Doğrudan ölçülen yaklaşık mesafe; yol uzunluğu farklı olabilir."
@@ -963,30 +982,43 @@ export default function Home() {
                 </form>
                 <div className="filter-options">{controls}</div>
               </div>
-              <div className="distance-toolbar">
-                <span className="distance-label">Arama mesafesi</span>
-                <div
-                  className="quick-distances"
-                  role="group"
-                  aria-label="Hızlı mesafe filtreleri"
-                >
-                  {["2", "5", "10", "20"].map((v) => (
-                    <button
-                      key={v}
-                      aria-pressed={radius === v}
-                      className={radius === v ? "on" : ""}
-                      onClick={() => changeRadius(v)}
-                    >
-                      {v} km
-                    </button>
-                  ))}
-                  {(query || hasPhone) && (
-                    <button className="clear-quick" onClick={clearFilters}>
-                      Filtreleri temizle <X size={12} />
-                    </button>
-                  )}
+              {provinceOverview ? (
+                <div className="distance-toolbar province-overview-toolbar">
+                  <span className="distance-label">Tüm İstanbul</span>
+                  <button
+                    type="button"
+                    className="location-manual"
+                    onClick={() => setLocOpen(true)}
+                  >
+                    Konumunu seç
+                  </button>
                 </div>
-              </div>
+              ) : (
+                <div className="distance-toolbar">
+                  <span className="distance-label">Arama mesafesi</span>
+                  <div
+                    className="quick-distances"
+                    role="group"
+                    aria-label="Hızlı mesafe filtreleri"
+                  >
+                    {["2", "5", "10", "20"].map((v) => (
+                      <button
+                        key={v}
+                        aria-pressed={radius === v}
+                        className={radius === v ? "on" : ""}
+                        onClick={() => changeRadius(v)}
+                      >
+                        {v} km
+                      </button>
+                    ))}
+                    {(query || hasPhone) && (
+                      <button className="clear-quick" onClick={clearFilters}>
+                        Filtreleri temizle <X size={12} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             {!online && (
               <div className="coverage-note" role="status">
@@ -1105,21 +1137,28 @@ export default function Home() {
                 ) : (
                   <>
                     <div className="pharmacy-list">
-                      {results.slice(0, limit).map((p, i) => (
-                        <PharmacyCard
-                          key={p.id}
-                          p={p}
-                          number={i + 1}
-                          now={now}
-                          highlighted={hover === p.id || focused === p.id}
-                          closest={sort === "distance" && i === 0}
-                          onOpen={() => choosePharmacy(p)}
-                          onHover={setHover}
-                          onCopy={() => void copyAddress(p)}
-                        />
-                      ))}
+                      {results
+                        .slice(0, provinceOverview ? results.length : limit)
+                        .map((p, i) => (
+                          <PharmacyCard
+                            key={p.id}
+                            p={p}
+                            number={i + 1}
+                            now={now}
+                            highlighted={hover === p.id || focused === p.id}
+                            closest={
+                              !provinceOverview &&
+                              sort === "distance" &&
+                              i === 0
+                            }
+                            hideDistance={provinceOverview}
+                            onOpen={() => choosePharmacy(p)}
+                            onHover={setHover}
+                            onCopy={() => void copyAddress(p)}
+                          />
+                        ))}
                     </div>
-                    {results.length > limit && (
+                    {!provinceOverview && results.length > limit && (
                       <button
                         className="load-more"
                         onClick={() => setLimit((x) => x + 8)}
@@ -1186,7 +1225,7 @@ export default function Home() {
           </section>
         )}
       </main>
-      <ProvinceDirectory />
+      <ProvinceDirectory locationGranted={locationPermissionGranted} />
       <SiteFooter
         sourceUrl={pharmacySource.url}
         onDiscover={() => {
@@ -1234,6 +1273,19 @@ export default function Home() {
         <DialogContent
           responsiveBottom
           className="location-dialog"
+          onOpenAutoFocus={() => {
+            locationOpener.current =
+              document.activeElement instanceof HTMLElement
+                ? document.activeElement
+                : null;
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            const target = locationOpener.current?.isConnected
+              ? locationOpener.current
+              : document.querySelector<HTMLElement>(".header .location");
+            target?.focus({ preventScroll: true });
+          }}
           showCloseButton={false}
         >
           <div className="panel-handle" aria-hidden="true" />
@@ -1396,6 +1448,7 @@ export default function Home() {
           {selected && (
             <PharmacyDetail
               place={selected}
+              hideDistance={provinceOverview}
               now={now}
               onClose={() => setSelected(null)}
               onCopy={() => void copyAddress(selected)}
