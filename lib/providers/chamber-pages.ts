@@ -32,6 +32,7 @@ export const CHAMBER_PAGES:Readonly<Record<string,ChamberPage>>=Object.freeze({
   kastamonu:page('https://kastamonueo.org.tr/nobetci-eczaneler/37','Kastamonu Eczacı Odası',[41.3765,33.777],['cankiri','karabuk']),
   cankiri:page('https://kastamonueo.org.tr/nobetci-eczaneler/18','Kastamonu Eczacı Odası · Çankırı',[40.5972,33.6213],['kastamonu','karabuk']),
   karabuk:page('https://kastamonueo.org.tr/nobetci-eczaneler/78','Kastamonu Eczacı Odası · Karabük',[41.1955,32.6231],['kastamonu','cankiri']),
+  izmir:page('https://www.izmireczaciodasi.org.tr/nobetci-eczaneler','İzmir Eczacı Odası',[38.4237,27.1428]),
   kirklareli:page('https://kirklarelieo.org.tr/nobetci-eczaneler','Kırklareli Eczacı Odası',[41.737,27.2236]),
   kocaeli:page('https://www.kocaelieo.org.tr/nobetci-eczaneler','Kocaeli Eczacı Odası',[40.7654,29.9407]),
   manisa:page('https://www.manisaeczaciodasi.org.tr/nobetci-eczaneler','Manisa Eczacı Odası',[38.6126,27.4334]),
@@ -60,6 +61,11 @@ const geoPattern=/(?:[?&](?:q|query|ll|daddr|destination)=|@|\/place\/|\/dir\/\/
 /** Page text as lines; phone and map links become ⟦TEL:…⟧ / ⟦GEO:lat,lng⟧ markers in reading order. */
 export function pageLines(html:string){
   let h=html.replace(/<!--[\s\S]*?-->/g,'').replace(/<(script|style|noscript|svg)\b[\s\S]*?<\/\1\s*>/gi,' ');
+  // The shared chamber platform pre-fills its date picker with the day of the list on show.
+  h=h.replace(/<input\b[^>]*>/gi,tag=>{
+    const value=/type\s*=\s*["']?date/i.test(tag)&&/name\s*=\s*["']?tarih/i.test(tag)?tag.match(/value\s*=\s*["'](20\d\d-\d\d-\d\d)["']/)?.[1]:undefined;
+    return value?`\n⟦DATE:${value}⟧\n`:' ';
+  });
   h=h.replace(/<a\b([^>]*)>([\s\S]*?)<\/a\s*>/gi,(_,attrs:string,inner:string)=>{
     const href=decode(attrs.match(/href\s*=\s*["']([^"']*)["']/i)?.[1]??'');
     if(/^tel:/i.test(href))return `\n⟦TEL:${href.slice(4).trim()}⟧\n${/eczane/i.test(inner)?inner+'\n':''}`;
@@ -115,17 +121,24 @@ const nextLocal=(now:number,h:string,min:string)=>{
   return at;
 };
 /** The duty interval a record states about itself, in any of the forms the pages use. */
-export function recordInterval(text:string,now:number):{start?:number;end?:number}{
+export function recordInterval(text:string,now:number,day?:string):{start?:number;end?:number}{
   const both=text.match(/(\d{2})[./](\d{2})[./](\d{4})\s+(\d{1,2})[:.](\d{2})\s*[/–-]\s*(\d{2})[./](\d{2})[./](\d{4})\s+(\d{1,2})[:.](\d{2})/);
   if(both)return {start:istanbulTime(both[1],both[2],both[3],both[4],both[5]),end:istanbulTime(both[6],both[7],both[8],both[9],both[10])};
   const until=text.match(/(\d{2})[./](\d{2})[./](\d{4})\s+(?:saat\s+)?(\d{1,2})[:.](\d{2})\s*['’]?\s*(?:a|e|ya|ye)?\s*kadar/i);
   if(until)return {end:istanbulTime(until[1],until[2],until[3],until[4],until[5])};
   const tomorrow=text.match(/yar[ıi]n\s+sabah(?:\s+saat)?\s*,?\s*(\d{1,2})[:.](\d{2})/i);
   if(tomorrow)return {end:nextLocal(now,tomorrow[1],tomorrow[2])};
+  // "SAAT 23:59'A KADAR" has no date of its own; it belongs to the page's duty day (early hours: the next morning).
+  const clock=day?text.match(/(?:saat\s+)?(\d{1,2})[:.](\d{2})\s*['’]\s*(?:a|e|ya|ye)\s*kadar/i):null;
+  if(clock&&day){
+    const [y,m,d]=day.split('-'),hour=Number(clock[1]);
+    if(hour>24)return {};
+    return {end:istanbulTime(d,m,y,String(hour%24),clock[2])+(hour<9||hour===24?86_400_000:0)};
+  }
   return {};
 }
 const months=['ocak','subat','mart','nisan','mayis','haziran','temmuz','agustos','eylul','ekim','kasim','aralik'];
-/** Calendar date in a "… nöbetçi eczaneler" heading; it must be the current duty day. */
+/** Calendar date in a "… nöbetçi eczaneler" heading, else the platform's date picker; it must be the current duty day. */
 export function pageDutyDay(lines:string[]){
   for(const line of lines){
     if(!/n[öo]bet/i.test(line)||line.length>160)continue;
@@ -134,10 +147,10 @@ export function pageDutyDay(lines:string[]){
     const month=words?months.indexOf(words[2])+1:0;
     if(words&&month)return `${words[3]}-${String(month).padStart(2,'0')}-${words[1].padStart(2,'0')}`;
   }
-  return undefined;
+  return lines.map(line=>line.match(/^⟦DATE:(20\d\d-\d\d-\d\d)⟧$/)?.[1]).find(Boolean);
 }
 
-const noise=/n[öo]bet(?:çidir|cidir| kart)|kadar|yazd[ıi]r|iletişim|harita|yol tarifi|konum|^ara$|^tümü$|telefon|^\W+$/i;
+const noise=/n[öo]bet(?:çidir|cidir| kart)|kadar|['’]?d[ae]n sonra|yazd[ıi]r|iletişim|harita|yol tarifi|konum|^ara$|^tümü$|telefon|^\W+$|^\*/i;
 function addressOf(text:string[],heading=''){
   const lines=text.filter(line=>!noise.test(line)&&!/^⟦/.test(line));
   const first=lines[0]??'';
@@ -160,21 +173,23 @@ export function parseChamberPage(html:string,params:SearchParams,now=new Date(),
   const fetchedAt=now.toISOString(),places:Place[]=[],ids=new Set<string>();
   let usable=0,skipped=0,expired=0,upcoming=0,missingPhone=0;
   for(const record of records){
-    const name=cleanName(record.name);
+    // İzmir-style names carry their neighbourhood: "CANSU ECZANESİ - ALİAĞA".
+    const named=cleanName(record.name).match(/^(.*ECZANES[İIiı])\s+-\s+(.{2,40})$/iu);
+    const name=named?named[1]:cleanName(record.name);
     if(!record.geo||!name){skipped++;continue;}
     const [lat,lng]=record.geo;
     const own=distanceKm(config.center[0],config.center[1],lat,lng);
     if(!(lat>35&&lat<43&&lng>25&&lng<45)||own>170){skipped++;continue;}
     // Chambers serving several provinces: a record belongs to the nearest of their centres.
     if(siblings.some(([a,b])=>distanceKm(a,b,lat,lng)<own))continue;
-    const {start,end}=recordInterval(record.text.join(' '),time);
+    const {start,end}=recordInterval(record.text.join(' '),time,day);
     if(end!==undefined&&end<=time){expired++;continue;}
     // A duty lasts at most a day: an end more than 24 h away belongs to a list that has not started.
     // Many chambers publish the evening shift (18:30 → morning) by day; it is shown with its start,
     // but a start further than 10 h ahead is a later day's list.
     if((start!==undefined&&start-time>10*3_600_000)||(end!==undefined&&end-time>25*3_600_000)){upcoming++;continue;}
     const opens=start!==undefined&&start>time?new Date(start).toISOString():undefined;
-    const {district,address}=addressOf(record.text,record.district);
+    const listed=addressOf(record.text,record.district),address=listed.address,district=listed.district||named?.[2]||'';
     if(address.length<5){skipped++;continue;}
     usable++;
     const id=`oda-${city}-${lat.toFixed(5)}-${lng.toFixed(5)}`;
