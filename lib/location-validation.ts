@@ -8,5 +8,15 @@ export function parseResolvedLocation(value:unknown):ResolvedLocation|undefined{
  if(typeof raw!=='string')return;
  const city=raw.replace(/ ili$/i,'').trim(),lat=Number(v.lat),lng=Number(v.lon);
  if(city.length<2||city.length>60||!validTurkeyCoordinates(lat,lng)||!v.display_name.trim())return;
- return {label:v.display_name.trim(),city,lat,lng};
+ return {label:shortLabel(a,v.display_name,city),city,lat,lng};
+}
+const part=(value:unknown)=>typeof value==='string'&&value.trim().length<=80?value.trim():'';
+/** "Kızılay, Çankaya, Ankara" instead of the geocoder's full line with region, postcode and country. */
+function shortLabel(a:Record<string,unknown>,displayName:string,city:string){
+ const parts:string[]=[];
+ for(const value of [part(a.suburb)||part(a.neighbourhood)||part(a.quarter)||part(a.village)||part(a.hamlet),part(a.county)||part(a.town)||part(a.city_district)||part(a.district),city])
+  if(value&&!parts.some(p=>p.toLocaleLowerCase('tr')===value.toLocaleLowerCase('tr')))parts.push(value);
+ if(parts.length>=2)return parts.join(', ');
+ const display=displayName.split(',').map(s=>s.trim()).filter(s=>s&&!/^\d{5}$/.test(s)&&!/^(türkiye|turkey)$/i.test(s)&&!/bölgesi$/i.test(s));
+ return display.slice(0,3).join(', ')||city;
 }

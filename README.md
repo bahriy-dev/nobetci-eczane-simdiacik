@@ -1,6 +1,6 @@
 # Şimdi Açık
 
-Yakınındaki nöbetçi eczaneyi bulmak, resmî nöbet kaynağını görmek, telefonla teyit etmek ve yol tarifi almak için Türkiye odaklı, mobil uyumlu uygulama. Kullanılan veri kaynakları için API anahtarı, kayıt veya ücretli abonelik gerekmez.
+Yakınındaki nöbetçi eczaneyi bulmak, resmî nöbet kaynağını görmek, telefonla teyit etmek ve yol tarifi almak için Türkiye odaklı, mobil uyumlu uygulama. 81 ilin nöbet listesi lisanslı [Eczaneler.org API](https://eczaneler.org/nobetci-eczane-api) üzerinden gelir; anahtar tanımlı değilse uygulama resmî kaynaklarla sınırlı çalışır.
 
 ## Özellikler
 
@@ -14,7 +14,11 @@ Yakınındaki nöbetçi eczaneyi bulmak, resmî nöbet kaynağını görmek, tel
 - Çevrimdışıyken bağlantı gerektiğini bildiren sayfa. Canlı nöbet listeleri, API yanıtları ve harita katmanları çevrimdışı önbelleğe alınmaz; eski çevrimdışı sayfa önbellekleri sürüm yükseltmesinde silinir.
 - 81 il için Türk Eczacıları Birliği (TEB) rehberinden ilgili resmî oda veya nöbet sayfası bağlantısı. Bu yönlendirme, 81 ilde otomatik liste erişimi anlamına gelmez.
 
-## Ücretsiz veri kaynakları ve sınırlar
+## Veri kaynakları ve sınırlar
+
+**Birincil nöbet kaynağı (81 il):** Eczaneler.org v2 API (`https://api.eczaneler.org/api/v2`, yıllık lisans). Anahtar yalnızca sunucuda, `ECZANELER_API_KEY` ortam değişkeninde tutulur ve `X-Api-Key` başlığıyla gönderilir; tarayıcıya veya URL'ye yazılmaz. İl listesi `sentry-city-list/{plaka}` uç noktasından sayfa sayfa alınır ve sağlayıcının yenileme aralığıyla uyumlu olarak 10 dakika önbellekte tutulur. Her kaydın `sentry_date` alanı doğrulanır: önceki günün listesi yalnızca Türkiye saatiyle 09:00 nöbet devrine kadar kabul edilir, daha eski kayıtlar gösterilmez. Kartlardaki resmî liste bağlantısı ilgili eczacı odasının sayfasına gider.
+
+Eczaneler.org yanıt vermezse aşağıdaki resmî kaynaklar yedek olarak denenir.
 
 **İl/ilçe:** TurkiyeAPI v2, `https://api.turkiyeapi.dev/v2/provinces` ve `/v2/provinces/{id}/districts`. Bağımsız ve açık kaynak idari veri projesidir; eczane veya nöbet verisi içermez. İl koordinatları il merkezleridir; ilçelerin API'de koordinatı yoktur. İlçe konumu yalnızca kullanıcı bölgeyi kullanmayı seçince Nominatim üzerinden bulunur. Şema, il–ilçe ilişkisi, koordinatlar ve listenin bütünlüğü doğrulanır. Sunucu ve HTTP önbelleği beş dakikadır; sınırsız kullanım veya SLA varsayılmaz.
 
@@ -22,15 +26,16 @@ Yakınındaki nöbetçi eczaneyi bulmak, resmî nöbet kaynağını görmek, tel
 
 | İl | Resmî kaynak ve yöntem |
 | --- | --- |
-| İstanbul, Yalova | İstanbul Eczacı Odası'nın halka açık nöbet sayfası ve sayfanın kullandığı JSON işlemi. |
+| İstanbul, Yalova | Yedek yok. İstanbul Eczacı Odası Kasım 2026'da veri işlemini yalnızca kendi sitesine açtı; bu kısıtlama aşılmaz, resmî sayfa bağlantısı gösterilir. |
 | Ankara | Ankara Eczacı Odası'nın tarihli `getPharmacies/YYYY-MM-DD` işlemi. |
 | İzmir | İzmir Büyükşehir Belediyesi'nin belgelenmiş `https://openapi.izmir.bel.tr/api/ibb/nobetcieczaneler` uç noktası. |
 | Kayseri | Belediyenin [CBS nöbet sayfası](https://cbs.kayseri.bel.tr/kayseri-nobetci-eczaneler) ve aynı sayfanın harita işlemi. Tarihli tablo ile harita kayıtları ad, adres, ilçe ve telefon üzerinden eşleştirilir. Ağ veya biçim hatasında belediyenin `https://acikveri.kayseri.bel.tr/api/kbb/eczane` açık veri kaynağı HTTPS üzerinden yedek olarak denenir. HTTP kullanılmaz; erişim reddi yedek istekle aşılmaz. |
-| Konya | Konya Eczacı Odası'nın bağlantı verdiği [resmî nöbet sitesi](https://www.konyanobetcieczaneleri.com/) ve kendi sayfasının kullandığı veri işlemi. Sayfadaki herkese açık istek belirteci hesap veya API anahtarı değildir. |
+| Konya | Yedek yok. [Resmî nöbet sitesi](https://www.konyanobetcieczaneleri.com/) veri isteklerini artık reddediyor; bu kısıtlama aşılmaz, resmî sayfa bağlantısı gösterilir. |
 | Samsun, Sinop | [Samsun Eczacı Odası nöbet sayfası](https://www.samsuneczaciodasi.org.tr/nobetci-eczaneler). İller sayfanın açıkça ayrı yayımladığı Samsun ve Sinop bölümlerinden seçilir. |
 | Gaziantep | [Gaziantep Büyükşehir Belediyesi nöbet sayfası](https://www.gaziantep.bel.tr/tr/nobetci-eczaneler). Tarih seçimi ve her kartın kendi telefon, adres ve harita koordinatı doğrulanır. |
+| Adana, Adıyaman, Aksaray, Antalya, Aydın, Balıkesir, Bartın, Batman, Bilecik, Burdur, Bursa, Çankırı, Denizli, Diyarbakır, Eskişehir, Kahramanmaraş, Karabük, Kastamonu, Kırklareli, Kırşehir, Kocaeli, Manisa, Mardin, Mersin, Muğla, Muş, Nevşehir, Niğde, Osmaniye, Siirt, Şırnak, Yozgat, Zonguldak | İlgili eczacı odasının herkese açık `nöbetçi eczaneler` sayfası (`lib/providers/chamber-pages.ts`). Kullanılan yollar sitelerin robots.txt kurallarınca serbesttir. Kayıtlar ortak bir desenle okunur: ad, adres, telefon ve koordinatlı harita bağlantısı. Kayıt kendi nöbet aralığını yazıyorsa yalnız şu an geçerli olanlar gösterilir; henüz başlamamış (bitişi 24 saatten uzak) ya da bitmiş kayıtlar elenir. Birden çok ile hizmet veren odalarda her kayıt en yakın il merkezine atanır. Bu sitelerin bir kısmı aynı sunucuda çalışır ve yoğun isteği reddeder; her sayfa en fazla 10 dakikada bir alınır, 403/429 yanıtından sonra 30 dakika hiç istenmez. |
 
-Oda ve belediye web işlemleri halka açık resmî kaynaklardır; belgelenmiş ticari API sözleşmesi veya açık veri lisansı oldukları varsayılmaz. Kayseri'nin özgün açık veri kümesi CC BY 4.0 olarak yayımlanmıştır; bu lisans CBS web sayfasına veya diğer kaynaklara genellenmez. Biçim, tarih veya erişim doğrulanamazsa eski ya da örnek kayıt gösterilmez. Samsun, Sinop, Konya ve Gaziantep sağlayıcıları yalnız Türkiye saat dilimindeki bugünün listesini kabul eder; önceki günden nöbet aralığı çıkarılmaz.
+Oda ve belediye web işlemleri halka açık resmî kaynaklardır; belgelenmiş ticari API sözleşmesi veya açık veri lisansı oldukları varsayılmaz. Kayseri'nin özgün açık veri kümesi CC BY 4.0 olarak yayımlanmıştır; bu lisans CBS web sayfasına veya diğer kaynaklara genellenmez. Biçim, tarih veya erişim doğrulanamazsa eski ya da örnek kayıt gösterilmez. Nöbet listeleri sabah devrinden (08:00–09:00) ertesi sabaha kadar sürer ve başladıkları günün tarihini taşır; bu yüzden önceki günün listesi Türkiye saatiyle 09:00'a kadar geçerli kabul edilir (`lib/duty-day.ts`). `npm run audit:coverage` 81 ili ve ilçelerini uygulamanın gerçekten sunduğu veriyle denetler.
 
 **81 il için resmî yönlendirme:** TEB'nin oda rehberi il–oda eşleşmesini sağlar. Otomatik sağlayıcı bulunmayan veya güncel liste alınamayan yerde doğrulanmış nöbet sayfası, ilgili eczacı odası sitesi ya da TEB rehberi bağlantısı gösterilir. Bir odanın birden çok ile hizmet vermesi, o illerin otomatik veri kapsamına girdiği anlamına gelmez. Genel eczane kayıtları nöbetçi eczane olarak gösterilmez.
 
@@ -40,7 +45,7 @@ Oda ve belediye web işlemleri halka açık resmî kaynaklardır; belgelenmiş t
 
 ## Yerel çalıştırma
 
-Node.js 22.13+ ve npm gerekir. API anahtarı veya `.env` ayarı gerekmez.
+Node.js 22.13+ ve npm gerekir. Nöbet listesinin 81 ilde gelmesi için `.env.local` dosyasına `ECZANELER_API_KEY` yazılır (bkz. `.env.example`).
 
 ```sh
 npm ci
@@ -81,7 +86,7 @@ Yayımlanan sürüm sahibiyle sınırlı özel erişimdedir. Paylaşım kitlesi 
 
 ## Railway dağıtımı
 
-Depoda `railway.json` bulunur. Railway servisini bu GitHub deposuna bağlayınca derleme komutu `npm run build:railway`, başlatma komutu `npm run start:railway` olarak uygulanır. Node sunucusu Railway'in `PORT` değerinde ve `0.0.0.0` adresinde dinler. `/api/health` sağlık kontrolü için kullanılır. API anahtarı gerekmez.
+Depoda `railway.json` bulunur. Railway servisini bu GitHub deposuna bağlayınca derleme komutu `npm run build:railway`, başlatma komutu `npm run start:railway` olarak uygulanır. Node sunucusu Railway'in `PORT` değerinde ve `0.0.0.0` adresinde dinler. `/api/health` sağlık kontrolü için kullanılır. Railway servisinin Variables bölümüne `ECZANELER_API_KEY` eklenmelidir.
 
 Yerel üretim kontrolü:
 

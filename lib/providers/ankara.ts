@@ -3,6 +3,13 @@ import { distanceKm, normalized, type Place, type PlacesProvider, type PlacesRes
 export const ANKARA_SOURCE_URL = 'https://www.aeo.org.tr/nobetci-eczaneler';
 const source = 'Ankara Eczacı Odası';
 const dayMs = 86_400_000;
+// The Ankara chamber also publishes the Kırıkkale list; each record is assigned to its own province.
+const kirikkaleDistricts = new Set(['bahsili', 'baliseyh', 'celebi', 'delice', 'karakecili', 'keskin', 'kirikkale', 'sulakyurt', 'yahsihan']);
+export function ankaraSourceProvince(district: string, address: string): 'Ankara' | 'Kırıkkale' {
+  if (kirikkaleDistricts.has(normalized(district).trim())) return 'Kırıkkale';
+  return /\/\s*kirikkale\b/.test(normalized(address)) ? 'Kırıkkale' : 'Ankara';
+}
+const unknownDistrict = (district: string) => normalized(district).replace(/\s+/g, ' ').trim() === 'ilcesi belirlenmemis';
 
 function turkeyDate(now: Date) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(now);
@@ -106,6 +113,7 @@ export function parseAnkaraPharmacies(payload: unknown, params: SearchParams, no
   const verifiedUntil = new Date(Math.min(now.getTime() + 5 * 60_000, (dutyEnd ?? tomorrowMidnight).getTime())).toISOString();
   const cards = pharmacyCards(data.html);
   if (!cards.length && !plainText(data.html).includes('Nöbetçi Eczane Bulunamadı')) throw new Error('Ankara nöbet kaynağının kart biçimi değişmiş.');
+  const province = normalized(params.city ?? 'Ankara').trim() === 'kirikkale' ? 'Kırıkkale' : 'Ankara';
   const places: Place[] = [];
   let skipped = 0;
   let missingPhone = 0;
@@ -118,6 +126,7 @@ export function parseAnkaraPharmacies(payload: unknown, params: SearchParams, no
     const district = attribute(openingTag, 'data-district')?.trim();
     const point = coordinates(card);
     if (!name || name.length > 200 || !address || address.length > 1000 || !district || district.length > 100 || !point) { skipped++; continue; }
+    if (ankaraSourceProvince(district, address) !== province) continue;
     const phoneHref = Array.from(card.matchAll(/<a\b[^>]*>/gi)).map(match => attribute(match[0], 'href')).find(href => href?.startsWith('tel:'));
     const phone = phoneNumber(phoneHref?.slice(4));
     if (!phone) missingPhone++;
@@ -126,7 +135,7 @@ export function parseAnkaraPharmacies(payload: unknown, params: SearchParams, no
     ids.add(id);
     const distance = distanceKm(params.lat, params.lng, point.lat, point.lng);
     if (distance > params.radius) continue;
-    places.push({ id, name, category: 'Eczane', ...point, address: normalized(address).includes(normalized(district)) ? address : `${address} · ${district}`, phone, status: 'unknown', allDay: false, duty: true, dutyDate: data.date, verification: 'official-duty', verifiedUntil, closes: dutyEnd?.toISOString(), hours: dutyEnd ? `Resmî listeye göre nöbet ${dottedDate(today)} 08:30'a kadar geçerli. Gitmeden önce telefonla teyit et.` : `Resmî nöbet tarihi: ${dottedDate(data.date)}. Gitmeden önce telefonla teyit et.`, distance, source, sourceUrl: ANKARA_SOURCE_URL, fetchedAt });
+    places.push({ id, name, category: 'Eczane', ...point, address: unknownDistrict(district) || normalized(address).includes(normalized(district)) ? address : `${address} · ${district}`, phone, status: 'unknown', allDay: false, duty: true, dutyDate: data.date, verification: 'official-duty', verifiedUntil, closes: dutyEnd?.toISOString(), hours: dutyEnd ? `Resmî listeye göre nöbet ${dottedDate(today)} 08:30'a kadar geçerli. Gitmeden önce telefonla teyit et.` : `Resmî nöbet tarihi: ${dottedDate(data.date)}. Gitmeden önce telefonla teyit et.`, distance, source, sourceUrl: ANKARA_SOURCE_URL, fetchedAt });
   }
   if (cards.length && skipped === cards.length) throw new Error('Ankara nöbet kayıtlarının adres ve konumları doğrulanamadı.');
   const warnings: string[] = [];

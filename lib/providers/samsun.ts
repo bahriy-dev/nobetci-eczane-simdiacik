@@ -1,12 +1,9 @@
 import { distanceKm, normalized, type Place, type PlacesProvider, type PlacesResult, type SearchParams } from '../places';
+import { activeDutyDates, dutyListEnds } from '../duty-day';
 
 export const SAMSUN_SOURCE_URL = 'https://www.samsuneczaciodasi.org.tr/nobetci-eczaneler';
 const source = 'Samsun Eczacı Odası';
 const months = ['ocak', 'subat', 'mart', 'nisan', 'mayis', 'haziran', 'temmuz', 'agustos', 'eylul', 'ekim', 'kasim', 'aralik'];
-
-function turkeyDay(now: Date) {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(now);
-}
 
 function decodeHtml(value: string) {
   const entities: Record<string, string> = { amp: '&', quot: '"', apos: "'", lt: '<', gt: '>', nbsp: ' ', ndash: '–', mdash: '—', middot: '·' };
@@ -103,8 +100,9 @@ export function parseSamsunPharmacies(payload: unknown, params: SearchParams, no
   if (!Number.isFinite(now.getTime()) || !Number.isFinite(params.lat) || !Number.isFinite(params.lng) || !Number.isFinite(params.radius) || params.radius <= 0) throw new Error('Samsun arama konumu geçersiz.');
   if (typeof payload !== 'string' || !payload || payload.length > 2_000_000) throw new Error('Samsun nöbet kaynağının veri biçimi değişmiş.');
   const html = payload.replace(/<!--[\s\S]*?-->/g, '').replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
-  const today = turkeyDay(now);
-  if (sourceDay(html) !== today) throw new Error('Samsun kaynağının nöbet tarihi güncel değil. Eski kayıtlar gösterilmedi.');
+  // The page is dated by the morning its list started; that list stays current until the next handover.
+  const today = sourceDay(html);
+  if (!activeDutyDates(now).includes(today)) throw new Error('Samsun kaynağının nöbet tarihi güncel değil. Eski kayıtlar gösterilmedi.');
   const city = normalized(params.city ?? 'Samsun');
   if (city !== 'samsun' && city !== 'sinop') throw new Error('Samsun kaynağı bu il için doğrulanmadı.');
   const province = city === 'sinop' ? 'Sinop' : 'Samsun';
@@ -114,8 +112,7 @@ export function parseSamsunPharmacies(payload: unknown, params: SearchParams, no
   const cards = elements(sections[0], 'article', tag => hasClass(tag, 'nobet-card'));
   if (!cards.length || cards.length > 500) throw new Error(`${province} nöbet kaynağının kart biçimi değişmiş.`);
   const fetchedAt = now.toISOString();
-  const midnight = new Date(`${today}T00:00:00+03:00`).getTime() + 86_400_000;
-  const verifiedUntil = new Date(Math.min(now.getTime() + 300_000, midnight)).toISOString();
+  const verifiedUntil = new Date(Math.min(now.getTime() + 300_000, dutyListEnds(today))).toISOString();
   const places: Place[] = [], ids = new Set<string>();
   let skipped = 0, missingPhone = 0;
   for (const card of cards) {

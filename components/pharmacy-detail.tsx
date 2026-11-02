@@ -19,6 +19,7 @@ import {
   pharmacyPhoneLink,
   pharmacyDutyDate,
   pharmacyTimestamp,
+  pharmacyDisplayName,
 } from "@/lib/pharmacy-presentation";
 import { safeUrl } from "@/lib/places";
 import type { Place } from "@/lib/places";
@@ -60,7 +61,7 @@ export function PharmacyDetail({
           )}
         </div>
       </div>
-      <SheetTitle className="detail-title">{p.name}</SheetTitle>
+      <SheetTitle className="detail-title">{pharmacyDisplayName(p.name)}</SheetTitle>
       <SheetDescription className="sr-only">
         Eczane adresi, telefonu ve yol tarifi
       </SheetDescription>
@@ -96,6 +97,12 @@ export function PharmacyDetail({
         <div className="detail-date">
           <CalendarDays size={15} />
           <span>{date}</span>
+        </div>
+      )}
+      {p.opens && Number.isFinite(Date.parse(p.opens)) && (
+        <div className="detail-date">
+          <Clock size={15} />
+          <span>Nöbet başlangıcı: {pharmacyTimestamp(p.opens)}</span>
         </div>
       )}
       {p.closes && Number.isFinite(Date.parse(p.closes)) && (
