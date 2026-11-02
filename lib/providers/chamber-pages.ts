@@ -3,6 +3,7 @@ import {SourceFailure,classifySourceFailure} from '../source-request';
 import {activeDutyDates,dutyListEnds,turkeyDay} from '../duty-day';
 import {listRegions} from '../regions';
 import {plateForCity} from './eczaneler-org';
+import {cachedPharmacyPoint,type EstimatedPoint} from '../geocode';
 
 /**
  * Public "nöbetçi eczaneler" pages of pharmacist chambers. Most run the same chamber website
@@ -10,8 +11,12 @@ import {plateForCity} from './eczaneler-org';
  * by its address, phone and a map link with coordinates. Every path used is allowed by the site's
  * robots.txt; pages behind a login, challenge or 403 are not listed here.
  */
-type ChamberPage={url:string;source:string;center:[number,number];siblings?:string[]};
-const page=(url:string,source:string,center:[number,number],siblings?:string[]):ChamberPage=>({url,source,center,siblings});
+/** `locate`: the page gives no map links, so addresses are placed via OpenStreetMap (marked as estimates).
+ * `schedule`: the page is a dated table of coming duties; only the current day's row is read.
+ * `areaCode`: the page writes local seven-digit numbers. */
+type PageOptions={locate?:boolean;schedule?:boolean;areaCode?:string};
+type ChamberPage={url:string;source:string;center:[number,number];siblings?:string[]}&PageOptions;
+const page=(url:string,source:string,center:[number,number],siblings?:string[],options:PageOptions={}):ChamberPage=>({url,source,center,siblings,...options});
 export const CHAMBER_PAGES:Readonly<Record<string,ChamberPage>>=Object.freeze({
   adana:page('https://www.adanaeo.org.tr/nobetci-eczaneler','Adana Eczacı Odası',[36.9864,35.3253]),
   adiyaman:page('https://www.adiyamaneo.org.tr/nobetci-eczaneler','Adıyaman Eczacı Odası',[37.7603,38.2773]),
@@ -71,6 +76,9 @@ export const CHAMBER_PAGES:Readonly<Record<string,ChamberPage>>=Object.freeze({
   van:page('https://www.vaneczaciodasi.org.tr/nobetci-eczaneler','Van Eczacı Odası',[38.4942,43.38],['bitlis','hakkari']),
   bitlis:page('https://www.vaneczaciodasi.org.tr/nobetci-eczaneler','Van Eczacı Odası · Bitlis',[38.4006,42.1095],['van','hakkari']),
   hakkari:page('https://www.vaneczaciodasi.org.tr/nobetci-eczaneler','Van Eczacı Odası · Hakkari',[37.5744,43.7408],['van','bitlis']),
+  malatya:page('https://www.malatyaeczaciodasi.org.tr/nobetci-eczaneler','Malatya Eczacı Odası',[38.3552,38.3095],undefined,{locate:true}),
+  usak:page('https://usakeczaciodasi.org.tr/usak-nobetci-eczaneler','Uşak Eczacı Odası',[38.6823,29.4082],undefined,{locate:true,areaCode:'0276'}),
+  tokat:page('https://tokateo.org/NobetciEczane.aspx','Tokat Eczacı Odası · Merkez',[40.3139,36.5544],undefined,{locate:true,schedule:true}),
 });
 export const chamberPageFor=(city:string)=>CHAMBER_PAGES[normalized(city).trim()];
 
@@ -122,6 +130,8 @@ export function pageRecords(lines:string[],districtNames:string[]=[],province=''
     if(!line.startsWith('⟦')&&nameLine.test(line)){
       // Some pages repeat the name (title, then card); the repeat continues the same record.
       if(current?.name===line&&!current.phones.length&&!current.geo&&!current.text.length)continue;
+      // …or follow it with an address line that itself ends in the name ("No:85 Menengiç Eczanesi Battalgazi").
+      if(current&&!current.text.length&&!current.geo&&line.length>current.name.length&&normalized(line).includes(normalized(current.name))){current.text.push(line);continue;}
       current={name:line,phones:[],text:[],district:heading};records.push(current);continue;
     }
     const section=line.length<=60&&!line.startsWith('⟦')?headingDistrict(line,districts):undefined;
@@ -134,13 +144,16 @@ export function pageRecords(lines:string[],districtNames:string[]=[],province=''
     const geo=line.match(/^⟦GEO:(.*),(.*)⟧$/);
     if(geo){current.geo??=[Number(geo[1]),Number(geo[2])];continue;}
     if(plainPhone.test(line)&&line.replace(/\D/g,'').length>=10){current.phones.push(line);continue;}
+    const labelled=line.match(/^(.*?)\s*Telefon\s*:\s*([\d\s()+-]{7,20})$/i);
+    if(labelled){current.phones.push(labelled[2]);if(labelled[1]&&current.text.length<8)current.text.push(labelled[1]);continue;}
     if(current.text.length<8)current.text.push(line);
   }
   return records;
 }
 
-function phoneNumber(value:string){
-  const digits=value.replace(/\D/g,'');
+function phoneNumber(value:string,areaCode=''){
+  let digits=value.replace(/\D/g,'');
+  if(areaCode&&digits.length===7)digits=areaCode+digits;
   if(/^0[2-5]\d{9}$/.test(digits))return digits;
   if(/^[2-5]\d{9}$/.test(digits))return '0'+digits;
   if(/^90[2-5]\d{9}$/.test(digits))return '+'+digits;
@@ -182,7 +195,26 @@ export function pageDutyDay(lines:string[]){
   return lines.map(line=>line.match(/^⟦DATE:(20\d\d-\d\d-\d\d)⟧$/)?.[1]).find(Boolean);
 }
 
-const noise=/n[öo]bet(?:çidir|cidir| kart)|kadar|['’]?d[ae]n sonra|yazd[ıi]r|iletişim|harita|yol tarifi|konum|^ara$|^tümü$|telefon|^\W+$|^\*/i;
+/** Lines of a dated duty table that belong to `day`: from its "2 Kasım 2026" row to the next date row. */
+export function scheduleLines(lines:string[],day:string){
+  const [y,m,d]=day.split('-');
+  const wanted=`${Number(d)} ${months[Number(m)-1]} ${y}`,isDate=(line:string)=>/^\d{1,2} [a-z]+ 20\d\d$/.test(normalized(line).trim());
+  const start=lines.findIndex(line=>normalized(line).trim()===wanted);
+  if(start<0)return undefined;
+  const end=lines.findIndex((line,i)=>i>start&&isDate(line));
+  return lines.slice(start+1,end<0?undefined:end);
+}
+const recordKey=(record:RawRecord)=>record.name+'|'+(record.text[0]??'');
+function readPage(config:ChamberPage,html:string,names:string[],province:string,now:Date){
+  const lines=pageLines(html);
+  if(!config.schedule)return {records:pageRecords(lines,names,province),day:pageDutyDay(lines)};
+  // The running duty is yesterday's row until the morning handover.
+  const active=activeDutyDates(now),day=active[active.length-1],rows=scheduleLines(lines,day);
+  if(!rows)throw new Error(`${config.source} çizelgesinde güncel nöbet günü bulunamadı.`);
+  return {records:pageRecords(rows,names,province),day};
+}
+
+const noise=/n[öo]bet(?:çidir|cidir| kart)|^n[öo]bet[çc][İIiı]\W*$|saat a[çc][ıi]k|^ecz(?:ac[ıi])?\s*[:.]|kadar|['’]?d[ae]n sonra|yazd[ıi]r|iletişim|harita|yol tarifi|konum|^ara$|^tümü$|telefon|^\W+$|^\*/i;
 function addressOf(text:string[],heading=''){
   const lines=text.filter(line=>!noise.test(line)&&!/^⟦/.test(line));
   const first=lines[0]??'';
@@ -194,12 +226,11 @@ function addressOf(text:string[],heading=''){
 const titleCase=(value:string)=>value.toLocaleLowerCase('tr-TR').replace(/(^|[\s(/-])\p{L}/gu,c=>c.toLocaleUpperCase('tr-TR'));
 const cleanName=(value:string)=>(value.length>40?value.match(/((?:[\p{L}\d.'’&-]+\s){0,3}ECZANES[İIiı])(?!\p{L})/iu)?.[1]??value:value).trim();
 
-export function parseChamberPage(html:string,params:SearchParams,now=new Date(),districtNames:string[]=[],siblingDistricts:string[]=[]):PlacesResult{
+export function parseChamberPage(html:string,params:SearchParams,now=new Date(),districtNames:string[]=[],siblingDistricts:string[]=[],located=new Map<string,EstimatedPoint>()):PlacesResult{
   const city=normalized(params.city??'').trim(),config=CHAMBER_PAGES[city];
   if(!config||!Number.isFinite(now.getTime())||!Number.isFinite(params.radius)||params.radius<=0)throw new Error('Oda kaynağı bu il için tanımlı değil.');
   if(html.length>3_000_000)throw new SourceFailure('invalid-response');
-  const lines=pageLines(html),records=pageRecords(lines,[...districtNames,...siblingDistricts],params.city),time=now.getTime();
-  const day=pageDutyDay(lines);
+  const {records,day}=readPage(config,html,[...districtNames,...siblingDistricts],params.city??'',now),time=now.getTime();
   if(day&&!activeDutyDates(now).includes(day))throw new Error(`${config.source} sayfasının tarihi güncel değil. Eski kayıtlar gösterilmedi.`);
   const siblings=(config.siblings??[]).map(key=>CHAMBER_PAGES[key].center);
   const label=(value:string)=>normalized(value).replace(/\s*[(-].*$/,'').trim();
@@ -210,8 +241,10 @@ export function parseChamberPage(html:string,params:SearchParams,now=new Date(),
     // İzmir-style names carry their neighbourhood: "CANSU ECZANESİ - ALİAĞA".
     const named=cleanName(record.name).match(/^(.*ECZANES[İIiı])\s+-\s+(.{2,40})$/iu);
     const name=named?named[1]:cleanName(record.name);
-    if(!record.geo||!name){skipped++;continue;}
-    const [lat,lng]=record.geo;
+    const estimate=record.geo?undefined:located.get(recordKey(record));
+    const geo=record.geo??(estimate?[estimate.lat,estimate.lng] as [number,number]:undefined);
+    if(!geo||!name){skipped++;continue;}
+    const [lat,lng]=geo;
     const own=distanceKm(config.center[0],config.center[1],lat,lng);
     if(!(lat>35&&lat<43&&lng>25&&lng<45)){skipped++;continue;}
     // Chambers serving several provinces: a record's district decides its province; a district name
@@ -235,18 +268,19 @@ export function parseChamberPage(html:string,params:SearchParams,now=new Date(),
     usable++;
     const id=`oda-${city}-${lat.toFixed(5)}-${lng.toFixed(5)}`;
     if(ids.has(id))continue;ids.add(id);
-    const phone=record.phones.map(phoneNumber).find(Boolean);
+    const phone=record.phones.map(value=>phoneNumber(value,config.areaCode)).find(Boolean);
     if(!phone)missingPhone++;
     const distance=distanceKm(params.lat,params.lng,lat,lng);
     if(distance>params.radius)continue;
     const active=activeDutyDates(now);
     const until=end??dutyListEnds(day??active[active.length-1]);
     places.push({id,name,category:'Eczane',lat,lng,
-      address:district&&!normalized(address).includes(normalized(district))?`${address} · ${titleCase(district)}`:address,
+      // Estimated points carry the province in the address so directions can search it by text.
+      address:[address,district&&!normalized(address).includes(normalized(district))?titleCase(district):'',estimate&&!normalized(address).includes(normalized(params.city??''))?params.city:''].filter(Boolean).join(' · '),
       phone,status:'unknown',allDay:false,duty:true,...(day?{dutyDate:day}:{}),verification:'official-duty',
       verifiedUntil:new Date(Math.min(time+300_000,until)).toISOString(),...(end?{closes:new Date(end).toISOString()}:{}),...(opens?{opens}:{}),
       hours:end?'Resmî listeye göre nöbet bitişi kaynakta belirtilmiştir. Gitmeden önce telefonla teyit et.':'Güncel resmî nöbet listesinde. Başlangıç ve bitiş aralığı doğrulanmamış; telefonla teyit et.',
-      distance,source:config.source,sourceUrl:config.url,fetchedAt});
+      ...(estimate?{locationEstimate:estimate.precision}:{}),distance,source:config.source,sourceUrl:config.url,fetchedAt});
   }
   if(!usable&&(expired||upcoming))throw new Error(`${config.source} sayfası şu an geçerli nöbet listesini göstermiyor.`);
   if(!usable)throw new Error(`${config.source} sayfasında doğrulanabilir nöbet kaydı bulunamadı.`);
@@ -267,7 +301,7 @@ export function decodePage(bytes:ArrayBuffer,contentType:string){
 
 // Many chamber sites share one host that refuses bursts, so each page is fetched at most every
 // ten minutes and a refusal (403/429) pauses that page for half an hour instead of being retried.
-const cacheMs=10*60_000,refusalPauseMs=30*60_000;
+const cacheMs=10*60_000,refusalPauseMs=30*60_000,locateBudgetMs=7_000;
 const pageCache=new Map<string,{html:string;expires:number}>();
 const paused=new Map<string,number>();
 export async function searchChamberPage(params:SearchParams):Promise<PlacesResult>{
@@ -290,5 +324,19 @@ export async function searchChamberPage(params:SearchParams):Promise<PlacesResul
   const plate=plateForCity(params.city??'');
   const districtsOf=(plate?:number)=>plate?listRegions(plate).then(result=>result.regions.map(region=>region.name),()=>[] as string[]):Promise.resolve([] as string[]);
   const [districts,...others]=await Promise.all([districtsOf(plate),...(config.siblings??[]).map(key=>districtsOf(plateForCity(key)))]);
-  return parseChamberPage(html,params,new Date(),districts,others.flat());
+  // Pages without map links: each address is placed once via OpenStreetMap and cached for a week.
+  // Lookups queue at one per second, so the answer waits at most a few seconds; slower ones finish
+  // in the background and appear on the next search.
+  const located=new Map<string,EstimatedPoint>();
+  if(config.locate){
+    const {records}=readPage(config,html,[...districts,...others.flat()],params.city??'',new Date());
+    const lookups=records.filter(item=>!item.geo).slice(0,15).flatMap(record=>{
+      const {district,address}=addressOf(record.text,record.district);
+      if(address.length<5)return [];
+      return [cachedPharmacyPoint({name:cleanName(record.name),address,province:params.city??'',district,center:config.center})
+        .then(point=>{if(point)located.set(recordKey(record),point);},()=>undefined)];
+    });
+    await Promise.race([Promise.all(lookups),new Promise(resolve=>setTimeout(resolve,locateBudgetMs))]);
+  }
+  return parseChamberPage(html,params,new Date(),districts,others.flat(),new Map(located));
 }
