@@ -301,11 +301,11 @@ export function decodePage(bytes:ArrayBuffer,contentType:string){
 
 // Many chamber sites share one host that refuses bursts, so each page is fetched at most every
 // ten minutes and a refusal (403/429) pauses that page for half an hour instead of being retried.
-const cacheMs=10*60_000,refusalPauseMs=30*60_000,locateBudgetMs=7_000;
+const cacheMs=10*60_000,refusalPauseMs=30*60_000,answerWithinMs=9_000;
 const pageCache=new Map<string,{html:string;expires:number}>();
 const paused=new Map<string,number>();
 export async function searchChamberPage(params:SearchParams):Promise<PlacesResult>{
-  const config=chamberPageFor(params.city??'');
+  const config=chamberPageFor(params.city??''),started=Date.now();
   if(!config)throw new Error('Oda kaynağı bu il için tanımlı değil.');
   const cached=pageCache.get(config.url);
   let html=cached&&cached.expires>Date.now()?cached.html:undefined;
@@ -325,8 +325,8 @@ export async function searchChamberPage(params:SearchParams):Promise<PlacesResul
   const districtsOf=(plate?:number)=>plate?listRegions(plate).then(result=>result.regions.map(region=>region.name),()=>[] as string[]):Promise.resolve([] as string[]);
   const [districts,...others]=await Promise.all([districtsOf(plate),...(config.siblings??[]).map(key=>districtsOf(plateForCity(key)))]);
   // Pages without map links: each address is placed once via OpenStreetMap and cached for a week.
-  // Lookups queue at one per second, so the answer waits at most a few seconds; slower ones finish
-  // in the background and appear on the next search.
+  // Lookups queue at one per second; the answer leaves within ~9 s of the search (browsers give up at
+  // 12 s) and slower lookups finish in the background for the next search.
   const located=new Map<string,EstimatedPoint>();
   if(config.locate){
     const {records}=readPage(config,html,[...districts,...others.flat()],params.city??'',new Date());
@@ -336,7 +336,7 @@ export async function searchChamberPage(params:SearchParams):Promise<PlacesResul
       return [cachedPharmacyPoint({name:cleanName(record.name),address,province:params.city??'',district,center:config.center})
         .then(point=>{if(point)located.set(recordKey(record),point);},()=>undefined)];
     });
-    await Promise.race([Promise.all(lookups),new Promise(resolve=>setTimeout(resolve,locateBudgetMs))]);
+    await Promise.race([Promise.all(lookups),new Promise(resolve=>setTimeout(resolve,Math.max(1_500,answerWithinMs-(Date.now()-started))))]);
   }
   return parseChamberPage(html,params,new Date(),districts,others.flat(),new Map(located));
 }
