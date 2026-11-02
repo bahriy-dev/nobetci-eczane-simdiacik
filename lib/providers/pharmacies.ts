@@ -151,7 +151,11 @@ function officialAdapter(city:string):((params:SearchParams)=>Promise<PlacesResu
   if(city==='kayseri')return params=>kayseriPharmacyProvider.search(params);
   if(city==='samsun'||city==='sinop')return params=>samsunPharmacyProvider.search(params);
   if(city==='gaziantep')return searchGaziantepChamber;
-  if(city==='izmir')return async params=>parseIzmirPharmacies(await(await get(izmirEndpoint)).json(),params,new Date());
+  // The municipal feed is often empty; the chamber's own duty page then serves the same list.
+  if(city==='izmir')return async params=>{
+    try{return parseIzmirPharmacies(await(await get(izmirEndpoint)).json(),params,new Date());}
+    catch(error){console.warn('izmir_feed_failed_using_chamber',{reason:error instanceof Error?error.message:String(error)});return searchChamberPage(params);}
+  };
   if(chamberPageFor(city))return searchChamberPage;
 }
 
