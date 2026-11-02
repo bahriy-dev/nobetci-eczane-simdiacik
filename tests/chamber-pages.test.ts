@@ -70,6 +70,29 @@ test('a chamber page serving two provinces gives each record to the nearer provi
   assert.deepEqual(parseChamberPage(html,params('Bartın',41.63,32.34),afterMidnight).places.map(p=>p.name),['AMASRA ECZANESİ']);
 });
 
+test('a shared page gives each record to the province of its district, not just the nearest centre',()=>{
+  // Başkale (Van) lies nearer Hakkari's centre; "MERKEZ" exists in both, so distance decides it.
+  const html=`<h4>BAŞKALE ECZANESİ</h4><p>BAŞKALE</p><p>Yeni Mah. No:3</p><a href="tel:04326113040">x</a><a href="https://www.google.com/maps?q=38.04536,44.01512">h</a>
+<h4>UMUT ECZANESİ</h4><p>MERKEZ</p><p>Cumhuriyet Cad. No:5</p><a href="tel:04382110101">x</a><a href="https://www.google.com/maps?q=37.573514,43.732111">h</a>
+<h4>CADDE ECZANESİ</h4><p>İPEKYOLU</p><p>Beşyol No:1</p><a href="tel:04322230606">x</a><a href="https://www.google.com/maps?q=38.503421,43.399394">h</a>`;
+  const van=['İpekyolu','Tuşba','Başkale'],hakkari=['Merkez','Yüksekova','Şemdinli'],bitlis=['Merkez','Tatvan'];
+  const names=(city:string,own:string[],others:string[])=>parseChamberPage(html,params(city,38,43),afterMidnight,own,others).places.map(p=>p.name).sort();
+  assert.deepEqual(names('Van',van,[...bitlis,...hakkari]),['BAŞKALE ECZANESİ','CADDE ECZANESİ']);
+  assert.deepEqual(names('Hakkari',hakkari,[...van,...bitlis]),['UMUT ECZANESİ']);
+  const [place]=parseChamberPage(html,params('Hakkari',37.57,43.74),afterMidnight,hakkari,[...van,...bitlis]).places;
+  assert.equal(place.address,'Cumhuriyet Cad. No:5 · Merkez');
+});
+
+test('"DISTRICT/PROVINCE" headings and district menus do not carry one province\'s label into another',()=>{
+  const html=`<select><option>MERKEZ</option><option>SULTANHANI</option></select>
+<h3>SULTANHANI BUGÜN NÖBETÇİ ECZANELER</h3><h4>UMUT ECZANESİ</h4><p>İstikamet Mah. No:61</p><a href="tel:03822213030">x</a><a href="https://www.google.com/maps?q=38.2484,33.5468">h</a>
+<h3>MERKEZ/KIRŞEHİR BUGÜN NÖBETÇİ ECZANELER</h3><h4>MERVE ECZANESİ</h4><p>Kervansaray Mah. 2019 Sok.</p><a href="tel:03862134040">x</a><a href="https://www.google.com/maps?q=39.1478,34.1611">h</a>`;
+  const aksaray=['Merkez','Sultanhanı','Ağaçören'],kirsehir=['Merkez','Kaman','Mucur'];
+  assert.deepEqual(parseChamberPage(html,params('Aksaray',38.37,34.03),afterMidnight,aksaray,kirsehir).places.map(p=>p.name),['UMUT ECZANESİ']);
+  const [place]=parseChamberPage(html,params('Kırşehir',39.15,34.16),afterMidnight,kirsehir,aksaray).places;
+  assert.equal(place.name,'MERVE ECZANESİ');assert.match(place.address,/· Merkez$/);
+});
+
 test('windows-1254 pages decode Turkish letters correctly',()=>{
   const bytes=new Uint8Array([...'<h4>G'].map(c=>c.charCodeAt(0)).concat([0xdc],[...'NE'].map(c=>c.charCodeAt(0)),[0xde],[...' ECZANES'].map(c=>c.charCodeAt(0)),[0xdd],[...'</h4>'].map(c=>c.charCodeAt(0))));
   assert.match(decodePage(bytes.buffer,'text/html; charset=windows-1254'),/GÜNEŞ ECZANESİ/);

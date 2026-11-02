@@ -47,6 +47,30 @@ export const CHAMBER_PAGES:Readonly<Record<string,ChamberPage>>=Object.freeze({
   yozgat:page('https://www.yozgateo.org.tr/nobetci-eczaneler','Yozgat Eczacı Odası',[39.8222,34.8081]),
   zonguldak:page('https://www.zeo.org.tr/nobetci-eczaneler/67','Zonguldak Eczacı Odası',[41.4527,31.7876],['bartin']),
   bartin:page('https://www.zeo.org.tr/nobetci-eczaneler/74','Zonguldak Eczacı Odası · Bartın',[41.635,32.3366],['zonguldak']),
+  afyonkarahisar:page('https://www.afyoneczaciodasi.org.tr/nobetci-eczaneler','Afyonkarahisar Eczacı Odası',[38.7507,30.5567]),
+  agri:page('https://agrieo.org.tr/nobetci-eczaneler','Ağrı Eczacı Odası',[39.7191,43.0503]),
+  canakkale:page('https://www.canakkaleeo.org.tr/nobetci-eczaneler','Çanakkale Eczacı Odası',[40.1553,26.4142]),
+  corum:page('https://www.corumeo.org.tr/nobetci-eczaneler','Çorum Eczacı Odası',[40.5506,34.9556]),
+  duzce:page('https://duzceeo.org/nobetci-eczaneler','Düzce Eczacı Odası',[40.8438,31.1565]),
+  erzincan:page('https://erzincaneo.org.tr/nobetci-eczaneler','Erzincan Eczacı Odası',[39.75,39.4914]),
+  erzurum:page('https://www.erzurumeo.org.tr/nobetci-eczaneler/25','Erzurum Eczacı Odası',[39.9043,41.2679]),
+  kars:page('https://www.erzurumeo.org.tr/nobetci-eczaneler/36','Erzurum Eczacı Odası · Kars',[40.6013,43.0975]),
+  bayburt:page('https://www.erzurumeo.org.tr/nobetci-eczaneler/69','Erzurum Eczacı Odası · Bayburt',[40.2552,40.2249]),
+  ardahan:page('https://www.erzurumeo.org.tr/nobetci-eczaneler/75','Erzurum Eczacı Odası · Ardahan',[41.1105,42.7022]),
+  igdir:page('https://www.erzurumeo.org.tr/nobetci-eczaneler/76','Erzurum Eczacı Odası · Iğdır',[39.9237,44.045]),
+  hatay:page('https://www.hatayeo.org.tr/nobetci-eczaneler','Hatay Eczacı Odası',[36.2025,36.1606]),
+  isparta:page('https://www.ispartaeo.org.tr/nobetci-eczaneler','Isparta Eczacı Odası',[37.7648,30.5566]),
+  kutahya:page('https://www.kutahyaeo.org.tr/nobetci-eczaneler','Kütahya Eczacı Odası',[39.4242,29.9833]),
+  sakarya:page('https://www.seo.org.tr/nobetci-eczaneler','Sakarya Eczacı Odası',[40.7569,30.3781]),
+  bolu:page('https://www.seo.org.tr/nobetci-eczaneler/14','Sakarya Eczacı Odası · Bolu',[40.7395,31.6116]),
+  sivas:page('https://sivaseo.org.tr/nobetci-eczaneler','Sivas Eczacı Odası',[39.7477,37.0179]),
+  tekirdag:page('https://www.teo.org.tr/nobetci-eczaneler','Tekirdağ Eczacı Odası',[40.978,27.511]),
+  trabzon:page('https://www.trabzoneczaciodasi.org.tr/nobetci-eczaneler/61','Trabzon Eczacı Odası',[41.0027,39.7168]),
+  artvin:page('https://www.trabzoneczaciodasi.org.tr/nobetci-eczaneler/8','Trabzon Eczacı Odası · Artvin',[41.1828,41.8183]),
+  gumushane:page('https://www.trabzoneczaciodasi.org.tr/nobetci-eczaneler/29','Trabzon Eczacı Odası · Gümüşhane',[40.4603,39.4814]),
+  van:page('https://www.vaneczaciodasi.org.tr/nobetci-eczaneler','Van Eczacı Odası',[38.4942,43.38],['bitlis','hakkari']),
+  bitlis:page('https://www.vaneczaciodasi.org.tr/nobetci-eczaneler','Van Eczacı Odası · Bitlis',[38.4006,42.1095],['van','hakkari']),
+  hakkari:page('https://www.vaneczaciodasi.org.tr/nobetci-eczaneler','Van Eczacı Odası · Hakkari',[37.5744,43.7408],['van','bitlis']),
 });
 export const chamberPageFor=(city:string)=>CHAMBER_PAGES[normalized(city).trim()];
 
@@ -60,7 +84,7 @@ const geoPattern=/(?:[?&](?:q|query|ll|daddr|destination)=|@|\/place\/|\/dir\/\/
 
 /** Page text as lines; phone and map links become ⟦TEL:…⟧ / ⟦GEO:lat,lng⟧ markers in reading order. */
 export function pageLines(html:string){
-  let h=html.replace(/<!--[\s\S]*?-->/g,'').replace(/<(script|style|noscript|svg)\b[\s\S]*?<\/\1\s*>/gi,' ');
+  let h=html.replace(/<!--[\s\S]*?-->/g,'').replace(/<(script|style|noscript|svg|select)\b[\s\S]*?<\/\1\s*>/gi,' ');
   // The shared chamber platform pre-fills its date picker with the day of the list on show.
   h=h.replace(/<input\b[^>]*>/gi,tag=>{
     const value=/type\s*=\s*["']?date/i.test(tag)&&/name\s*=\s*["']?tarih/i.test(tag)?tag.match(/value\s*=\s*["'](20\d\d-\d\d-\d\d)["']/)?.[1]:undefined;
@@ -85,7 +109,9 @@ const plainPhone=/^\+?[\d\s()-]{10,18}$/;
 /** Pages group records under district headings ("Kepez", "SEYHAN BUGÜN NÖBETÇİ ECZANELER"). */
 function headingDistrict(line:string,districts:Map<string,string>){
   const n=normalized(line).replace(/\s+/g,' ').trim();
-  return districts.get(n)??districts.get(n.replace(/\s*(?:bugun\s+)?(?:nobetci|nobet)\b.*$/,'').trim());
+  const base=n.replace(/\s*(?:bugun\s+)?(?:nobetci|nobet)\b.*$/,'').trim();
+  // "MERKEZ/KIRŞEHİR BUGÜN NÖBETÇİ ECZANELER" names the district before the slash.
+  return districts.get(n)??districts.get(base)??(base.includes('/')?districts.get(base.split('/')[0].trim()):undefined);
 }
 export function pageRecords(lines:string[],districtNames:string[]=[],province=''){
   const districts=new Map(districtNames.map(name=>[normalized(name).trim(),name]));
@@ -93,8 +119,14 @@ export function pageRecords(lines:string[],districtNames:string[]=[],province=''
   if(province&&districtNames.includes('Merkez')&&!districts.has(normalized(province).trim()))districts.set(normalized(province).trim(),'Merkez');
   const records:RawRecord[]=[];let current:RawRecord|undefined,heading:string|undefined;
   for(const line of lines){
-    if(!line.startsWith('⟦')&&nameLine.test(line)){current={name:line,phones:[],text:[],district:heading};records.push(current);continue;}
+    if(!line.startsWith('⟦')&&nameLine.test(line)){
+      // Some pages repeat the name (title, then card); the repeat continues the same record.
+      if(current?.name===line&&!current.phones.length&&!current.geo&&!current.text.length)continue;
+      current={name:line,phones:[],text:[],district:heading};records.push(current);continue;
+    }
     const section=line.length<=60&&!line.startsWith('⟦')?headingDistrict(line,districts):undefined;
+    // A district line right under a name labels that record; elsewhere it heads the records below.
+    if(section&&current&&!current.text.length){current.district=section;continue;}
     if(section){heading=section;continue;}
     if(!current)continue;
     const tel=line.match(/^⟦TEL:(.*)⟧$/);
@@ -162,14 +194,16 @@ function addressOf(text:string[],heading=''){
 const titleCase=(value:string)=>value.toLocaleLowerCase('tr-TR').replace(/(^|[\s(/-])\p{L}/gu,c=>c.toLocaleUpperCase('tr-TR'));
 const cleanName=(value:string)=>(value.length>40?value.match(/((?:[\p{L}\d.'’&-]+\s){0,3}ECZANES[İIiı])(?!\p{L})/iu)?.[1]??value:value).trim();
 
-export function parseChamberPage(html:string,params:SearchParams,now=new Date(),districtNames:string[]=[]):PlacesResult{
+export function parseChamberPage(html:string,params:SearchParams,now=new Date(),districtNames:string[]=[],siblingDistricts:string[]=[]):PlacesResult{
   const city=normalized(params.city??'').trim(),config=CHAMBER_PAGES[city];
   if(!config||!Number.isFinite(now.getTime())||!Number.isFinite(params.radius)||params.radius<=0)throw new Error('Oda kaynağı bu il için tanımlı değil.');
   if(html.length>3_000_000)throw new SourceFailure('invalid-response');
-  const lines=pageLines(html),records=pageRecords(lines,districtNames,params.city),time=now.getTime();
+  const lines=pageLines(html),records=pageRecords(lines,[...districtNames,...siblingDistricts],params.city),time=now.getTime();
   const day=pageDutyDay(lines);
   if(day&&!activeDutyDates(now).includes(day))throw new Error(`${config.source} sayfasının tarihi güncel değil. Eski kayıtlar gösterilmedi.`);
   const siblings=(config.siblings??[]).map(key=>CHAMBER_PAGES[key].center);
+  const label=(value:string)=>normalized(value).replace(/\s*[(-].*$/,'').trim();
+  const ownDistricts=new Set(districtNames.map(label)),foreignDistricts=new Set(siblingDistricts.map(label));
   const fetchedAt=now.toISOString(),places:Place[]=[],ids=new Set<string>();
   let usable=0,skipped=0,expired=0,upcoming=0,missingPhone=0;
   for(const record of records){
@@ -179,9 +213,16 @@ export function parseChamberPage(html:string,params:SearchParams,now=new Date(),
     if(!record.geo||!name){skipped++;continue;}
     const [lat,lng]=record.geo;
     const own=distanceKm(config.center[0],config.center[1],lat,lng);
-    if(!(lat>35&&lat<43&&lng>25&&lng<45)||own>170){skipped++;continue;}
-    // Chambers serving several provinces: a record belongs to the nearest of their centres.
-    if(siblings.some(([a,b])=>distanceKm(a,b,lat,lng)<own))continue;
+    if(!(lat>35&&lat<43&&lng>25&&lng<45)){skipped++;continue;}
+    // Chambers serving several provinces: a record's district decides its province; a district name
+    // shared by both (e.g. "Merkez") or missing falls back to the nearest centre.
+    if(siblings.length){
+      const area=label(addressOf(record.text,record.district).district);
+      const mine=ownDistricts.has(area),theirs=foreignDistricts.has(area);
+      if(theirs&&!mine)continue;
+      if(!(mine&&!theirs)&&siblings.some(([a,b])=>distanceKm(a,b,lat,lng)<own))continue;
+    }
+    if(own>170){skipped++;continue;}
     const {start,end}=recordInterval(record.text.join(' '),time,day);
     if(end!==undefined&&end<=time){expired++;continue;}
     // A duty lasts at most a day: an end more than 24 h away belongs to a list that has not started.
@@ -247,6 +288,7 @@ export async function searchChamberPage(params:SearchParams):Promise<PlacesResul
   }
   // District names only label records; the list still works if the region service is down.
   const plate=plateForCity(params.city??'');
-  const districts=plate?await listRegions(plate).then(result=>result.regions.map(region=>region.name),()=>[]):[];
-  return parseChamberPage(html,params,new Date(),districts);
+  const districtsOf=(plate?:number)=>plate?listRegions(plate).then(result=>result.regions.map(region=>region.name),()=>[] as string[]):Promise.resolve([] as string[]);
+  const [districts,...others]=await Promise.all([districtsOf(plate),...(config.siblings??[]).map(key=>districtsOf(plateForCity(key)))]);
+  return parseChamberPage(html,params,new Date(),districts,others.flat());
 }
