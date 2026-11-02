@@ -1,6 +1,8 @@
 import type {Place} from './places';
 export const pharmacyDistance=(p:Place)=>p.distance<1?`${Math.round(p.distance*1000)} m`:`${p.distance.toFixed(1)} km`;
-export const pharmacyDirections=(p:Pick<Place,'lat'|'lng'>)=>`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+// A point estimated at neighbourhood level would mislead turn-by-turn directions, so its name and address are sent instead.
+export const pharmacyDirections=(p:Pick<Place,'lat'|'lng'>&Partial<Pick<Place,'name'|'address'|'locationEstimate'>>)=>`https://www.google.com/maps/dir/?api=1&destination=${p.locationEstimate==='neighbourhood'&&p.name&&p.address?encodeURIComponent(`${p.name}, ${p.address.replace(/\s*·\s*/g,', ')}`):`${p.lat},${p.lng}`}`;
+export const pharmacyLocationNote=(p:Pick<Place,'locationEstimate'>)=>p.locationEstimate==='pharmacy'?'Kaynak harita konumu vermiyor; konum OpenStreetMap eczane kaydından alındı.':p.locationEstimate==='neighbourhood'?'Kaynak harita konumu vermiyor; konum adresteki mahalle ve sokağa göre yaklaşık gösteriliyor.':undefined;
 export const pharmacyAppleDirections=(p:Pick<Place,'lat'|'lng'>)=>`https://maps.apple.com/?daddr=${p.lat},${p.lng}`;
 export const pharmacyMapLink=(p:Pick<Place,'lat'|'lng'>)=>`https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
 export const pharmacyPhoneLink=(phone:string)=>'tel:'+phone.replace(/[^\d+]/g,'');

@@ -20,6 +20,7 @@ import {
   pharmacyDutyDate,
   pharmacyTimestamp,
   pharmacyDisplayName,
+  pharmacyLocationNote,
 } from "@/lib/pharmacy-presentation";
 import { safeUrl } from "@/lib/places";
 import type { Place } from "@/lib/places";
@@ -109,6 +110,12 @@ export function PharmacyDetail({
         <div className="detail-date">
           <Clock size={15} />
           <span>Nöbet bitişi: {pharmacyTimestamp(p.closes)}</span>
+        </div>
+      )}
+      {pharmacyLocationNote(p) && (
+        <div className="detail-date">
+          <MapPin size={15} />
+          <span>{pharmacyLocationNote(p)}</span>
         </div>
       )}
       <div className="detail-utility-actions">
