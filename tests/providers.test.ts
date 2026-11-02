@@ -230,8 +230,8 @@ test("unsupported provinces are not attributed to neighbouring official sources"
       );
     };
     for (const [city, lat, lng] of [
-      ["Kocaeli", 40.76, 29.94],
-      ["Manisa", 38.61, 27.43],
+      ["Sakarya", 40.78, 30.4],
+      ["Hatay", 36.2, 36.16],
     ] as const) {
       const result = await pharmacyProvider.search({
         city,

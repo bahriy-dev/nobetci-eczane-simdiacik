@@ -13,6 +13,8 @@ export type Place = {
   status: "open" | "closed" | "unknown";
   /** Confirmed duty ending time, only when the source explicitly supplies it. */
   closes?: string;
+  /** Confirmed duty start, set only while that start is still ahead (evening lists seen by day). */
+  opens?: string;
   allDay: boolean;
   distance: number;
   rating?: number;

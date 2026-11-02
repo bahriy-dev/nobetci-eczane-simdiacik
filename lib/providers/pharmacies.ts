@@ -3,10 +3,12 @@ import {z} from 'zod';
 import {distanceKm,normalized,type Place,type PlacesProvider,type PlacesResult,type SearchParams} from '../places';
 import {searchAnkaraPharmacies} from './ankara';
 import {kayseriPharmacyProvider} from './kayseri';
-import {konyaPharmacyProvider} from './konya';
 import {samsunPharmacyProvider} from './samsun';
 import {searchGaziantepChamber} from './gaziantep-chamber';
+import {eczanelerApiKey,plateForCity,searchEczanelerPharmacies} from './eczaneler-org';
+import {chamberPageFor,searchChamberPage} from './chamber-pages';
 import {getPharmacySource} from '../pharmacy-sources';
+import {activeDutyDates,dutyListEnds} from '../duty-day';
 
 export const ISTANBUL_SOURCE_URL='https://www.istanbuleczaciodasi.org.tr/nobetci-eczane/';
 export const IZMIR_SOURCE_URL='https://www.izmir.bel.tr/tr/NobetciEczane/27';
@@ -101,16 +103,20 @@ export function parseIstanbulPharmacies(payload:unknown,params:SearchParams,now=
 
 /** Tarih is a source calendar date; no overnight interval is inferred from its 08:00 value. */
 export function parseIzmirPharmacies(payload:unknown,params:SearchParams,now=new Date()):PlacesResult{
-  const {today,fetchedAt,verifiedUntil}=metadata(params,now);
+  const {fetchedAt}=metadata(params,now),active=activeDutyDates(now);
   if(normalized(params.city??'İzmir').trim()!=='izmir')throw new Error('İzmir Belediyesi kaynağı bu il için doğrulanmadı.');
   const parsed=z.array(z.unknown()).max(2000).safeParse(payload);
   if(!parsed.success)throw new Error('İzmir nöbet listesi doğrulanamadı.');
+  // An empty answer means the source is not publishing right now, never that no pharmacy is on duty.
+  if(!parsed.data.length)throw new Error('İzmir kaynağı şu an nöbet listesi yayımlamıyor.');
   const places:Place[]=[],ids=new Set<string>();
   let currentRows=0,usableRows=0,skipped=0,missingPhone=0,skippedDates=0;
   for(const raw of parsed.data){
     const date=sourceDate.safeParse(object(raw)?raw.Tarih:undefined);
     if(!date.success){skipped++;continue;}
-    if(date.data.slice(0,10)!==today){skippedDates++;continue;}
+    const today=date.data.slice(0,10);
+    if(!active.includes(today)){skippedDates++;continue;}
+    const verifiedUntil=new Date(Math.min(now.getTime()+300000,dutyListEnds(today))).toISOString();
     currentRows++;
     const record=izmirRow.safeParse(raw);
     if(!record.success){skipped++;continue;}
@@ -136,25 +142,30 @@ export function parseIzmirPharmacies(payload:unknown,params:SearchParams,now=new
   return result(places,'İzmir Büyükşehir Belediyesi',fetchedAt,skipped,missingPhone,skippedDates);
 }
 
+/**
+ * Official adapters used only when the licensed API is not configured or fails. İstanbul/Yalova and
+ * Konya are absent: their chambers now refuse third-party requests, and that refusal is not bypassed.
+ */
+function officialAdapter(city:string):((params:SearchParams)=>Promise<PlacesResult>)|undefined{
+  if(city==='ankara'||city==='kirikkale')return searchAnkaraPharmacies;
+  if(city==='kayseri')return params=>kayseriPharmacyProvider.search(params);
+  if(city==='samsun'||city==='sinop')return params=>samsunPharmacyProvider.search(params);
+  if(city==='gaziantep')return searchGaziantepChamber;
+  if(city==='izmir')return async params=>parseIzmirPharmacies(await(await get(izmirEndpoint)).json(),params,new Date());
+  if(chamberPageFor(city))return searchChamberPage;
+}
+
 export const pharmacyProvider:PlacesProvider={async search(params){
   const city=normalized(params.city||'').trim();
-  if(city==='ankara')return searchAnkaraPharmacies(params);
-  if(city==='kayseri')return kayseriPharmacyProvider.search(params);
-  if(city==='konya')return konyaPharmacyProvider.search(params);
-  if(city==='samsun'||city==='sinop')return samsunPharmacyProvider.search(params);
-  if(city==='gaziantep')return searchGaziantepChamber(params);
-  if(city==='istanbul'||city==='yalova'){
-    const html=await(await get(ISTANBUL_SOURCE_URL)).text();
-    const token=html.match(/id="h"\s+value="([^"]+)"/)?.[1];
-    if(!token||html.length>500000)throw new Error('İstanbul Eczacı Odası veri biçimi değişmiş.');
-    const response=await get(ISTANBUL_SOURCE_URL+'index.php',{method:'POST',headers:{Referer:ISTANBUL_SOURCE_URL},body:new URLSearchParams({jx:'1',islem:'get_eczane_markers',h:token})});
-    const payload:unknown=await response.json();
-    return parseIstanbulPharmacies(payload,params,new Date());
+  const fallback=officialAdapter(city);
+  if(eczanelerApiKey()&&plateForCity(params.city??'')){
+    try{return await searchEczanelerPharmacies(params);}
+    catch(error){
+      if(!fallback)throw error;
+      console.warn('eczaneler_org_failed_using_official',{city:params.city});
+    }
   }
-  if(city==='izmir'){
-    const payload:unknown=await(await get(izmirEndpoint)).json();
-    return parseIzmirPharmacies(payload,params,new Date());
-  }
+  if(fallback)return fallback(params);
   const official=getPharmacySource(params.city);
   return {places:[],coverageStatus:'unsupported',source:official.name,fetchedAt:new Date().toISOString(),coverage:'Bu ilde otomatik nöbet bağlantısı henüz yok. '+(official.kind==='duty-list'?'Resmî nöbet listesini':official.kind==='chamber'?'İlgili eczacı odasının sitesini':'Türk Eczacıları Birliği kaynak rehberini')+' aşağıdaki bağlantıdan açabilirsin.',warnings:['Genel eczane kayıtları nöbetçi eczane olarak gösterilmez.']};
 }};

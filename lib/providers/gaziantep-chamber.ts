@@ -1,6 +1,7 @@
 import {distanceKm,normalized,type Place,type PlacesResult,type SearchParams} from '../places';
 import {requestSource} from '../source-request';
 import {validTurkeyCoordinates} from '../location-validation';
+import {activeDutyDates,dutyListEnds} from '../duty-day';
 export const GAZIANTEP_CHAMBER_URL='https://www.gaziantepeo.org.tr/nobetci-eczaneler/';
 const endpoint='https://www.gaziantepeo.org.tr/api/nobetci-eczaneler.JSON';
 const fields=['tarih','unvan','enlem','boylam','telefon','adres','ilce','il','id'] as const;
@@ -10,11 +11,12 @@ export function parseGaziantepChamber(payload:unknown,params:SearchParams,now=ne
  const data=payload as Record<string,unknown>;
  const values:Record<string,string[]>={};let length:number|undefined;
  for(const key of fields){const rows=data[key];if(!Array.isArray(rows)||rows.length>500||rows.some(v=>typeof v!=='string'||v.length>1200)||(length!==undefined&&rows.length!==length))throw new Error('Gaziantep oda kayıtlarının biçimi doğrulanamadı.');length=rows.length;values[key]=rows;}
- const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul'}).format(now);
- const fetchedAt=now.toISOString(),verifiedUntil=new Date(Math.min(now.getTime()+300000,new Date(day+'T00:00:00+03:00').getTime()+86400000)).toISOString();
+ // Before the morning handover the endpoint still serves the list that started the previous morning.
+ const day=values.tarih[0]??'',active=activeDutyDates(now);
+ const fetchedAt=now.toISOString(),verifiedUntil=new Date(Math.min(now.getTime()+300000,dutyListEnds(day))).toISOString();
  const places:Place[]=[],seen=new Set<string>();let skipped=0,usable=0,provinceRows=0,missingPhone=0;
  for(let i=0;i<(length||0);i++){
-  if(values.tarih[i]!==day)throw new Error('Gaziantep oda kaynağının tarihi güncel değil.');
+  if(values.tarih[i]!==day||!active.includes(day))throw new Error('Gaziantep oda kaynağının tarihi güncel değil.');
   if(normalized(values.il[i].trim())!=='gaziantep')continue;provinceRows++;
   const lat=Number(values.enlem[i]),lng=Number(values.boylam[i]);
   const name=values.unvan[i].trim(),address=values.adres[i].trim(),district=values.ilce[i].trim(),sourceId=values.id[i].trim();

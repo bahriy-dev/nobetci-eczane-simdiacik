@@ -1,5 +1,6 @@
 import {requestSource} from '../source-request';
 import { distanceKm, normalized, type Place, type PlacesProvider, type PlacesResult, type SearchParams } from '../places';
+import { activeDutyDates, dutyListEnds } from '../duty-day';
 
 export const GAZIANTEP_SOURCE_URL = 'https://www.gaziantep.bel.tr/tr/nobetci-eczaneler';
 const source = 'Gaziantep Büyükşehir Belediyesi';
@@ -106,14 +107,13 @@ export function parseGaziantepPharmacies(payload: unknown, params: SearchParams,
   if (!Number.isFinite(now.getTime()) || !Number.isFinite(params.lat) || !Number.isFinite(params.lng) || !Number.isFinite(params.radius) || params.radius <= 0) throw new Error('Gaziantep arama konumu geçersiz.');
   if (typeof payload !== 'string' || !payload || payload.length > 2_000_000) throw new Error('Gaziantep nöbet kaynağının veri biçimi değişmiş.');
   const html = payload.replace(/<!--[\s\S]*?-->/g, '').replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
-  const today = turkeyDay(now);
-  if (sourceDay(html) !== today) throw new Error('Gaziantep kaynağının nöbet tarihi güncel değil. Eski kayıtlar gösterilmedi.');
+  const today = sourceDay(html);
+  if (!activeDutyDates(now).includes(today)) throw new Error('Gaziantep kaynağının nöbet tarihi güncel değil. Eski kayıtlar gösterilmedi.');
   if (params.city && normalized(params.city) !== 'gaziantep') throw new Error('Gaziantep kaynağı bu il için doğrulanmadı.');
   const cards = pharmacyCards(html);
   if (!cards.length || cards.length > 500) throw new Error('Gaziantep nöbet kaynağının kart biçimi değişmiş.');
   const fetchedAt = now.toISOString();
-  const midnight = new Date(`${today}T00:00:00+03:00`).getTime() + 86_400_000;
-  const verifiedUntil = new Date(Math.min(now.getTime() + 300_000, midnight)).toISOString();
+  const verifiedUntil = new Date(Math.min(now.getTime() + 300_000, dutyListEnds(today))).toISOString();
   const places: Place[] = [], ids = new Set<string>();
   let skipped = 0, missingPhone = 0;
   for (const card of cards) {

@@ -5,6 +5,8 @@ import {
   pharmacyDistance,
   pharmacyDirections,
   pharmacyPhoneLink,
+  pharmacyShortAddress,
+  pharmacyDisplayName,
 } from "@/lib/pharmacy-presentation";
 import { PharmacyStatus } from "./pharmacy-status";
 type Props = {
@@ -50,9 +52,7 @@ export function PharmacyCard({
         </span>
         <div>
           <h3 className="pharmacy-name">
-            {p.name
-              .toLocaleLowerCase("tr-TR")
-              .replace(/(^|\s)\S/g, (c) => c.toLocaleUpperCase("tr-TR"))}
+            {pharmacyDisplayName(p.name)}
           </h3>
           <div className="card-status-row">
             <PharmacyStatus p={p} now={now} />
@@ -70,7 +70,7 @@ export function PharmacyCard({
       </div>
       <p className="pharmacy-address">
         <MapPin size={14} />
-        <span>{p.address}</span>
+        <span title={p.address}>{pharmacyShortAddress(p.address)}</span>
         <button
           className="card-copy-address"
           onClick={onCopy}
