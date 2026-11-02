@@ -12,3 +12,12 @@ export function pharmacyDutyDate(value?:string){
  const sourceDay=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul'}).format(date);
  return sourceDay===value?date.toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul',day:'2-digit',month:'2-digit',year:'numeric'}):undefined;
 }
+/** Card line: street and number only. District/province ("Çankaya/ANKARA") and directions stay in the detail panel. */
+export function pharmacyShortAddress(address:string){
+ const first=address.split(' · ')[0].trim();
+ const street=first.replace(/(?:^|\s)[\p{L}.]+(?:\s*\/\s*[\p{L}.]+)*\s*\/\s*\p{L}+(?:\s.*)?$/u,'').replace(/[\s,]+$/,'').trim();
+ const line=street.length>=8?street:first;
+ return /\p{Ll}/u.test(line)?line:line.toLocaleLowerCase('tr-TR').replace(/(^|[\s.(/-])\p{L}/gu,c=>c.toLocaleUpperCase('tr-TR'));
+}
+/** Sources publish names in capitals; cards and the detail panel show the same title case. */
+export const pharmacyDisplayName=(name:string)=>name.toLocaleLowerCase('tr-TR').replace(/(^|\s)\S/g,c=>c.toLocaleUpperCase('tr-TR'));

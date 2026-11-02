@@ -15,7 +15,8 @@
     "build:railway": "next build --webpack",
     "start:railway": "node scripts/start-railway.mjs",
     "test": "tsx --test tests/*.test.ts",
-    "monitor:sources": "node scripts/check-live-sources.mjs"
+    "monitor:sources": "node scripts/check-live-sources.mjs",
+    "audit:coverage": "tsx scripts/audit-coverage.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

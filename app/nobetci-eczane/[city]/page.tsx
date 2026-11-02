@@ -148,15 +148,15 @@ export default async function CityGuidePage({
           <div className="city-hero-source-pill">
             <ShieldCheck size={16} />
             <span>
-              Veri Kaynağı: <strong>{city.source.name}</strong>
+              Resmî nöbet listesi: <strong>{city.source.name}</strong>
             </span>
             <a
               href={city.source.url}
               target="_blank"
               rel="noreferrer"
-              title="Resmî kaynağa git"
+              title="Resmî nöbet listesini aç"
             >
-              Kaynak <ArrowUpRight size={13} />
+              Aç <ArrowUpRight size={13} />
             </a>
           </div>
         </section>

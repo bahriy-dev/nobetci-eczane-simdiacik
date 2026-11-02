@@ -6,7 +6,7 @@ import "./design-refresh.css";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#285c4b",
+  themeColor: "#16302c",
 };
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),

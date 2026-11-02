@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseAnkaraPharmacies } from '../lib/providers/ankara';
+import { ankaraSourceProvince, parseAnkaraPharmacies } from '../lib/providers/ankara';
 import type { SearchParams } from '../lib/places';
 
 const params: SearchParams = { lat: 39.92, lng: 32.85, radius: 10, query: '', category: 'Eczane', demo: false };
@@ -61,4 +61,12 @@ test('Ankara fails closed on changed schema while retaining a valid official emp
   const result = parseAnkaraPharmacies(payload(card('ŞİFA', '39.9201', '32.8501', 'javascript:bad')), params, now);
   assert.equal(result.places[0].phone, undefined);
   assert.equal(result.partial, true);
+});
+
+test('Kırıkkale records in the Ankara chamber list belong to Kırıkkale, not Ankara', () => {
+  assert.equal(ankaraSourceProvince('Yahşihan', 'Alaaddin Mah. Yahşihan/KIRIKKALE'), 'Kırıkkale');
+  assert.equal(ankaraSourceProvince('Kırıkkale', 'Güzeltepe Mah. Merkez/KIRIKKALE'), 'Kırıkkale');
+  assert.equal(ankaraSourceProvince('Ilcesi Belirlenmemis', 'Karşıyaka Mah. Lalahan/ ANKARA'), 'Ankara');
+  assert.equal(ankaraSourceProvince('Ilcesi Belirlenmemis', 'Merkez/ KIRIKKALE'), 'Kırıkkale');
+  assert.equal(ankaraSourceProvince('Çankaya', 'Kızılay Mah. Çankaya/ANKARA'), 'Ankara');
 });

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {pharmacyDutyDate,pharmacyTimestamp,pharmacyMapLink,pharmacyDirections,pharmacyAppleDirections,pharmacyPhoneLink} from '../lib/pharmacy-presentation';
+import {pharmacyDutyDate,pharmacyTimestamp,pharmacyMapLink,pharmacyDirections,pharmacyAppleDirections,pharmacyPhoneLink,pharmacyShortAddress} from '../lib/pharmacy-presentation';
 test('duty dates stay source calendar dates without being replaced by query timestamps',()=>{
  assert.equal(pharmacyDutyDate('2026-10-06'),'06.10.2026');
  assert.equal(pharmacyDutyDate(undefined),undefined);
@@ -16,4 +16,11 @@ test('sharing points to the selected pharmacy rather than a province duty list',
  assert.equal(new URL(pharmacyDirections(p)).searchParams.get('destination'),'40.9875,29.0278');
  assert.equal(new URL(pharmacyAppleDirections(p)).searchParams.get('daddr'),'40.9875,29.0278');
  assert.equal(pharmacyPhoneLink('0216 565 64 41'),'tel:02165656441');
+});
+test('cards show street and number; district, province and directions stay in the detail panel',()=>{
+ assert.equal(pharmacyShortAddress('Kavaklıdere Mah. Büklüm Cad. No:6/18 Çankaya/ ANKARA Akay Lokman Hekim Hastanesi yanı'),'Kavaklıdere Mah. Büklüm Cad. No:6/18');
+ assert.equal(pharmacyShortAddress('Aşağı Eğlence Mah.Susurluk Sok. No:18/B Etlik / Keçiören/ANKARA ADESE Market Çaprazı'),'Aşağı Eğlence Mah.Susurluk Sok. No:18/B');
+ assert.equal(pharmacyShortAddress('GEVHER NESİBE MAH. ATATÜRK BUL. NO: 21 KOCASİNAN/ KAYSERİ · KOCASİNAN'),'Gevher Nesibe Mah. Atatürk Bul. No: 21');
+ assert.equal(pharmacyShortAddress('Moda Mah. Test Sok. No:1 · Kadıköy · İstanbul'),'Moda Mah. Test Sok. No:1');
+ assert.equal(pharmacyShortAddress('Rıhtım Cad. · Kadıköy'),'Rıhtım Cad.');
 });

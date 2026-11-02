@@ -58,13 +58,17 @@ test('official cards retain attribution, their own phone and coordinates without
   }
 });
 
-test('only the current Turkey calendar date is accepted, including just after local midnight', () => {
-  for (const time of [now, new Date('2026-10-06T22:00:00Z')]) {
+test('the overnight list stays valid after midnight and is replaced at the 09:00 handover', () => {
+  const afterMidnight = new Date('2026-10-06T22:00:00Z');
+  for (const time of [now, afterMidnight]) {
     assert.equal(parseSamsunPharmacies(samsunPage(), samsunParams, time).places.length, 1);
     assert.equal(parseGaziantepPharmacies(gaziantepPage(), gaziantepParams, time).places.length, 1);
-    assert.throws(() => parseSamsunPharmacies(samsunPage(undefined, '06 Ekim 2026 Salı · 08:30'), samsunParams, time), /güncel değil/);
-    assert.throws(() => parseGaziantepPharmacies(gaziantepPage(undefined, '2026-10-06'), gaziantepParams, time), /güncel değil/);
   }
+  assert.equal(parseSamsunPharmacies(samsunPage(undefined, '06 Ekim 2026 Salı · 08:30'), samsunParams, afterMidnight).places.length, 1);
+  assert.equal(parseGaziantepPharmacies(gaziantepPage(undefined, '2026-10-06'), gaziantepParams, afterMidnight).places.length, 1);
+  assert.throws(() => parseSamsunPharmacies(samsunPage(undefined, '06 Ekim 2026 Salı · 08:30'), samsunParams, now), /güncel değil/);
+  assert.throws(() => parseGaziantepPharmacies(gaziantepPage(undefined, '2026-10-06'), gaziantepParams, now), /güncel değil/);
+  assert.throws(() => parseSamsunPharmacies(samsunPage(undefined, '05 Ekim 2026 Pazartesi · 08:30'), samsunParams, afterMidnight), /güncel değil/);
   assert.throws(() => parseSamsunPharmacies(samsunPage(undefined, '08 Ekim 2026 Perşembe · 08:30'), samsunParams, now), /güncel değil/);
   assert.throws(() => parseGaziantepPharmacies(gaziantepPage(undefined, '2026-10-08'), gaziantepParams, now), /güncel değil/);
 });
@@ -79,10 +83,10 @@ test('invalid calendar dates and changed or ambiguous date fields fail clearly',
   assert.throws(() => parseGaziantepPharmacies(gaziantepPage() + '<input id="datepicker" name="date" value="2026-10-07">', gaziantepParams, now), /tarihi doğrulanamadı/);
 });
 
-test('verification expires at the Turkey date boundary even when five minutes have not elapsed', () => {
-  const midnightSoon = new Date('2026-10-07T20:59:59Z');
-  assert.equal(parseSamsunPharmacies(samsunPage(), samsunParams, midnightSoon).places[0].verifiedUntil, '2026-10-07T21:00:00.000Z');
-  assert.equal(parseGaziantepPharmacies(gaziantepPage(), gaziantepParams, midnightSoon).places[0].verifiedUntil, '2026-10-07T21:00:00.000Z');
+test('verification expires at the next morning handover even when five minutes have not elapsed', () => {
+  const handoverSoon = new Date('2026-10-08T05:59:59Z');
+  assert.equal(parseSamsunPharmacies(samsunPage(), samsunParams, handoverSoon).places[0].verifiedUntil, '2026-10-08T06:00:00.000Z');
+  assert.equal(parseGaziantepPharmacies(gaziantepPage(), gaziantepParams, handoverSoon).places[0].verifiedUntil, '2026-10-08T06:00:00.000Z');
 });
 
 test('Samsun and Sinop are selected by their explicit official page sections', () => {

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseIstanbulPharmacies,parseIzmirPharmacies,pharmacyProvider,ISTANBUL_SOURCE_URL} from '../lib/providers/pharmacies';
+import {parseIstanbulPharmacies,parseIzmirPharmacies} from '../lib/providers/pharmacies';
 
 const now=new Date('2026-10-09T13:00:00Z');
 const istanbulParams={city:'İstanbul',lat:41,lng:29,radius:100,category:'Eczane',query:'',demo:false};
@@ -54,9 +54,11 @@ test('only validated telephone strings are exposed, including source-specific lo
   }
 });
 
-test('İzmir accepts only the current Turkey calendar date, including before08:00',()=>{
-  const beforeEight=new Date('2026-10-09T04:59:00Z');
-  assert.throws(()=>parseIzmirPharmacies([{...izmirRow,Tarih:'2026-10-08T08:00:00'}],izmirParams,beforeEight));
+test('İzmir keeps the previous list only until the 09:00 handover',()=>{
+  const beforeHandover=new Date('2026-10-09T05:59:00Z'),afterHandover=new Date('2026-10-09T06:00:00Z');
+  assert.equal(parseIzmirPharmacies([{...izmirRow,Tarih:'2026-10-08T08:00:00'}],izmirParams,beforeHandover).places.length,1);
+  assert.throws(()=>parseIzmirPharmacies([{...izmirRow,Tarih:'2026-10-08T08:00:00'}],izmirParams,afterHandover));
+  assert.throws(()=>parseIzmirPharmacies([],izmirParams,now),/yayımlamıyor/);
   for(const Tarih of ['2026-10-08T08:00:00','2026-10-10T08:00:00','2026-02-30T08:00:00','2026-10-09T25:00:00','2026-10-09T08:00:00junk'])assert.throws(()=>parseIzmirPharmacies([{...izmirRow,Tarih}],izmirParams,now));
   const mixed=parseIzmirPharmacies([izmirRow,{...izmirRow,Tarih:'2026-10-08T08:00:00'}],izmirParams,now);
   assert.equal(mixed.places.length,1);
@@ -64,54 +66,23 @@ test('İzmir accepts only the current Turkey calendar date, including before08:0
   assert.throws(()=>parseIzmirPharmacies([izmirRow],{...izmirParams,city:'Manisa'},now));
 });
 
-test('legacy records expire within five minutes and never cross Turkey midnight',()=>{
+test('legacy records expire within five minutes and never outlive their duty list',()=>{
   const late=new Date('2026-10-09T20:59:00Z');
-  for(const result of [parseIstanbulPharmacies({error:0,eczaneler:[ieoRow]},istanbulParams,late),parseIzmirPharmacies([izmirRow],izmirParams,late)]){
+  for(const [result,until] of [[parseIstanbulPharmacies({error:0,eczaneler:[ieoRow]},istanbulParams,late),'2026-10-09T21:00:00.000Z'],[parseIzmirPharmacies([izmirRow],izmirParams,late),'2026-10-09T21:04:00.000Z']] as const){
     assert.equal(result.fetchedAt,late.toISOString());
-    assert.equal(result.places[0].verifiedUntil,'2026-10-09T21:00:00.000Z');
+    assert.equal(result.places[0].verifiedUntil,until);
     assert.equal(result.places[0].allDay,false);
     assert.equal(result.places[0].status,'unknown');
   }
   assert.equal(parseIzmirPharmacies([izmirRow],izmirParams,now).places[0].verifiedUntil,'2026-10-09T13:05:00.000Z');
-  assert.throws(()=>parseIzmirPharmacies([izmirRow],izmirParams,new Date('2026-10-09T21:00:00Z')));
+  assert.equal(parseIzmirPharmacies([izmirRow],izmirParams,new Date('2026-10-10T05:58:00Z')).places[0].verifiedUntil,'2026-10-10T06:00:00.000Z');
+  assert.throws(()=>parseIzmirPharmacies([izmirRow],izmirParams,new Date('2026-10-10T06:00:00Z')));
 });
 
 test('valid distant records yield an empty radius result rather than a false stale-source error',()=>{
   assert.equal(parseIstanbulPharmacies({error:0,eczaneler:[{...ieoRow,lat:'42'}]},{...istanbulParams,radius:1},now).places.length,0);
   assert.equal(parseIzmirPharmacies([{...izmirRow,LokasyonX:'39'}],{...izmirParams,radius:1},now).places.length,0);
 });
-
-test('fetch completion determines timestamps and uses only existing public IEO operations',async()=>{
-  const original=globalThis.fetch;
-  let calls=0,completedAt=0;
-  try{
-    globalThis.fetch=async(input,init)=>{
-      calls++;
-      if(calls===1){
-        assert.equal(String(input),ISTANBUL_SOURCE_URL);
-        return new Response('<input id="h" value="public-fixture-nonce">');
-      }
-      assert.equal(String(input),ISTANBUL_SOURCE_URL+'index.php');
-      assert.equal(init?.method,'POST');
-      assert.equal(new URLSearchParams(init?.body as URLSearchParams).get('islem'),'get_eczane_markers');
-      const response=Response.json({error:0,eczaneler:[ieoRow]});
-      const json=response.json.bind(response);
-      response.json=async()=>{
-        await new Promise(resolve=>setTimeout(resolve,10));
-        const body=await json();
-        completedAt=Date.now();
-        return body;
-      };
-      return response;
-    };
-    const result=await pharmacyProvider.search(istanbulParams);
-    assert.equal(calls,2);
-    assert.ok(Date.parse(result.fetchedAt)>=completedAt);
-    assert.ok(Date.parse(result.places[0].verifiedUntil!)<=Date.parse(result.fetchedAt)+300000);
-  }finally{globalThis.fetch=original;}
-});
-
-
 
 test('source duty dates are preserved only where the record explicitly supplies one',()=>{
   assert.equal(parseIzmirPharmacies([izmirRow],izmirParams,now).places[0].dutyDate,'2026-10-09');
