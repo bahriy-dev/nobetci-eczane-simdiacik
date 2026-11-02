@@ -2,7 +2,7 @@ import { istanbulOverview } from "@/lib/default-search";
 import { z } from "zod";
 import { categoryNames } from "@/lib/places";
 import { searchPlaces } from "@/lib/providers";
-import { classifySourceFailure } from "@/lib/source-request";
+import { classifySourceFailure, SourceFailure } from "@/lib/source-request";
 import { getPharmacySource } from "@/lib/pharmacy-sources";
 import {
   createRequestRateLimiter,
@@ -55,6 +55,13 @@ export async function GET(request: Request) {
         state: "source-error",
         errorKind: failure.kind,
         sourceUrl: official.url,
+        // Parser messages are written for people (e.g. "…sayfasının tarihi güncel değil"); network
+        // and HTTP failures carry no message here.
+        ...(error instanceof Error &&
+        !(error instanceof SourceFailure) &&
+        error.message.length <= 200
+          ? { detail: error.message }
+          : {}),
         error:
           "Güncel eczane kayıtları alınamadı. Tekrar dene veya resmî nöbet listesini aç.",
       },
