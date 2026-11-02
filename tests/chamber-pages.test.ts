@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {decodePage,parseChamberPage,searchChamberPage,CHAMBER_PAGES} from '../lib/providers/chamber-pages';
 import {pharmacyProvider} from '../lib/providers/pharmacies';
+import {turkeyDay} from '../lib/duty-day';
 const params=(city:string,lat:number,lng:number)=>({city,lat,lng,radius:2000,category:'Eczane',query:'',demo:false});
 const denizli=(interval='01.11.2026 08:30 / 02.11.2026 08:30 nöbetçidir.',heading='02 Kasım 2026 DENİZLİ\'DE NÖBETÇİ ECZANELER')=>`<h2>${heading}</h2>
 <div class="nobetci"><h4>ADALET ECZANESİ</h4><p>- MERKEZEFENDİ / ADALET MAH. 10142 SOK. NO:11</p><p>${interval}</p>
@@ -31,6 +32,28 @@ test('an evening shift seen by day is shown with its start; a later day\'s shift
   assert.equal(place.opens,'2026-11-02T15:30:00.000Z');assert.equal(place.closes,'2026-11-03T05:30:00.000Z');
   assert.equal(parseChamberPage(evening,params('Denizli',37.78,29.09),new Date('2026-11-02T16:00:00Z')).places[0].opens,undefined);
   assert.throws(()=>parseChamberPage(evening,params('Denizli',37.78,29.09),new Date('2026-11-02T00:30:00Z')),/göstermiyor/); // 03:30
+});
+
+const izmir=(date='2026-11-02',clock="<p>SAAT 23:59'A KADAR NÖBETÇİDİR</p>")=>`<form><input type="date" name="tarih1" value="${date}" class="form-control"></form>
+<h4>YILDIZ ECZANESİ - ALTINDAĞ</h4><a href="tel:02324676727">0232</a><p>* (24:00'DEN SONRA- ÇAMDİBİ )</p>${clock}<p>ZAFER MAH. YENER CAD. NO:25/B</p>
+<a href="https://www.google.com/maps?q=38.422392,27.205131">Harita</a>`;
+test('the platform date picker dates a page, and a clock-only end belongs to that duty day',()=>{
+  const at=(iso:string)=>parseChamberPage(izmir(),params('İzmir',38.42,27.14),new Date(iso));
+  const [place]=at('2026-11-02T18:00:00Z').places; // 21:00
+  assert.equal(place.name,'YILDIZ ECZANESİ');assert.equal(place.address,'ZAFER MAH. YENER CAD. NO:25/B · Altındağ');
+  assert.equal(place.closes,'2026-11-02T20:59:00.000Z');
+  assert.throws(()=>at('2026-11-02T21:30:00Z'),/göstermiyor/); // 00:30, its shift is over
+  assert.throws(()=>parseChamberPage(izmir('2026-10-30'),params('İzmir',38.42,27.14),new Date('2026-11-02T18:00:00Z')),/güncel değil/);
+});
+
+test('an empty İzmir municipal feed falls back to the chamber page',async()=>{
+  const original=globalThis.fetch,previous=process.env.ECZANELER_API_KEY;
+  try{
+    delete process.env.ECZANELER_API_KEY;
+    globalThis.fetch=async input=>{const url=String(input);if(url.includes('openapi.izmir'))return Response.json([]);if(url.includes('turkiyeapi'))return Response.json({},{status:500});return new Response(izmir(turkeyDay(Date.now()),''),{headers:{'content-type':'text/html; charset=utf-8'}});};
+    const result=await pharmacyProvider.search(params('İzmir',38.42,27.14));
+    assert.equal(result.source,'İzmir Eczacı Odası');assert.equal(result.places.length,1);
+  }finally{globalThis.fetch=original;if(previous!==undefined)process.env.ECZANELER_API_KEY=previous;}
 });
 
 test('district headings and addresses inside map links are kept',()=>{
