@@ -15,6 +15,8 @@ export type Place = {
   closes?: string;
   /** Confirmed duty start, set only while that start is still ahead (evening lists seen by day). */
   opens?: string;
+  /** Set when the source gave no map point and the location was placed from the address. */
+  locationEstimate?: "pharmacy" | "neighbourhood";
   allDay: boolean;
   distance: number;
   rating?: number;

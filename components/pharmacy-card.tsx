@@ -70,7 +70,12 @@ export function PharmacyCard({
       </div>
       <p className="pharmacy-address">
         <MapPin size={14} />
-        <span title={p.address}>{pharmacyShortAddress(p.address)}</span>
+        <span title={p.address}>
+          {pharmacyShortAddress(p.address)}
+          {p.locationEstimate === "neighbourhood" && (
+            <em className="location-estimate"> · yaklaşık konum</em>
+          )}
+        </span>
         <button
           className="card-copy-address"
           onClick={onCopy}

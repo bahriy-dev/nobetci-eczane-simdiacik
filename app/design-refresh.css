@@ -1505,3 +1505,7 @@ body { background: var(--background); letter-spacing: -.015em; }
 /* Duty that starts later today (evening shifts published by day) */
 .status.upcoming { color: #7a5a12; background: #f6edd6; border: 1px solid transparent; }
 .dark .status.upcoming { color: #e6c77a; background: rgba(230, 199, 122, 0.14); border-color: transparent; }
+
+/* Location placed from the address, not from the source's own map point */
+.location-estimate { font-style: normal; color: #7a5a12; }
+.dark .location-estimate { color: #e6c77a; }

@@ -7,8 +7,8 @@ import {
   rateLimitResponse,
   requestRateLimitKey,
 } from "@/lib/request-rate-limit";
+import { claimNominatimSlot, NOMINATIM_USER_AGENT } from "@/lib/nominatim";
 const cache = new Map<string, { value: unknown; expires: number }>();
-let lastRequest = 0;
 const allowLocation = createRequestRateLimiter({ limit: 12, windowMs: 60_000 });
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams,
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     return Response.json(cached.value, {
       headers: { "Cache-Control": "no-store" },
     });
-  if (Date.now() - lastRequest < 1100)
+  if (!claimNominatimSlot())
     return Response.json(
       { error: "Konum hizmeti meşgul. Biraz sonra tekrar dene." },
       {
@@ -41,7 +41,6 @@ export async function GET(request: Request) {
         headers: { "Retry-After": "2", "Cache-Control": "no-store" },
       },
     );
-  lastRequest = Date.now();
   try {
     const url = new URL(
       "https://nominatim.openstreetmap.org/" + (reverse ? "reverse" : "search"),
@@ -65,7 +64,7 @@ export async function GET(request: Request) {
           },
     ).toString();
     const response = await fetch(url, {
-      headers: { "User-Agent": "SimdiAcik/1.0 (https://simdiacik.com)" },
+      headers: { "User-Agent": NOMINATIM_USER_AGENT },
       signal: AbortSignal.timeout(10000),
       cache: "no-store",
     });
