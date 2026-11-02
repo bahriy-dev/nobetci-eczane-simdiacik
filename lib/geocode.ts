@@ -73,13 +73,16 @@ export async function estimatePharmacyPoint(request: PharmacyAddress): Promise<E
   };
   const pharmacy = named.find((hit) => hit.kind === "amenity/pharmacy" && agrees(hit) && nearCentre(hit, request));
   if (pharmacy) return { lat: pharmacy.lat, lng: pharmacy.lng, precision: "pharmacy" };
-  // The street itself, accepted only inside the stated neighbourhood (or near the centre without one).
-  if (streets[0]) {
-    const road = hits(await nominatimSearch({ q: `${streets[0]}, ${neighbourhood ? neighbourhood + " mahallesi, " : ""}${request.province}`, limit: "3" }), request.province)
-      .find((hit) => hit.kind.startsWith("highway/") && (!neighbourhood || words(hit.text).includes(neighbourhood)) && nearCentre(hit, request));
-    if (road) return { lat: road.lat, lng: road.lng, precision: "neighbourhood" };
+  // Without a neighbourhood, the street itself near the centre. (OSM rarely names Turkish streets as the
+  // sources write them, so with a neighbourhood that query is skipped to keep lookups few.)
+  if (!neighbourhood) {
+    if (!streets[0]) return undefined;
+    const road = hits(await nominatimSearch({ q: `${streets[0]}, ${request.province}`, limit: "3" }), request.province)
+      .filter((hit) => hit.kind.startsWith("highway/") && nearCentre(hit, request));
+    // A street name found in two places is no answer.
+    if (road.length !== 1) return undefined;
+    return { lat: road[0].lat, lng: road[0].lng, precision: "neighbourhood" };
   }
-  if (!neighbourhood) return undefined;
   const area = request.district && normalized(request.district) !== "merkez" ? request.district + ", " : "";
   // Only the neighbourhood itself or a point that lies in it ("…, Yeni Mahalle, Tokat"), never a namesake school.
   const lookup = async (suffix: string) => hits(await nominatimSearch({ q: `${neighbourhood} ${suffix}, ${area}${request.province}`, limit: "5" }), request.province)
