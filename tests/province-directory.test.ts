@@ -12,5 +12,6 @@ test('province directory covers each province once and labels live-search covera
   assert.match(component,/İlçe seçerek sitede ara/);
   assert.match(component,/resmî eczacı odasının nöbet listesi/);
   assert.match(component,/Konum izni gerekmez/);
-  assert.equal(cityGuides.length,9);
+  assert.equal(cityGuides.length,81);
+  assert.match(component,/onSelect/);
 });

@@ -21,5 +21,12 @@ export function pharmacyShortAddress(address:string){
  const line=street.length>=8?street:first;
  return /\p{Ll}/u.test(line)?line:line.toLocaleLowerCase('tr-TR').replace(/(^|[\s.(/-])\p{L}/gu,c=>c.toLocaleUpperCase('tr-TR'));
 }
+/** "02242225770" → "0224 222 57 70"; anything else is shown as given. */
+export function pharmacyPhoneDisplay(phone:string){
+ const digits=phone.replace(/[^\d+]/g,''),local=digits.match(/^0(\d{3})(\d{3})(\d{2})(\d{2})$/),intl=digits.match(/^\+90(\d{3})(\d{3})(\d{2})(\d{2})$/);
+ return local?`0${local[1]} ${local[2]} ${local[3]} ${local[4]}`:intl?`+90 ${intl[1]} ${intl[2]} ${intl[3]} ${intl[4]}`:phone;
+}
+/** Full address with all-capital parts in the same case the card uses. */
+export const pharmacyDisplayAddress=(address:string)=>address.split(' · ').map(part=>/\p{Ll}/u.test(part)?part:part.toLocaleLowerCase('tr-TR').replace(/(^|[\s.(/-])\p{L}/gu,c=>c.toLocaleUpperCase('tr-TR'))).join(' · ');
 /** Sources publish names in capitals; cards and the detail panel show the same title case. */
 export const pharmacyDisplayName=(name:string)=>name.toLocaleLowerCase('tr-TR').replace(/(^|\s)\S/g,c=>c.toLocaleUpperCase('tr-TR'));
