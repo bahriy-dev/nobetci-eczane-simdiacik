@@ -1,4 +1,4 @@
-import {requestSource} from '../source-request';
+import {requestSource,SourceFailure} from '../source-request';
 import {z} from 'zod';
 import {distanceKm,normalized,type Place,type PlacesProvider,type PlacesResult,type SearchParams} from '../places';
 import {searchAnkaraPharmacies} from './ankara';
@@ -186,10 +186,16 @@ export const pharmacyProvider:PlacesProvider={async search(params){
       return searchEczaneApi(params).catch(()=>{throw error;});
     }
   }
+  let fallbackNote='';
   if(thirdParty){
     try{return await searchEczaneApi(params);}
-    catch(error){console.warn('eczaneapi_failed',{city:params.city,reason:error instanceof Error?error.message:String(error)});}
+    catch(error){
+      const reason=error instanceof SourceFailure?`${error.kind}${error.status?' '+error.status:''}`:error instanceof Error?error.message:String(error);
+      console.warn('eczaneapi_failed',{city:params.city,reason});
+      // Says that the backup was tried and why it failed; never the key.
+      fallbackNote=`Yedek nöbet kaynağı (EczaneAPI) şu an yanıt vermedi: ${reason.slice(0,120)}`;
+    }
   }
   const official=getPharmacySource(params.city);
-  return {places:[],coverageStatus:'unsupported',source:official.name,fetchedAt:new Date().toISOString(),coverage:'Bu ilde otomatik nöbet bağlantısı henüz yok. '+(official.kind==='duty-list'?'Resmî nöbet listesini':official.kind==='chamber'?'İlgili eczacı odasının sitesini':'Türk Eczacıları Birliği kaynak rehberini')+' aşağıdaki bağlantıdan açabilirsin.',warnings:['Genel eczane kayıtları nöbetçi eczane olarak gösterilmez.']};
+  return {places:[],coverageStatus:'unsupported',source:official.name,fetchedAt:new Date().toISOString(),coverage:'Bu ilde otomatik nöbet bağlantısı henüz yok. '+(official.kind==='duty-list'?'Resmî nöbet listesini':official.kind==='chamber'?'İlgili eczacı odasının sitesini':'Türk Eczacıları Birliği kaynak rehberini')+' aşağıdaki bağlantıdan açabilirsin.',warnings:['Genel eczane kayıtları nöbetçi eczane olarak gösterilmez.',...(fallbackNote?[fallbackNote]:[])]};
 }};
