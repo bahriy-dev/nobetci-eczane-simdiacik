@@ -111,6 +111,8 @@ type Location = {
   accuracy?: number;
 };
 
+const noLocation: Location = { label: "", city: "", lat: 0, lng: 0 };
+
 export default function Home() {
   const { filters, updateFilters } = useSearchFilters();
   const { query, hasPhone, radius, sort } = filters;
@@ -122,17 +124,13 @@ export default function Home() {
   const setHasPhone = (value: boolean) => updateFilters({ hasPhone: value });
   const setRadius = (value: string) => updateFilters({ radius: value });
   const setSort = (value: string) => updateFilters({ sort: value });
-  const [provinceOverview, setProvinceOverview] = useState(true);
+  const [provinceOverview, setProvinceOverview] = useState(false);
   const [locationPermissionGranted, setLocationPermissionGranted] =
     useState(false);
   const locationOpener = useRef<HTMLElement | null>(null);
   const [rememberRegion, setRememberRegion] = useState(false);
-  const [location, setLocationValue] = useState<Location>({
-      label: istanbulOverview.label,
-      city: istanbulOverview.city,
-      lat: istanbulOverview.lat,
-      lng: istanbulOverview.lng,
-    }),
+  // Nothing is searched until the visitor shares a location or picks a province.
+  const [location, setLocationValue] = useState<Location>(noLocation),
     [scrollTarget, setScrollTarget] = useState<string | null>(null),
     [geoState, setGeoState] = useState(""),
     [refresh, setRefresh] = useState(0);
@@ -612,8 +610,7 @@ export default function Home() {
     clearSavedRegion();
     setRememberRegion(false);
     initialLocationRequest.current = true;
-    setLocation(istanbulOverview);
-    setProvinceOverview(true);
+    setLocation(noLocation);
     setLocOpen(false);
     setGeoState("");
     const url = new URL(window.location.href);
@@ -939,7 +936,9 @@ export default function Home() {
               </div>
               {data?.partial && (
                 <p className="source-quality-note" role="status">
-                  Eksik veya doğrulanamayan kayıtlar gösterilmiyor.
+                  {/* The source's own notes (e.g. "konumlar hazırlanıyor") say more than a generic line. */}
+                  {(data.warnings?.filter((w) => typeof w === "string").slice(0, 3) ?? []).join(" ") ||
+                    "Eksik veya doğrulanamayan kayıtlar gösterilmiyor."}
                 </p>
               )}
               {sourceDelayed && (
@@ -1234,7 +1233,13 @@ export default function Home() {
           </section>
         )}
       </main>
-      <ProvinceDirectory locationGranted={locationPermissionGranted} />
+      <ProvinceDirectory
+        locationGranted={locationPermissionGranted}
+        onSelect={(next) => {
+          selectRegion(next);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      />
       <SiteFooter
         sourceUrl={pharmacySource.url}
         onDiscover={() => {

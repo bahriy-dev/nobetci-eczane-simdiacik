@@ -21,6 +21,8 @@ import {
   pharmacyTimestamp,
   pharmacyDisplayName,
   pharmacyLocationNote,
+  pharmacyPhoneDisplay,
+  pharmacyDisplayAddress,
 } from "@/lib/pharmacy-presentation";
 import { safeUrl } from "@/lib/places";
 import type { Place } from "@/lib/places";
@@ -70,7 +72,7 @@ export function PharmacyDetail({
         <MapPin size={20} />
         <div>
           <span className="detail-row-label">Adres</span>
-          <p>{p.address}</p>
+          <p>{pharmacyDisplayAddress(p.address)}</p>
           <button className="detail-copy" onClick={onCopy}>
             <Copy size={13} />
             Adresi kopyala
@@ -84,7 +86,7 @@ export function PharmacyDetail({
           </span>
           <span>
             <small>Telefon</small>
-            <b>{p.phone}</b>
+            <b>{pharmacyPhoneDisplay(p.phone)}</b>
           </span>
           <Phone size={16} />
         </a>
@@ -97,7 +99,7 @@ export function PharmacyDetail({
       {date && (
         <div className="detail-date">
           <CalendarDays size={15} />
-          <span>{date}</span>
+          <span>Nöbet günü: {date}</span>
         </div>
       )}
       {p.opens && Number.isFinite(Date.parse(p.opens)) && (
@@ -124,12 +126,13 @@ export function PharmacyDetail({
           Paylaş
         </button>
         {p.phone && (
-          <button onClick={onCopyPhone}>
+          <button onClick={onCopyPhone} aria-label="Numarayı kopyala">
             <Copy size={15} />
-            Numarayı kopyala
+            Kopyala
           </button>
         )}
         <a href={pharmacyAppleDirections(p)} target="_blank" rel="noreferrer">
+          <MapPin size={15} />
           Apple Harita
         </a>
       </div>
