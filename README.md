@@ -26,7 +26,7 @@ Eczaneler.org yanıt vermezse aşağıdaki resmî kaynaklar yedek olarak denenir
 
 | İl | Resmî kaynak ve yöntem |
 | --- | --- |
-| İstanbul, Yalova | Yedek yok. İstanbul Eczacı Odası Kasım 2026'da veri işlemini yalnızca kendi sitesine açtı; bu kısıtlama aşılmaz, resmî sayfa bağlantısı gösterilir. |
+| İstanbul, Yalova, Amasya, Ordu | Resmî kaynaklar veriyi yalnızca kendi sitelerine açıyor ya da bu sunucuyu reddediyor; bu kısıtlamalar aşılmaz. `ECZANEAPI_KEY` tanımlıysa üçüncü taraf [EczaneAPI](https://eczaneapi.com) kullanılır (`lib/providers/eczaneapi.ts`): her il günde bir kez istenir, cevap bellekte ve diskte günün sonuna kadar tutulur, başarısız istekten sonra 30 dakika yeniden denenmez. Yalnızca o günün (09:00'a kadar dünün) nöbetçileri gösterilir. Anahtar yoksa resmî sayfa bağlantısı gösterilir. |
 | Ankara | Ankara Eczacı Odası'nın tarihli `getPharmacies/YYYY-MM-DD` işlemi. |
 | İzmir | İzmir Büyükşehir Belediyesi'nin belgelenmiş `https://openapi.izmir.bel.tr/api/ibb/nobetcieczaneler` uç noktası. Servis boş ya da hatalı dönerse İzmir Eczacı Odası'nın nöbet sayfası kullanılır. |
 | Kayseri | Belediyenin [CBS nöbet sayfası](https://cbs.kayseri.bel.tr/kayseri-nobetci-eczaneler) ve aynı sayfanın harita işlemi. Tarihli tablo ile harita kayıtları ad, adres, ilçe ve telefon üzerinden eşleştirilir. Ağ veya biçim hatasında belediyenin `https://acikveri.kayseri.bel.tr/api/kbb/eczane` açık veri kaynağı HTTPS üzerinden yedek olarak denenir. HTTP kullanılmaz; erişim reddi yedek istekle aşılmaz. |

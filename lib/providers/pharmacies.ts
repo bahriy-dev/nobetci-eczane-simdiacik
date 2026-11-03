@@ -7,6 +7,7 @@ import {samsunPharmacyProvider} from './samsun';
 import {searchGaziantepChamber} from './gaziantep-chamber';
 import {eczanelerApiKey,plateForCity,searchEczanelerPharmacies} from './eczaneler-org';
 import {chamberPageFor,searchChamberPage} from './chamber-pages';
+import {eczaneApiKey,searchEczaneApi} from './eczaneapi';
 import {getPharmacySource} from '../pharmacy-sources';
 import {activeDutyDates,dutyListEnds} from '../duty-day';
 
@@ -159,9 +160,17 @@ function officialAdapter(city:string):((params:SearchParams)=>Promise<PlacesResu
   if(chamberPageFor(city))return searchChamberPage;
 }
 
+// EczaneAPI's free plan is small, so it serves only provinces whose official source is closed or
+// refuses this server; ECZANEAPI_PROVINCES (comma-separated, e.g. "istanbul,yalova") overrides the set.
+function eczaneApiServes(city:string){
+  const configured=process.env.ECZANEAPI_PROVINCES?.split(',').map(item=>normalized(item).trim()).filter(Boolean);
+  return Boolean(eczaneApiKey())&&(configured?.length?configured:['istanbul','yalova','amasya','ordu']).includes(city);
+}
+
 export const pharmacyProvider:PlacesProvider={async search(params){
   const city=normalized(params.city||'').trim();
   const fallback=officialAdapter(city);
+  const thirdParty=eczaneApiServes(city);
   if(eczanelerApiKey()&&plateForCity(params.city??'')){
     try{return await searchEczanelerPharmacies(params);}
     catch(error){
@@ -169,7 +178,18 @@ export const pharmacyProvider:PlacesProvider={async search(params){
       console.warn('eczaneler_org_failed_using_official',{city:params.city});
     }
   }
-  if(fallback)return fallback(params);
+  if(fallback){
+    try{return await fallback(params);}
+    catch(error){
+      if(!thirdParty)throw error;
+      console.warn('official_failed_using_eczaneapi',{city:params.city});
+      return searchEczaneApi(params).catch(()=>{throw error;});
+    }
+  }
+  if(thirdParty){
+    try{return await searchEczaneApi(params);}
+    catch(error){console.warn('eczaneapi_failed',{city:params.city,reason:error instanceof Error?error.message:String(error)});}
+  }
   const official=getPharmacySource(params.city);
   return {places:[],coverageStatus:'unsupported',source:official.name,fetchedAt:new Date().toISOString(),coverage:'Bu ilde otomatik nöbet bağlantısı henüz yok. '+(official.kind==='duty-list'?'Resmî nöbet listesini':official.kind==='chamber'?'İlgili eczacı odasının sitesini':'Türk Eczacıları Birliği kaynak rehberini')+' aşağıdaki bağlantıdan açabilirsin.',warnings:['Genel eczane kayıtları nöbetçi eczane olarak gösterilmez.']};
 }};
