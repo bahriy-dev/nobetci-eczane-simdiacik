@@ -51,7 +51,7 @@ test('Konya: names from the card grid are placed by a single same-name pharmacy,
   const card=(kind:string,name:string,region:string,no:string,hours='')=>`<article class="kart" data-kart data-tur="${kind}" data-lat="" data-lon="" data-ad="${name}" data-bolge="${region}" data-no="${no}" data-tel="">${hours?`<span> ${hours} </span>`:''}<h4>${name}<span> Eczanesi</span></h4></article>`;
   const page=`<html><title>Konya Nöbetçi Eczaneler — 3 Kasım 2026 Salı</title>${card('merkez','Esra Ayhan','Selçuklu','1')}${card('ilce','İpek','Akşehir','','18:00 – 08:30')}</html>`;
   const answers:Record<string,unknown[]>={
-    'Esra Ayhan Eczanesi, Selçuklu, Konya':[{class:'amenity',type:'pharmacy',lat:'37.8845',lon:'32.4902',display_name:'Esra Ayhan Eczanesi, Selçuklu, Konya',address:{province:'Konya'}}],
+    'Esra Ayhan Eczanesi, Konya':[{class:'amenity',type:'pharmacy',lat:'37.8845',lon:'32.4902',display_name:'Esra Ayhan Eczanesi, Selçuklu, Konya',address:{province:'Konya'}}],
     'Akşehir, Konya':[{class:'boundary',type:'administrative',lat:'38.35885',lon:'31.4202',display_name:'Akşehir, Konya, İç Anadolu Bölgesi',address:{province:'Konya'}}],
   };
   const original=globalThis.fetch,previous=process.env.ECZANELER_API_KEY;

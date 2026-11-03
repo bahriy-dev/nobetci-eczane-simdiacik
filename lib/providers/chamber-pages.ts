@@ -22,7 +22,9 @@ import {z} from 'zod';
  * chamber's own public JSON API, a card grid) turned into the same lines a page gives. */
 type PageRequest={url:string;form?:Record<string,string>};
 type PageOptions={locate?:boolean;schedule?:boolean;areaCode?:string;parts?:[string,string][];
-  request?:(days:string[])=>PageRequest;prepare?:(html:string)=>string;lines?:(body:string,days:string[])=>string[]};
+  request?:(days:string[])=>PageRequest;prepare?:(html:string)=>string;lines?:(body:string,days:string[])=>string[];
+  /** Said instead of "phone not verified" when the source never gives phones. */
+  phoneNote?:string};
 type ChamberPage={url:string;source:string;center:[number,number];siblings?:string[]}&PageOptions;
 const page=(url:string,source:string,center:[number,number],siblings?:string[],options:PageOptions={}):ChamberPage=>({url,source,center,siblings,...options});
 export const CHAMBER_PAGES:Readonly<Record<string,ChamberPage>>=Object.freeze({
@@ -103,7 +105,8 @@ export const CHAMBER_PAGES:Readonly<Record<string,ChamberPage>>=Object.freeze({
   rize:page('https://rizeeczaciodasi.org.tr/nobetci-eczane','Rize Eczacı Odası',[41.0201,40.5234],undefined,{prepare:rizeMarkup}),
   // Konya's page shows names, districts and hours; addresses and phones come only through a signed
   // per-visit request, which is not used. Names are placed via OpenStreetMap pharmacies of that district.
-  konya:page('https://www.konyanobetcieczaneleri.com/','Konya Eczacı Odası',[37.8714,32.4846],undefined,{locate:true,lines:konyaLines}),
+  konya:page('https://www.konyanobetcieczaneleri.com/','Konya Eczacı Odası',[37.8714,32.4846],undefined,{locate:true,lines:konyaLines,
+    phoneNote:'Konya nöbet sitesi telefonları yalnızca kendi sayfasında gösteriyor; aramak için resmî listeyi aç.'}),
 });
 export const chamberPageFor=(city:string)=>CHAMBER_PAGES[normalized(city).trim()];
 
@@ -139,7 +142,9 @@ function konyaLines(body:string,days:string[]){
     const name=attr('ad'),region=attr('bolge'),kind=attr('tur'),number=attr('no');
     if(!name||!region||!/^(merkez|ilce)$/.test(kind))return [];
     const hours=card.match(/(\d{2}:\d{2})\s*[–-]\s*(\d{2}:\d{2})/);
-    return [{day,name:`${name} ECZANESİ`,district:kind==='ilce'||!region.includes('-')?region:undefined,
+    // Central regions name urban districts too large for a district-centre point; only an exact
+    // pharmacy record places them. District towns may fall back to their centre.
+    return [{day,name:`${name} ECZANESİ`,district:kind==='ilce'?region:undefined,
       address:kind==='merkez'?`${region} · ${number}. nöbet bölgesi`:`${region} ilçesi`,from:hours?.[1]??'08:30',to:hours?.[2]??'08:30'}];
   });
   return apiLines([day,...days.filter(item=>item!==day)],rows);
@@ -398,7 +403,7 @@ export function parseChamberPage(html:string,params:SearchParams,now=new Date(),
   if(!usable)throw new Error(`${config.source} sayfasında doğrulanabilir nöbet kaydı bulunamadı.`);
   const warnings:string[]=[];
   if(skipped)warnings.push(`${skipped} nöbet kaydı, adres veya konum doğrulanamadığı için gösterilmedi.`);
-  if(missingPhone)warnings.push(`${missingPhone} nöbet kaydının telefon bilgisi doğrulanamadı.`);
+  if(missingPhone)warnings.push(config.phoneNote??`${missingPhone} nöbet kaydının telefon bilgisi doğrulanamadı.`);
   return {places:places.sort((a,b)=>a.distance-b.distance),source:config.source,fetchedAt,coverage:`${config.source} güncel resmî nöbet listesi`,...(warnings.length?{partial:true,warnings}:{})};
 }
 
