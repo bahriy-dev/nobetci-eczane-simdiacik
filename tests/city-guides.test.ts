@@ -4,16 +4,23 @@ import { readFile } from "node:fs/promises";
 import { cityGuides, getCityGuide } from "../lib/city-guides";
 import { GET as sitemapGET } from "../app/sitemap.xml/route";
 
-test("SEO city pages exist only for provinces with a direct, supported duty provider", () => {
-  assert.equal(cityGuides.length, 9);
+test("every province has one guide page; only closed sources are marked official-only", () => {
+  assert.equal(cityGuides.length, 81);
   assert.equal(
     new Set(cityGuides.map((city) => city.slug)).size,
     cityGuides.length,
   );
-  assert.ok(cityGuides.every((city) => city.source.kind !== "directory"));
+  assert.ok(cityGuides.every((city) => /^[a-z]+$/.test(city.slug)));
   for (const city of cityGuides)
     assert.equal(getCityGuide(city.slug)?.name, city.name);
-  assert.equal(getCityGuide("adana"), undefined);
+  // Earlier guide addresses stay where they were.
+  for (const slug of ["ankara", "istanbul", "izmir", "yalova", "konya"])
+    assert.ok(getCityGuide(slug));
+  assert.equal(getCityGuide("sanliurfa")?.name, "Şanlıurfa");
+  assert.deepEqual(
+    cityGuides.filter((city) => !city.live).map((city) => city.slug),
+    ["amasya", "istanbul", "yalova"],
+  );
 });
 
 test("city sitemap entries and static route generation use the same supported list", async () => {

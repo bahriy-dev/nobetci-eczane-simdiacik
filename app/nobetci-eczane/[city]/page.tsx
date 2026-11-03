@@ -88,7 +88,9 @@ export default async function CityGuidePage({
     },
     {
       q: "Yola çıkmadan önce eczaneyi telefonla aramak neden önerilir?",
-      a: `Nöbet listeleri resmî ${city.source.name} kayıtlarından güncellense de acil durumlarda ihtiyaç duyulan ilacın eczane stoklarında bulunduğunu ve nöbet yerini doğrulamak amacıyla gitmeden önce telefonla aramanız tavsiye edilir.`,
+      a: city.live
+        ? `Liste resmî nöbet kaynaklarından otomatik alınsa da nöbet yerini ve ihtiyaç duyduğunuz ilacın stokta olduğunu doğrulamak için gitmeden önce telefonla aramanız tavsiye edilir.`
+        : `${city.source.name} nöbet listesini yalnızca kendi sayfasında yayımlıyor. Listeyi oradan açın ve gitmeden önce eczaneyi telefonla arayarak doğrulayın.`,
     },
   ];
 
@@ -140,9 +142,9 @@ export default async function CityGuidePage({
           <h1 className="city-hero-title">{city.name} Nöbetçi Eczaneleri</h1>
 
           <p className="city-hero-description">
-            {city.name} genelinde bugün ve bu gece nöbetçi olan eczaneleri
-            harita üzerinde bulun, telefonla arayarak çalışma durumunu teyit
-            edin ve harita uygulamasından yol tarifi alın.
+            {city.live
+              ? `${city.name} genelinde bugün ve bu gece nöbetçi olan eczaneleri harita üzerinde bulun, telefonla arayarak teyit edin ve yol tarifi alın.`
+              : `${city.name} için resmî nöbet listesi yalnızca kaynağın kendi sayfasında yayımlanıyor. Aşağıdaki bağlantıdan güncel listeyi açabilirsiniz.`}
           </p>
 
           <div className="city-hero-source-pill">
@@ -161,8 +163,8 @@ export default async function CityGuidePage({
           </div>
         </section>
 
-        {/* Search & Location Card */}
-        <CityGuideSearch city={city.name} />
+        {/* Search & Location Card (only where the site has the live list) */}
+        {city.live && <CityGuideSearch city={city.name} />}
 
         {/* Trust & Safety Cards Grid */}
         <section
@@ -222,9 +224,9 @@ export default async function CityGuidePage({
         {/* Related Cities Navigation */}
         <nav
           className="city-guide-related"
-          aria-label="Diğer desteklenen iller"
+          aria-label="Diğer iller"
         >
-          <h2>Diğer Desteklenen İller</h2>
+          <h2>Diğer İller</h2>
           <div className="city-related-grid">
             {otherCities.map((item) => (
               <Link

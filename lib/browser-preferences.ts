@@ -35,8 +35,12 @@ export function writeTheme(dark: boolean) {
   } catch {
     sessionTheme = dark;
   }
-  document.documentElement.classList.toggle("dark", dark);
+  // Colours switch at once: per-element transitions would show light text on a still-light card.
+  const root = document.documentElement;
+  root.classList.add("theme-switching");
+  root.classList.toggle("dark", dark);
   window.dispatchEvent(new Event(themeEvent));
+  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("theme-switching")));
 }
 export const subscribeNetwork = (notify: () => void) => {
   window.addEventListener("online", notify);
