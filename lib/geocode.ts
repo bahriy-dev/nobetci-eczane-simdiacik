@@ -6,8 +6,9 @@ import { nominatimSearch } from "./nominatim";
  * name counts only when its street or neighbourhood agrees with the source address; otherwise the
  * neighbourhood's own point is used. Anything vaguer is rejected rather than guessed.
  */
-export type EstimatedPoint = { lat: number; lng: number; precision: "pharmacy" | "neighbourhood" };
-export type PharmacyAddress = { name: string; address: string; province: string; district?: string; center: [number, number] };
+export type EstimatedPoint = { lat: number; lng: number; precision: "pharmacy" | "neighbourhood" | "district" };
+/** `urgentUntil`: when the search waiting for this point stops waiting; later lookups yield to others. */
+export type PharmacyAddress = { name: string; address: string; province: string; district?: string; center: [number, number]; urgentUntil?: number };
 
 type Hit = { lat: number; lng: number; kind: string; text: string; area: string };
 const okNumber = (value: unknown) => typeof value === "string" && /^-?\d+(\.\d+)?$/.test(value);
@@ -56,28 +57,32 @@ export function addressParts(address: string) {
   return { neighbourhood, streets };
 }
 
+// Nominatim names the district in different address fields; its display name always carries it.
 const nearCentre = (hit: Hit, request: PharmacyAddress) =>
   request.district && normalized(request.district) !== "merkez"
-    ? normalized(hit.area).includes(normalized(request.district))
+    ? words(`${hit.area} ${hit.text}`).includes(words(request.district))
     : distanceKm(request.center[0], request.center[1], hit.lat, hit.lng) <= 25;
 
 export async function estimatePharmacyPoint(request: PharmacyAddress): Promise<EstimatedPoint | undefined> {
   const { neighbourhood, streets } = addressParts(request.address);
   const title = request.name.toLocaleLowerCase("tr-TR").replace(/(^|\s)\p{L}/gu, (c) => c.toLocaleUpperCase("tr-TR"));
-  const named = hits(await nominatimSearch({ q: `${title}, ${request.province}`, limit: "5" }), request.province);
+  const inDistrict = request.district && normalized(request.district) !== "merkez" ? `${request.district}, ` : "";
+  const named = hits(await nominatimSearch({ q: `${title}, ${inDistrict}${request.province}`, limit: "5" }, request.urgentUntil), request.province);
   // The street's last name word is its most distinctive part ("vali konağı" → "konagi").
   const streetNames = streets.map((street) => street.split(" ").at(-2)!).filter((word) => word.length > 2);
   const agrees = (hit: Hit) => {
     const place = words(hit.text);
     return (neighbourhood !== undefined && place.includes(neighbourhood)) || streetNames.some((street) => place.includes(street));
   };
-  const pharmacy = named.find((hit) => hit.kind === "amenity/pharmacy" && agrees(hit) && nearCentre(hit, request));
+  const pharmacies = named.filter((hit) => hit.kind === "amenity/pharmacy" && nearCentre(hit, request));
+  // With no street or neighbourhood to compare, only a single same-name pharmacy in the area counts.
+  const pharmacy = pharmacies.find(agrees) ?? (!neighbourhood && !streets.length && pharmacies.length === 1 && words(pharmacies[0].text).startsWith(words(title)) ? pharmacies[0] : undefined);
   if (pharmacy) return { lat: pharmacy.lat, lng: pharmacy.lng, precision: "pharmacy" };
   // Without a neighbourhood, the street itself near the centre. (OSM rarely names Turkish streets as the
   // sources write them, so with a neighbourhood that query is skipped to keep lookups few.)
   if (!neighbourhood) {
-    if (!streets[0]) return undefined;
-    const road = hits(await nominatimSearch({ q: `${streets[0]}, ${request.province}`, limit: "3" }), request.province)
+    if (!streets[0]) return districtCentre(request);
+    const road = hits(await nominatimSearch({ q: `${streets[0]}, ${request.province}`, limit: "3" }, request.urgentUntil), request.province)
       .filter((hit) => hit.kind.startsWith("highway/") && nearCentre(hit, request));
     // A street name found in two places is no answer.
     if (road.length !== 1) return undefined;
@@ -85,7 +90,7 @@ export async function estimatePharmacyPoint(request: PharmacyAddress): Promise<E
   }
   const area = request.district && normalized(request.district) !== "merkez" ? request.district + ", " : "";
   // Only the neighbourhood itself or a point that lies in it ("…, Yeni Mahalle, Tokat"), never a namesake school.
-  const lookup = async (suffix: string) => hits(await nominatimSearch({ q: `${neighbourhood} ${suffix}, ${area}${request.province}`, limit: "5" }), request.province)
+  const lookup = async (suffix: string) => hits(await nominatimSearch({ q: `${neighbourhood} ${suffix}, ${area}${request.province}`, limit: "5" }, request.urgentUntil), request.province)
     .filter((hit) => words(hit.text).includes(`${neighbourhood} mahalle`) && nearCentre(hit, request));
   // OSM writes both "Yeni Mahallesi" and "Yeni Mahalle".
   let places = await lookup("Mahallesi");
@@ -93,6 +98,14 @@ export async function estimatePharmacyPoint(request: PharmacyAddress): Promise<E
   // Two neighbourhoods of that name (e.g. in both central districts) leave the place unknown.
   if (!places.length || places.some((hit) => distanceKm(hit.lat, hit.lng, places[0].lat, places[0].lng) > 1.5)) return undefined;
   return { lat: places[0].lat, lng: places[0].lng, precision: "neighbourhood" };
+}
+
+/** A district town's own point, only for a source that names nothing finer than the district. */
+async function districtCentre(request: PharmacyAddress): Promise<EstimatedPoint | undefined> {
+  if (!request.district || normalized(request.district) === "merkez") return undefined;
+  const town = hits(await nominatimSearch({ q: `${request.district}, ${request.province}`, limit: "3" }, request.urgentUntil), request.province)
+    .find((hit) => hit.kind === "boundary/administrative" && words(hit.text).startsWith(words(request.district!)));
+  return town ? { lat: town.lat, lng: town.lng, precision: "district" } : undefined;
 }
 
 // Addresses rarely move: a found point is kept a week, a miss a day, so each address is looked up rarely.

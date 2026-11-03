@@ -1,0 +1,78 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {parseChamberPage} from '../lib/providers/chamber-pages';
+
+const params=(city:string,lat:number,lng:number)=>({city,lat,lng,radius:2000,category:'Eczane',query:'',demo:false});
+const evening=new Date('2026-11-03T18:00:00Z'); // 21:00 in Türkiye
+const early=new Date('2026-11-04T05:45:00Z'); // 08:45, before the 09:00 handover
+
+test('Giresun API rows: only the running days, each with its own hours',()=>{
+  const row=(name:string,date:string,duty_status:string,lat:number|string|null)=>({name,address:'Aksu Mah. Pazar Cad. No:37',phone:'0454 222 55 55',district:'MERKEZ',is_duty:true,duty_status,date,lat,lng:38.39});
+  const body=JSON.stringify([row('SARAY ECZANESİ','03.11.2026','Saat 18:00-08:00 Arası Nöbetçidir',40.9077),row('GÜNDÜZ ECZANESİ','03.11.2026','Saat 08:00-18:00 Arası Nöbetçidir',40.91),row('İLERİ ECZANESİ','13.11.2026','24 Saat Açık',40.92)]);
+  const [place,...rest]=parseChamberPage(body,params('Giresun',40.91,38.39),evening,['Merkez']).places;
+  assert.equal(rest.length,0);
+  assert.equal(place.name,'SARAY ECZANESİ');assert.equal(place.closes,'2026-11-04T05:00:00.000Z');assert.match(place.address,/· Merkez$/);
+});
+
+test('Şanlıurfa rosters: a bad coordinate drops only the point, and a place note leaves the name',()=>{
+  const roster=(dutyDate:string,name:string,latitude:unknown,longitude:unknown)=>({dutyDate,regionName:'BOZOVA',dutyList:[{eczane:{name,phone:'0414 711 68 17',location:'YEŞİLOVA MAHALLESİ BARAJ CADDESİ 73/2',district:'BOZOVA',latitude,longitude}}]});
+  const body=JSON.stringify({content:[roster('2026-11-04T08:30:00','KARA ECZANESİ(baraj yolu)','37.361230','38.52'),roster('2026-11-04T08:30:00','BOZUK ECZANESİ','37.36','38,5x'),roster('2026-11-03T08:30:00','DÜN ECZANESİ','37.35','38.51')]});
+  const places=parseChamberPage(body,params('Şanlıurfa',37.16,38.8),early,['Bozova']).places;
+  // 08:45: both days are read, yesterday's roster ended at 08:30, today's has begun; the unlocated record is skipped.
+  assert.deepEqual(places.map(p=>p.name),['KARA ECZANESİ']);
+  assert.match(places[0].address,/baraj yolu/);assert.equal(places[0].closes,'2026-11-05T05:30:00.000Z');
+});
+
+test('a map link carrying the name opens the record; labels around names are removed',()=>{
+  const ordu=`<h2>Fatsa</h2><div><a href="https://maps.google.com/?q=41.0301,37.5012">  GÜNDÜZ-GECE  : GAZİ ECZANESİ</a><p>Mustafa Kemal Paşa Mah. No:12</p><p>( Akbank Karşısı ) - <a href="tel:0452 423 70 06">0452 423 70 06</a></p></div>
+<div><a href="https://maps.google.com/?q=41.0412,37.5121">GÜNDÜZ-GECE : SAHİL ECZANESİ</a><p>Dolunay Mah. Fikir Sok. No:1</p></div>`;
+  const places=parseChamberPage(ordu,params('Ordu',40.99,37.88),evening,['Fatsa','Altınordu']).places;
+  // Results come nearest first; each name keeps its own point.
+  assert.deepEqual(places.map(p=>[p.name,p.lat]).sort(),[['GAZİ ECZANESİ',41.0301],['SAHİL ECZANESİ',41.0412]]);
+  assert.match(places.find(p=>p.name==='GAZİ ECZANESİ')!.address,/· Fatsa$/);
+});
+
+test('Karaman: bare names and a heading date on its own line',()=>{
+  const html=`<h2><span>Merkez Nöbetçi Eczaneler <br />03-11-2026</span></h2><!--<h4>ESKİ</h4>-->
+<h4><i class="icon-arrow-right"></i>YAKAMOZ  </h4><strong> 04/11/2026 08:00'e kadar </strong><br><p>SAKABAŞI MAH. 860. SOK. NO: 1/A KARAMAN <br>0338 214 50 07 - <a href="https://maps.google.com/?ll=37.173171,33.223049&q=37.173171,33.223049">HARİTA</a></p>`;
+  const [place]=parseChamberPage(html,params('Karaman',37.18,33.22),evening,['Merkez']).places;
+  assert.equal(place.name,'YAKAMOZ ECZANESİ');assert.equal(place.dutyDate,'2026-11-03');assert.equal(place.closes,'2026-11-04T05:00:00.000Z');assert.equal(place.phone,'03382145007');
+  assert.throws(()=>parseChamberPage(html.replace('03-11-2026','01-11-2026'),params('Karaman',37.18,33.22),evening,['Merkez']),/güncel değil/);
+});
+
+test('Rize: bare names and "3 Kasım 18:00 – 4 Kasım 08:00" intervals',()=>{
+  const html=`<p class="font-semibold">3 Kasım 2026</p><ul><li><h3 class="m-0 font-display leading-snug">AVCI</h3><span>MERKEZ</span><address>EMİNETTİN MAH.ATATÜRK CAD.NO:247/B</address><p> Nöbet: 3 Kasım 18:00 – 4 Kasım 08:00</p>
+<a href="tel:04642142824">0464 214 28 24</a><a href="https://www.google.com/maps/dir/?api=1&amp;destination=41.02749,40.514398">Yol tarifi al</a></li></ul>`;
+  const [place]=parseChamberPage(html,params('Rize',41.02,40.52),evening,['Merkez','Pazar']).places;
+  assert.equal(place.name,'AVCI ECZANESİ');assert.equal(place.dutyDate,'2026-11-03');assert.equal(place.closes,'2026-11-04T05:00:00.000Z');assert.match(place.address,/· Merkez$/);
+});
+
+test('Konya: names from the card grid are placed by a single same-name pharmacy, else the district town',async()=>{
+  const card=(kind:string,name:string,region:string,no:string,hours='')=>`<article class="kart" data-kart data-tur="${kind}" data-lat="" data-lon="" data-ad="${name}" data-bolge="${region}" data-no="${no}" data-tel="">${hours?`<span> ${hours} </span>`:''}<h4>${name}<span> Eczanesi</span></h4></article>`;
+  const page=`<html><title>Konya Nöbetçi Eczaneler — 3 Kasım 2026 Salı</title>${card('merkez','Esra Ayhan','Selçuklu','1')}${card('ilce','İpek','Akşehir','','18:00 – 08:30')}</html>`;
+  const answers:Record<string,unknown[]>={
+    'Esra Ayhan Eczanesi, Selçuklu, Konya':[{class:'amenity',type:'pharmacy',lat:'37.8845',lon:'32.4902',display_name:'Esra Ayhan Eczanesi, Selçuklu, Konya',address:{province:'Konya'}}],
+    'Akşehir, Konya':[{class:'boundary',type:'administrative',lat:'38.35885',lon:'31.4202',display_name:'Akşehir, Konya, İç Anadolu Bölgesi',address:{province:'Konya'}}],
+  };
+  const original=globalThis.fetch,previous=process.env.ECZANELER_API_KEY;
+  try{
+    delete process.env.ECZANELER_API_KEY;
+    globalThis.fetch=async input=>{const url=String(input);
+      if(url.includes('nominatim'))return Response.json(answers[new URL(url).searchParams.get('q')??'']??[]);
+      if(url.includes('turkiyeapi'))return Response.json({},{status:500});
+      return new Response(page,{headers:{'content-type':'text/html; charset=utf-8'}});};
+    const {searchChamberPage}=await import('../lib/providers/chamber-pages');
+    const places=(await searchChamberPage(params('Konya',37.87,32.48))).places;
+    const byName=Object.fromEntries(places.map(p=>[p.name,p]));
+    assert.equal(byName['Esra Ayhan ECZANESİ'].locationEstimate,'pharmacy');assert.match(byName['Esra Ayhan ECZANESİ'].address,/1\. nöbet bölgesi/);
+    assert.equal(byName['İpek ECZANESİ'].locationEstimate,'district');assert.equal(byName['İpek ECZANESİ'].lat,38.35885);
+  }finally{globalThis.fetch=original;if(previous!==undefined)process.env.ECZANELER_API_KEY=previous;}
+});
+
+test('Kilis rows are read from the Gaziantep chamber feed, without the province note or misspelling',async()=>{
+  const {parseGaziantepChamber}=await import('../lib/providers/gaziantep-chamber');
+  const feed={tarih:['2026-11-03','2026-11-03'],unvan:['ARZU ECZAESİ (KİLİS)','ŞAHİNBEY ECZANESİ'],enlem:['36.70823','37.06'],boylam:['37.11','37.38'],telefon:['0348 814 22 50','0342 111 11 11'],
+    adres:['Kazım Karabekir Mah. Funda Sok. No:15','Merkez'],ilce:['KİLİS MERKEZ','ŞAHİNBEY'],il:['KİLİS','GAZİANTEP'],id:['1','2']};
+  const places=parseGaziantepChamber(feed,params('Kilis',36.72,37.12),evening).places;
+  assert.deepEqual(places.map(p=>p.name),['ARZU ECZANESİ']);assert.match(places[0].address,/Kilis$/);
+});

@@ -150,7 +150,7 @@ function officialAdapter(city:string):((params:SearchParams)=>Promise<PlacesResu
   if(city==='ankara'||city==='kirikkale')return searchAnkaraPharmacies;
   if(city==='kayseri')return params=>kayseriPharmacyProvider.search(params);
   if(city==='samsun'||city==='sinop')return params=>samsunPharmacyProvider.search(params);
-  if(city==='gaziantep')return searchGaziantepChamber;
+  if(city==='gaziantep'||city==='kilis')return searchGaziantepChamber;
   // The municipal feed is often empty; the chamber's own duty page then serves the same list.
   if(city==='izmir')return async params=>{
     try{return parseIzmirPharmacies(await(await get(izmirEndpoint)).json(),params,new Date());}
