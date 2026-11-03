@@ -54,6 +54,7 @@ export async function GET(request: Request) {
       {
         state: "source-error",
         errorKind: failure.kind,
+        ...(failure.status ? { upstreamStatus: failure.status } : {}),
         sourceUrl: official.url,
         // Parser messages are written for people (e.g. "…sayfasının tarihi güncel değil"); network
         // and HTTP failures carry no message here.
