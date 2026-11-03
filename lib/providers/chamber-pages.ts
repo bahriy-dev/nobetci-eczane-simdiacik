@@ -444,13 +444,21 @@ async function download(url:string,form?:Record<string,string>){
   }catch(error){throw classifySourceFailure(error);}
   return html;
 }
-/** A district-split list: its small pages are asked together and the answer uses those that arrived in
- * time; a slow or failed district is left out (and reported), not the province. */
+/** A district-split list: its small pages are read three at a time (the host refuses bursts) and the
+ * answer uses those that arrived in time; a slow or failed district is left out (and reported), not the
+ * province. A refusal stops further requests for this search. */
 async function fetchSource(config:ChamberPage,now:Date,within:number){
   if(!config.parts){const request=config.request?.(activeDutyDates(now))??{url:config.url};return {html:await fetchPage(request.url,request.form),missing:0};}
-  const pages=new Map<string,string>();let failure:unknown=new SourceFailure('timeout');
-  const jobs=config.parts.map(([district,url])=>fetchPage(url,undefined,true).then(html=>{pages.set(district,`<h2>${district}</h2>\n${html}`);},error=>{failure=error;}));
-  await Promise.race([Promise.all(jobs),new Promise(resolve=>setTimeout(resolve,within))]);
+  const pages=new Map<string,string>(),queue=[...config.parts],deadline=Date.now()+within;
+  let failure:unknown=new SourceFailure('timeout'),refused=false;
+  const worker=async()=>{
+    for(let part=queue.shift();part&&!refused&&Date.now()<deadline;part=queue.shift()){
+      const [district,url]=part;
+      try{pages.set(district,`<h2>${district}</h2>\n${await fetchPage(url,undefined,true)}`);}
+      catch(error){failure=error;if(error instanceof SourceFailure&&error.kind==='rate-limited')refused=true;}
+    }
+  };
+  await Promise.race([Promise.all([worker(),worker(),worker()]),new Promise(resolve=>setTimeout(resolve,within))]);
   if(!pages.size)throw failure;
   return {html:config.parts.map(([district])=>pages.get(district)??'').join('\n'),missing:config.parts.length-pages.size};
 }
