@@ -230,8 +230,8 @@ test("unsupported provinces are not attributed to neighbouring official sources"
       );
     };
     for (const [city, lat, lng] of [
-      ["Giresun", 40.91, 38.39],
-      ["Ordu", 40.98, 37.88],
+      ["Yalova", 40.65, 29.27],
+      ["Amasya", 40.65, 35.83],
     ] as const) {
       const result = await pharmacyProvider.search({
         city,

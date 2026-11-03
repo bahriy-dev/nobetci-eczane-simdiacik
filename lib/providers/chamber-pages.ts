@@ -3,7 +3,9 @@ import {SourceFailure,classifySourceFailure} from '../source-request';
 import {activeDutyDates,dutyListEnds,turkeyDay} from '../duty-day';
 import {listRegions} from '../regions';
 import {plateForCity} from './eczaneler-org';
+import {PHARMACY_CHAMBERS} from '../pharmacy-sources';
 import {cachedPharmacyPoint,type EstimatedPoint} from '../geocode';
+import {z} from 'zod';
 
 /**
  * Public "nöbetçi eczaneler" pages of pharmacist chambers. Most run the same chamber website
@@ -13,8 +15,14 @@ import {cachedPharmacyPoint,type EstimatedPoint} from '../geocode';
  */
 /** `locate`: the page gives no map links, so addresses are placed via OpenStreetMap (marked as estimates).
  * `schedule`: the page is a dated table of coming duties; only the current day's row is read.
- * `areaCode`: the page writes local seven-digit numbers. */
-type PageOptions={locate?:boolean;schedule?:boolean;areaCode?:string};
+ * `areaCode`: the page writes local seven-digit numbers.
+ * `parts`: the list is split into one page per district, each read under its district heading.
+ * `request`: the list is fetched for the duty day (a query or the site's own public search form).
+ * `prepare`: site-specific markup fixed before reading. `lines`: a source that is not a list page (the
+ * chamber's own public JSON API, a card grid) turned into the same lines a page gives. */
+type PageRequest={url:string;form?:Record<string,string>};
+type PageOptions={locate?:boolean;schedule?:boolean;areaCode?:string;parts?:[string,string][];
+  request?:(days:string[])=>PageRequest;prepare?:(html:string)=>string;lines?:(body:string,days:string[])=>string[]};
 type ChamberPage={url:string;source:string;center:[number,number];siblings?:string[]}&PageOptions;
 const page=(url:string,source:string,center:[number,number],siblings?:string[],options:PageOptions={}):ChamberPage=>({url,source,center,siblings,...options});
 export const CHAMBER_PAGES:Readonly<Record<string,ChamberPage>>=Object.freeze({
@@ -79,8 +87,103 @@ export const CHAMBER_PAGES:Readonly<Record<string,ChamberPage>>=Object.freeze({
   malatya:page('https://www.malatyaeczaciodasi.org.tr/nobetci-eczaneler','Malatya Eczacı Odası',[38.3552,38.3095],undefined,{locate:true}),
   usak:page('https://usakeczaciodasi.org.tr/usak-nobetci-eczaneler','Uşak Eczacı Odası',[38.6823,29.4082],undefined,{locate:true,areaCode:'0276'}),
   tokat:page('https://tokateo.org/NobetciEczane.aspx','Tokat Eczacı Odası · Merkez',[40.3139,36.5544],undefined,{locate:true,schedule:true}),
+  ordu:page('https://ordueczaciodasi.org.tr/nobetci-eczaneler/','Ordu Eczacı Odası',[40.9862,37.8797],undefined,{parts:[
+    ['Altınordu',701],['Fatsa',706],['Ünye',718],['Perşembe',716],['Kumru',714],['Korgan',713],['Akkuş',700],['Aybastı',702],['Çamaş',703],['Çatalpınar',704],
+    ['Çaybaşı',705],['Gölköy',707],['Gülyalı',708],['Gürgentepe',709],['İkizce',710],['Kabadüz',711],['Kabataş',712],['Mesudiye',715],['Ulubey',717],
+  ].map(([district,id])=>[String(district),`https://ordu.eczanesistemi.net/list/${id}`])}),
+  sanliurfa:page('https://sanliurfaeo.org.tr/nobetci-eczaneler','Şanlıurfa Eczacı Odası',[37.1591,38.7969],undefined,{locate:true,lines:sanliurfaLines,
+    request:days=>({url:`https://portal.sanliurfaeo.birodam.org.tr/auth-server/api/duty-rosters/list-grouped?page=0&size=200&sort=id,asc&dutyDateFrom=${days.at(-1)}&dutyDateTo=${days[0]}`})}),
+  giresun:page('https://giresuneczaciodasi.org.tr/giresun_nobetci_eczaneler','Giresun Eczacı Odası',[40.9128,38.3895],undefined,{locate:true,lines:giresunLines,
+    request:()=>({url:'https://giresuneczaciodasi.org.tr/api/pharmacies'})}),
+  elazig:page('https://www.elazigeczaciodasi.org.tr/nobetci-eczaneler','Elazığ Eczacı Odası',[38.681,39.2264],['bingol','tunceli'],{request:elazigSearch}),
+  bingol:page('https://www.elazigeczaciodasi.org.tr/nobetci-eczaneler','Elazığ Eczacı Odası · Bingöl',[38.8847,40.4939],['elazig','tunceli'],{request:elazigSearch}),
+  tunceli:page('https://www.elazigeczaciodasi.org.tr/nobetci-eczaneler','Elazığ Eczacı Odası · Tunceli',[39.1062,39.5483],['elazig','bingol'],{request:elazigSearch}),
+  karaman:page('https://karamaneo.org.tr/nobet-listesi','Karaman Eczacı Odası',[37.1811,33.215],undefined,{prepare:karamanMarkup}),
+  edirne:page('https://www.edirneeo.org.tr/nobetci-eczaneler','Edirne Eczacı Odası',[41.6771,26.5557]),
+  rize:page('https://rizeeczaciodasi.org.tr/nobetci-eczane','Rize Eczacı Odası',[41.0201,40.5234],undefined,{prepare:rizeMarkup}),
+  // Konya's page shows names, districts and hours; addresses and phones come only through a signed
+  // per-visit request, which is not used. Names are placed via OpenStreetMap pharmacies of that district.
+  konya:page('https://www.konyanobetcieczaneleri.com/','Konya Eczacı Odası',[37.8714,32.4846],undefined,{locate:true,lines:konyaLines}),
 });
 export const chamberPageFor=(city:string)=>CHAMBER_PAGES[normalized(city).trim()];
+
+// Elazığ's page lists nothing until its public search form is sent; one search covers all three provinces.
+function elazigSearch(days:string[]):PageRequest{
+  const day=days.at(-1)!;
+  return {url:'https://www.elazigeczaciodasi.org.tr/nobetci-eczaneler',form:{tarih1:day,tarih2:day,ilce:'',gnr:'ARA'}};
+}
+// Karaman writes bare names ("BENDER") and breaks the heading date onto its own line.
+function karamanMarkup(html:string){
+  return html.replace(/N[öo]bet[çc]i Eczaneler\s*<br\s*\/?>\s*(\d{2}-\d{2}-\d{4})/gi,'Nöbetçi Eczaneler $1')
+    .replace(/<h4>\s*(?:<i[^>]*><\/i>)?\s*([^<]{2,60}?)\s*<\/h4>/gi,(tag,name:string)=>/eczane/i.test(name)?tag:`<h4>${name} ECZANESİ</h4>`);
+}
+const monthNames=['ocak','subat','mart','nisan','mayis','haziran','temmuz','agustos','eylul','ekim','kasim','aralik'];
+const isoOf=(day:string,month:string,year:number)=>{const m=monthNames.indexOf(normalized(month))+1;return m?`${year}-${String(m).padStart(2,'0')}-${day.padStart(2,'0')}`:undefined;};
+// Rize writes bare names and "Nöbet: 3 Kasım 18:00 – 4 Kasım 08:00"; the year is in the page heading.
+function rizeMarkup(html:string){
+  const heading=html.match(/(\d{1,2})\s+(\p{L}+)\s+(20\d\d)/u),year=Number(heading?.[3]),day=heading?isoOf(heading[1],heading[2],year):undefined;
+  const marked=html.replace(/<h3([^>]*leading-snug[^>]*)>\s*([^<]{2,60}?)\s*<\/h3>/g,(tag,attrs:string,name:string)=>/eczane/i.test(name)?tag:`<h3${attrs}>${name} ECZANESİ</h3>`)
+    .replace(/N[öo]bet:\s*(\d{1,2})\s+(\p{L}+)\s+(\d{1,2}:\d{2})\s*[–-]\s*(\d{1,2})\s+(\p{L}+)\s+(\d{1,2}:\d{2})/gu,(whole,d1:string,m1:string,t1:string,d2:string,m2:string,t2:string)=>{
+      const start=isoOf(d1,m1,year),end=isoOf(d2,m2,normalized(m2)==='ocak'&&normalized(m1)==='aralik'?year+1:year);
+      return start&&end?`${dotted(start)} ${t1} / ${dotted(end)} ${t2} nöbetçidir.`:whole;
+    });
+  return day?`<input type="date" name="tarih1" value="${day}">${marked}`:marked;
+}
+/** Konya's card grid: each card names the pharmacy, its region and (for districts) its hours. */
+function konyaLines(body:string,days:string[]){
+  const title=body.match(/<title>[^<]*?(\d{1,2})\s+(\p{L}+)\s+(20\d\d)/u),day=title?isoOf(title[1],title[2],Number(title[3])):undefined;
+  if(!day)return [];
+  const decodeAttr=(value:string)=>value.replace(/&amp;/g,'&').replace(/&#0?39;|&apos;/g,"'").replace(/&quot;/g,'"').trim();
+  const rows:ApiRow[]=body.split(/<article\b/).slice(1).flatMap(card=>{
+    const attr=(name:string)=>decodeAttr(card.match(new RegExp(`data-${name}="([^"]*)"`))?.[1]??'');
+    const name=attr('ad'),region=attr('bolge'),kind=attr('tur'),number=attr('no');
+    if(!name||!region||!/^(merkez|ilce)$/.test(kind))return [];
+    const hours=card.match(/(\d{2}:\d{2})\s*[–-]\s*(\d{2}:\d{2})/);
+    return [{day,name:`${name} ECZANESİ`,district:kind==='ilce'||!region.includes('-')?region:undefined,
+      address:kind==='merkez'?`${region} · ${number}. nöbet bölgesi`:`${region} ilçesi`,from:hours?.[1]??'08:30',to:hours?.[2]??'08:30'}];
+  });
+  return apiLines([day,...days.filter(item=>item!==day)],rows);
+}
+const dotted=(iso:string)=>iso.split('-').reverse().join('.');
+const nextDay=(iso:string)=>turkeyDay(Date.parse(`${iso}T12:00:00+03:00`)+86_400_000);
+type ApiRow={day:string;name:string;district?:string;address:string;phone?:string;lat?:number|null;lng?:number|null;from:string;to:string};
+/** API rows as the lines a chamber page would give: name, district, address, phone, map point and the
+ * row's own interval, which then decides whether it is running (both duty days are passed in). */
+function apiLines(days:string[],rows:ApiRow[]){
+  return [`⟦DATE:${days[0]}⟧`,...rows.flatMap(row=>{
+    const point=row.lat&&row.lng&&Number.isFinite(row.lat)&&Number.isFinite(row.lng)?[`⟦GEO:${row.lat},${row.lng}⟧`]:[];
+    const ends=row.to<=row.from?nextDay(row.day):row.day;
+    return [row.name,...(row.district?[row.district]:[]),row.address,...(row.phone?[`⟦TEL:${row.phone}⟧`]:[]),...point,`${dotted(row.day)} ${row.from} / ${dotted(ends)} ${row.to}`];
+  })];
+}
+const text=z.string().trim().max(300);
+// A malformed coordinate drops only that point (the address is then placed), never the whole list.
+const coordinate=z.unknown().transform(value=>{const number=typeof value==='number'?value:typeof value==='string'?Number(value.trim().replace(',','.')):NaN;return Number.isFinite(number)?number:null;});
+const urfaRosters=z.object({content:z.array(z.object({dutyDate:z.string(),regionName:text.nullable().optional(),
+  dutyList:z.array(z.object({eczane:z.object({name:text,phone:text.nullable().optional(),location:text.nullable().optional(),district:text.nullable().optional(),latitude:coordinate,longitude:coordinate})}))}))});
+/** Şanlıurfa's chamber site reads its own roster API; each roster starts at its stated time and runs a day. */
+function sanliurfaLines(body:string,days:string[]){
+  const rosters=urfaRosters.parse(JSON.parse(body)).content.filter(roster=>days.includes(roster.dutyDate.slice(0,10)));
+  return apiLines(days,rosters.flatMap(roster=>{
+    const day=roster.dutyDate.slice(0,10),from=roster.dutyDate.slice(11,16)||'08:30';
+    return roster.dutyList.map(({eczane})=>{
+      // "HALİLİYE ECZANESİ(topçu meydanı)": the note is a place hint, not part of the name.
+      const [,name,hint]=eczane.name.match(/^(.*?)\s*(?:\(([^)]*)\))?$/)!;
+      const district=eczane.district&&!/merkez/i.test(eczane.district)?eczane.district:undefined;
+      return {day,name,district,address:[eczane.location,hint].filter(Boolean).join(' · '),phone:eczane.phone??undefined,lat:eczane.latitude,lng:eczane.longitude,from,to:from};
+    });
+  }));
+}
+const giresunRows=z.array(z.object({name:text,address:text,phone:text.nullable().optional(),district:text.nullable().optional(),
+  is_duty:z.boolean().optional(),duty_status:text.nullable().optional(),date:z.string(),lat:coordinate,lng:coordinate}));
+/** Giresun's chamber site lists days ahead; only the running day is read, with each row's stated hours. */
+function giresunLines(body:string,days:string[]){
+  return apiLines(days,giresunRows.parse(JSON.parse(body)).filter(row=>days.some(day=>row.date===dotted(day))&&row.is_duty!==false).map(row=>{
+    const hours=row.duty_status?.match(/(\d{1,2})[:.](\d{2})\s*-\s*(\d{1,2})[:.](\d{2})/);
+    const [from,to]=hours?[`${hours[1].padStart(2,'0')}:${hours[2]}`,`${hours[3].padStart(2,'0')}:${hours[4]}`]:['08:00','08:00'];
+    return {day:row.date.split('.').reverse().join('-'),name:row.name,district:row.district??undefined,address:row.address,phone:row.phone??undefined,lat:row.lat,lng:row.lng,from,to};
+  }));
+}
 
 const entities:Record<string,string>={nbsp:' ',amp:'&',quot:'"',apos:"'",lt:'<',gt:'>'};
 const decode=(value:string)=>value.replace(/&(#x[\da-f]+|#\d+|[a-z]+);/gi,(whole,e:string)=>{
@@ -103,6 +206,8 @@ export function pageLines(html:string){
     if(/^tel:/i.test(href))return `\n⟦TEL:${href.slice(4).trim()}⟧\n${/eczane/i.test(inner)?inner+'\n':''}`;
     const geo=href.match(geoPattern);
     // Some pages put the address inside the map link, so its text is kept.
+    // A link whose text is the pharmacy's name ("GÜNDÜZ-GECE : ŞİMŞEK ECZANESİ") opens its record, so the point follows the name.
+    if(geo&&nameLine.test(inner.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()))return `\n${inner}\n⟦GEO:${geo[1]},${geo[2]}⟧\n`;
     return geo?`\n⟦GEO:${geo[1]},${geo[2]}⟧\n${inner}\n`:`\n${inner}\n`;
   });
   // Some pages carry the location only inside a QR-code image address.
@@ -191,6 +296,9 @@ export function pageDutyDay(lines:string[]){
     const words=n.match(/(\d{1,2})\s+([a-z]+)\s+(20\d\d)/);
     const month=words?months.indexOf(words[2])+1:0;
     if(words&&month)return `${words[3]}-${String(month).padStart(2,'0')}-${words[1].padStart(2,'0')}`;
+    // "Merkez Nöbetçi Eczaneler 03-11-2026" (headings only; record lines say "nöbetçidir").
+    const digits=/n[öo]bet[çc]i eczane/i.test(line)?line.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](20\d\d)/):null;
+    if(digits)return `${digits[3]}-${digits[2].padStart(2,'0')}-${digits[1].padStart(2,'0')}`;
   }
   return lines.map(line=>line.match(/^⟦DATE:(20\d\d-\d\d-\d\d)⟧$/)?.[1]).find(Boolean);
 }
@@ -206,7 +314,7 @@ export function scheduleLines(lines:string[],day:string){
 }
 const recordKey=(record:RawRecord)=>record.name+'|'+(record.text[0]??'');
 function readPage(config:ChamberPage,html:string,names:string[],province:string,now:Date){
-  const lines=pageLines(html);
+  const lines=config.lines?config.lines(html,activeDutyDates(now)):pageLines(config.prepare?config.prepare(html):html);
   if(!config.schedule)return {records:pageRecords(lines,names,province),day:pageDutyDay(lines)};
   // The running duty is yesterday's row until the morning handover.
   const active=activeDutyDates(now),day=active[active.length-1],rows=scheduleLines(lines,day);
@@ -214,17 +322,21 @@ function readPage(config:ChamberPage,html:string,names:string[],province:string,
   return {records:pageRecords(rows,names,province),day};
 }
 
-const noise=/n[öo]bet(?:çidir|cidir| kart)|^n[öo]bet[çc][İIiı]\W*$|saat a[çc][ıi]k|^ecz(?:ac[ıi])?\s*[:.]|kadar|['’]?d[ae]n sonra|yazd[ıi]r|iletişim|harita|yol tarifi|konum|^ara$|^tümü$|telefon|^\W+$|^\*/i;
+const noise=/n[öo]bet(?:çidir|cidir| kart)|^n[öo]bet[çc][İIiı]\W*$|saat a[çc][ıi]k|^ecz(?:ac[ıi])?\s*[:.]|kadar|['’]?d[ae]n sonra|yazd[ıi]r|iletişim|harita|yol tarifi|konum|^ara$|^tümü$|telefon|^\W+$|^\*|^\d{2}\.\d{2}\.\d{4} \d{1,2}:\d{2} \/ /i;
 function addressOf(text:string[],heading=''){
   const lines=text.filter(line=>!noise.test(line)&&!/^⟦/.test(line));
   const first=lines[0]??'';
   const prefixed=first.match(/^-\s*([^/]{2,40}?)\s*\/\s*(.{5,})$/);
   if(prefixed)return {district:prefixed[1].trim(),address:prefixed[2].trim()};
-  if(first&&first.length<=25&&!/\d/.test(first)&&lines[1])return {district:first,address:lines[1]};
+  if(first&&first.length<=25&&!/\d/.test(first)&&lines[1])return {district:first.replace(/^[-–]\s*/,''),address:lines[1]};
   return {district:heading,address:first};
 }
 const titleCase=(value:string)=>value.toLocaleLowerCase('tr-TR').replace(/(^|[\s(/-])\p{L}/gu,c=>c.toLocaleUpperCase('tr-TR'));
-const cleanName=(value:string)=>(value.length>40?value.match(/((?:[\p{L}\d.'’&-]+\s){0,3}ECZANES[İIiı])(?!\p{L})/iu)?.[1]??value:value).trim();
+const cleanName=(raw:string)=>{
+  // Labels around the name: "GÜNDÜZ-GECE : ŞİMŞEK ECZANESİ", "ŞİFA ECZANESİ - 03.11.2026".
+  const value=raw.replace(/^[\p{Lu}\s-]{2,30}:\s*/u,'').replace(/\s+-\s+\d{1,2}[./]\d{1,2}[./]\d{4}$/,'').trim();
+  return (value.length>40?value.match(/((?:[\p{L}\d.'’&-]+\s){0,3}ECZANES[İIiı])(?!\p{L})/iu)?.[1]??value:value).trim();
+};
 
 export function parseChamberPage(html:string,params:SearchParams,now=new Date(),districtNames:string[]=[],siblingDistricts:string[]=[],located=new Map<string,EstimatedPoint>()):PlacesResult{
   const city=normalized(params.city??'').trim(),config=CHAMBER_PAGES[city];
@@ -302,24 +414,51 @@ export function decodePage(bytes:ArrayBuffer,contentType:string){
 // Many chamber sites share one host that refuses bursts, so each page is fetched at most every
 // ten minutes and a refusal (403/429) pauses that page for half an hour instead of being retried.
 const cacheMs=10*60_000,refusalPauseMs=30*60_000,answerWithinMs=9_000;
-const pageCache=new Map<string,{html:string;expires:number}>();
+const pageCache=new Map<string,{html:string;expires:number;fetched:number}>();
 const paused=new Map<string,number>();
+const loading=new Map<string,Promise<string>>();
+/** `reuse`: an expired copy fetched since this morning's handover is answered at once and refreshed
+ * behind it (slow district hosts); a copy from before the handover is never used. */
+async function fetchPage(url:string,form?:Record<string,string>,reuse=false){
+  const key=form?`${url}#${new URLSearchParams(form)}`:url,cached=pageCache.get(key);
+  if(cached&&cached.expires>Date.now())return cached.html;
+  const handover=dutyListEnds(activeDutyDates(new Date()).at(-1)!)-86_400_000;
+  if(reuse&&cached&&cached.fetched>=handover){void fetchPage(url,form).catch(()=>undefined);return cached.html;}
+  // One request per page at a time, however many searches wait for it.
+  const running=loading.get(key);
+  if(running)return running;
+  const request=download(url,form).then(html=>{pageCache.set(key,{html,expires:Date.now()+cacheMs,fetched:Date.now()});return html;}).finally(()=>loading.delete(key));
+  loading.set(key,request);
+  return request;
+}
+async function download(url:string,form?:Record<string,string>){
+  if((paused.get(url)??0)>Date.now())throw new SourceFailure('rate-limited');
+  let html:string;
+  try{
+    // The sites answer an identified client; generic browser strings receive 403 from some of them.
+    const response=await fetch(url,{method:form?'POST':'GET',body:form?new URLSearchParams(form):undefined,cache:'no-store',signal:AbortSignal.timeout(12_000),
+      headers:{'User-Agent':'Mozilla/5.0 (compatible; SimdiAcik/1.0; +https://simdiacik.com)','Accept-Language':'tr',...(form?{'Content-Type':'application/x-www-form-urlencoded'}:{})}});
+    if(response.status===403||response.status===429)paused.set(url,Date.now()+refusalPauseMs);
+    if(!response.ok)throw new SourceFailure(response.status===429?'rate-limited':'upstream',response.status);
+    html=decodePage(await response.arrayBuffer(),response.headers.get('content-type')??'');
+  }catch(error){throw classifySourceFailure(error);}
+  return html;
+}
+/** A district-split list: its small pages are asked together and the answer uses those that arrived in
+ * time; a slow or failed district is left out (and reported), not the province. */
+async function fetchSource(config:ChamberPage,now:Date,within:number){
+  if(!config.parts){const request=config.request?.(activeDutyDates(now))??{url:config.url};return {html:await fetchPage(request.url,request.form),missing:0};}
+  const pages=new Map<string,string>();let failure:unknown=new SourceFailure('timeout');
+  const jobs=config.parts.map(([district,url])=>fetchPage(url,undefined,true).then(html=>{pages.set(district,`<h2>${district}</h2>\n${html}`);},error=>{failure=error;}));
+  await Promise.race([Promise.all(jobs),new Promise(resolve=>setTimeout(resolve,within))]);
+  if(!pages.size)throw failure;
+  return {html:config.parts.map(([district])=>pages.get(district)??'').join('\n'),missing:config.parts.length-pages.size};
+}
+
 export async function searchChamberPage(params:SearchParams):Promise<PlacesResult>{
   const config=chamberPageFor(params.city??''),started=Date.now();
   if(!config)throw new Error('Oda kaynağı bu il için tanımlı değil.');
-  const cached=pageCache.get(config.url);
-  let html=cached&&cached.expires>Date.now()?cached.html:undefined;
-  if(!html){
-    if((paused.get(config.url)??0)>Date.now())throw new SourceFailure('rate-limited');
-    try{
-      // The sites answer an identified client; generic browser strings receive 403 from some of them.
-      const response=await fetch(config.url,{cache:'no-store',signal:AbortSignal.timeout(12_000),headers:{'User-Agent':'Mozilla/5.0 (compatible; SimdiAcik/1.0; +https://simdiacik.com)','Accept-Language':'tr'}});
-      if(response.status===403||response.status===429)paused.set(config.url,Date.now()+refusalPauseMs);
-      if(!response.ok)throw new SourceFailure(response.status===429?'rate-limited':'upstream',response.status);
-      html=decodePage(await response.arrayBuffer(),response.headers.get('content-type')??'');
-    }catch(error){throw classifySourceFailure(error);}
-    pageCache.set(config.url,{html,expires:Date.now()+cacheMs});
-  }
+  const {html,missing}=await fetchSource(config,new Date(),answerWithinMs-2_000);
   // District names only label records; the list still works if the region service is down.
   const plate=plateForCity(params.city??'');
   const districtsOf=(plate?:number)=>plate?listRegions(plate).then(result=>result.regions.map(region=>region.name),()=>[] as string[]):Promise.resolve([] as string[]);
@@ -327,16 +466,58 @@ export async function searchChamberPage(params:SearchParams):Promise<PlacesResul
   // Pages without map links: each address is placed once via OpenStreetMap and cached for a week.
   // Lookups queue at one per second; the answer leaves within ~9 s of the search (browsers give up at
   // 12 s) and slower lookups finish in the background for the next search.
-  const located=new Map<string,EstimatedPoint>();
+  const located=new Map<string,EstimatedPoint>();let unsettled=0,settled=0;
   if(config.locate){
     const {records}=readPage(config,html,[...districts,...others.flat()],params.city??'',new Date());
-    const lookups=records.filter(item=>!item.geo).slice(0,15).flatMap(record=>{
+    const lookups=records.filter(item=>!item.geo).slice(0,40).flatMap(record=>{
       const {district,address}=addressOf(record.text,record.district);
       if(address.length<5)return [];
-      return [cachedPharmacyPoint({name:cleanName(record.name),address,province:params.city??'',district,center:config.center})
-        .then(point=>{if(point)located.set(recordKey(record),point);},()=>undefined)];
+      return [cachedPharmacyPoint({name:cleanName(record.name),address,province:params.city??'',district,center:config.center,urgentUntil:started+answerWithinMs})
+        .then(point=>{if(point)located.set(recordKey(record),point);},()=>undefined).finally(()=>{settled++;})];
     });
     await Promise.race([Promise.all(lookups),new Promise(resolve=>setTimeout(resolve,Math.max(1_500,answerWithinMs-(Date.now()-started))))]);
+    unsettled=lookups.length-settled;
+    // A dated table also shows the coming days: their addresses are placed now, in the background,
+    // so tomorrow's first visitor does not wait for them.
+    if(config.schedule){
+      const lines=pageLines(html),today=activeDutyDates(new Date()).at(-1)!;
+      for(const day of [nextDay(today),nextDay(nextDay(today))])
+        for(const record of pageRecords(scheduleLines(lines,day)??[]).filter(item=>!item.geo)){
+          const {district,address}=addressOf(record.text,record.district);
+          if(address.length>=5)void cachedPharmacyPoint({name:cleanName(record.name),address,province:params.city??'',district,center:config.center}).catch(()=>undefined);
+        }
+    }
   }
-  return parseChamberPage(html,params,new Date(),districts,others.flat(),new Map(located));
+  let result:PlacesResult;
+  try{result=parseChamberPage(html,params,new Date(),districts,others.flat(),new Map(located));}
+  catch(error){
+    if(unsettled&&!located.size)throw new Error(`${config.source} listesindeki eczanelerin konumları hazırlanıyor; birkaç saniye sonra yenile.`);
+    throw error;
+  }
+  // Records still being placed are not "unverifiable": say so, the next search shows them.
+  const notes=[...(unsettled?[`${unsettled} nöbet kaydının konumu hâlâ hesaplanıyor; birkaç saniye sonra yenile.`]:[]),
+    ...(missing?[`${missing} ilçenin listesi kaynaktan zamanında alınamadı; resmî listeyi de kontrol et.`]:[])];
+  if(!notes.length)return result;
+  return {...result,partial:true,warnings:[...(result.warnings??[]).filter(warning=>!unsettled||!/doğrulanamadığı için gösterilmedi/.test(warning)),...notes]};
+}
+
+/**
+ * Keeps address-placed provinces ready on the long-running server: every half hour each such page is
+ * read once and its new addresses are placed, so a visitor rarely waits for OpenStreetMap lookups.
+ * Already-placed addresses come from the week-long cache and cost no lookup.
+ */
+let warming=false;
+async function warmLocatedPages(){
+  if(warming)return;warming=true;
+  try{
+    for(const [key,config] of Object.entries(CHAMBER_PAGES)){
+      if(!config.locate)continue;
+      const province=PHARMACY_CHAMBERS.find(chamber=>chamber.provinceId===plateForCity(key))?.province??key;
+      await searchChamberPage({city:province,lat:config.center[0],lng:config.center[1],radius:1,category:'Eczane',query:'',demo:false}).catch(()=>undefined);
+    }
+  }finally{warming=false;}
+}
+if(process.env.NODE_ENV==='production'&&typeof setInterval==='function'){
+  setTimeout(()=>void warmLocatedPages(),60_000).unref?.();
+  setInterval(()=>void warmLocatedPages(),30*60_000).unref?.();
 }

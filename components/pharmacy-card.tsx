@@ -72,7 +72,7 @@ export function PharmacyCard({
         <MapPin size={14} />
         <span title={p.address}>
           {pharmacyShortAddress(p.address)}
-          {p.locationEstimate === "neighbourhood" && (
+          {(p.locationEstimate === "neighbourhood" || p.locationEstimate === "district") && (
             <em className="location-estimate"> · yaklaşık konum</em>
           )}
         </span>
