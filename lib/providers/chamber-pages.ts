@@ -204,7 +204,9 @@ export function pageLines(html:string){
     const value=/type\s*=\s*["']?date/i.test(tag)&&/name\s*=\s*["']?tarih/i.test(tag)?tag.match(/value\s*=\s*["'](20\d\d-\d\d-\d\d)["']/)?.[1]:undefined;
     return value?`\n⟦DATE:${value}⟧\n`:' ';
   });
-  h=h.replace(/<a\b([^>]*)>([\s\S]*?)<\/a\s*>/gi,(_,attrs:string,inner:string)=>{
+  // Quoted attribute values may hold ">" (Burdur: title="?=$eczane;?> Eczanesi Harita Konumu").
+  // Values are bounded so an unclosed quote cannot make every link scan the rest of the page.
+  h=h.replace(/<a\b((?:[^>"']|"[^"]{0,400}"|'[^']{0,400}')*)>([\s\S]*?)<\/a\s*>/gi,(_,attrs:string,inner:string)=>{
     const href=decode(attrs.match(/href\s*=\s*["']([^"']*)["']/i)?.[1]??'');
     if(/^tel:/i.test(href))return `\n⟦TEL:${href.slice(4).trim()}⟧\n${/eczane/i.test(inner)?inner+'\n':''}`;
     const geo=href.match(geoPattern);
@@ -316,6 +318,11 @@ export function scheduleLines(lines:string[],day:string){
   return lines.slice(start+1,end<0?undefined:end);
 }
 const recordKey=(record:RawRecord)=>record.name+'|'+(record.text[0]??'');
+/** A point-less repeat of a pharmacy listed elsewhere on the page with its point (a "today's duty" side box). */
+const repeats=(records:RawRecord[])=>{
+  const placed=new Set(records.filter(record=>record.geo).map(record=>normalized(record.name)));
+  return (record:RawRecord)=>!record.geo&&placed.has(normalized(record.name));
+};
 function readPage(config:ChamberPage,html:string,names:string[],province:string,now:Date){
   const lines=config.lines?config.lines(html,activeDutyDates(now)):pageLines(config.prepare?config.prepare(html):html);
   if(!config.schedule)return {records:pageRecords(lines,names,province),day:pageDutyDay(lines)};
@@ -352,7 +359,9 @@ export function parseChamberPage(html:string,params:SearchParams,now=new Date(),
   const ownDistricts=new Set(districtNames.map(label)),foreignDistricts=new Set(siblingDistricts.map(label));
   const fetchedAt=now.toISOString(),places:Place[]=[],ids=new Set<string>();
   let usable=0,skipped=0,expired=0,upcoming=0,missingPhone=0;
+  const isRepeat=repeats(records);
   for(const record of records){
+    if(isRepeat(record))continue;
     // İzmir-style names carry their neighbourhood: "CANSU ECZANESİ - ALİAĞA".
     const named=cleanName(record.name).match(/^(.*ECZANES[İIiı])\s+-\s+(.{2,40})$/iu);
     const name=named?named[1]:cleanName(record.name);
@@ -480,7 +489,8 @@ export async function searchChamberPage(params:SearchParams):Promise<PlacesResul
   const located=new Map<string,EstimatedPoint>();let unsettled=0,settled=0;
   if(config.locate){
     const {records}=readPage(config,html,[...districts,...others.flat()],params.city??'',new Date());
-    const lookups=records.filter(item=>!item.geo).slice(0,40).flatMap(record=>{
+    const isRepeat=repeats(records);
+    const lookups=records.filter(item=>!item.geo&&!isRepeat(item)).slice(0,40).flatMap(record=>{
       const {district,address}=addressOf(record.text,record.district);
       if(address.length<5)return [];
       return [cachedPharmacyPoint({name:cleanName(record.name),address,province:params.city??'',district,center:config.center,urgentUntil:started+answerWithinMs})

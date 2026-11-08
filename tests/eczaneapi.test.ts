@@ -11,6 +11,11 @@ const row=(id:number,day:string,extra:Record<string,unknown>={})=>({id,name:`ECZ
   location:{latitude:40.99,longitude:29.03},city:{name:'İstanbul',slug:'istanbul'},district:{name:'Kadıköy'},duty:{date:`${day}T00:00:00.000Z`,isVerified:true},...extra});
 const body=(rows:unknown[])=>({success:true,data:{pharmacies:rows}});
 
+test('the three-day answer (data as an array of days) is read like a single day',()=>{
+  const days={success:true,data:[{date:'2026-11-02',count:1,pharmacies:[row(1,'2026-11-02')]},{date:'2026-11-03',count:1,pharmacies:[row(2,'2026-11-03')]},{date:'2026-11-04',count:0,pharmacies:[]}],meta:{requestId:'x'}};
+  assert.deepEqual(parseEczaneApi(days,params('İstanbul',41,29),new Date('2026-11-03T07:00:00Z')).places.map(p=>p.name),['ECZANE 2']);
+});
+
 test('only the running duty day is shown: yesterday until 09:00, today after',()=>{
   const rows=body([row(1,'2026-11-02'),row(2,'2026-11-03'),row(3,'2026-11-04')]);
   const names=(iso:string)=>parseEczaneApi(rows,params('İstanbul',41,29),new Date(iso)).places.map(p=>p.name);
