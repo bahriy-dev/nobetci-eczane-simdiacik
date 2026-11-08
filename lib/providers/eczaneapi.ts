@@ -29,7 +29,9 @@ const pharmacyRow=z.object({
   district:z.object({name:text(100).optional()}).nullable().optional(),
   duty:z.object({date:z.string().max(40)}),
 });
-const payload=z.object({success:z.literal(true),data:z.object({pharmacies:z.array(z.unknown()).max(3000)})});
+// With a date, `data` is that day; without one (as asked here) it is yesterday, today and tomorrow.
+const day=z.object({pharmacies:z.array(z.unknown()).max(3000)});
+const payload=z.object({success:z.literal(true),data:z.union([day,z.array(day).max(7)])});
 
 function phoneNumber(value?:string|null){
   const digits=(value??'').replace(/\D/g,'');
@@ -49,7 +51,8 @@ export function parseEczaneApi(raw:unknown,params:SearchParams,now=new Date()):P
   const verifiedUntil=new Date(Math.min(now.getTime()+300_000,dutyListEnds(running))).toISOString();
   const places:Place[]=[],ids=new Set<string>();
   let cityRows=0,currentRows=0,skipped=0,missingAddress=0,missingPhone=0;
-  for(const item of parsed.data.data.pharmacies){
+  const days=Array.isArray(parsed.data.data)?parsed.data.data:[parsed.data.data];
+  for(const item of days.flatMap(entry=>entry.pharmacies)){
     const record=pharmacyRow.safeParse(item);
     if(!record.success){skipped++;continue;}
     const row=record.data;

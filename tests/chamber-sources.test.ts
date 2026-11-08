@@ -79,3 +79,17 @@ test('Kilis rows are read from the Gaziantep chamber feed, without the province 
   const places=parseGaziantepChamber(feed,params('Kilis',36.72,37.12),evening).places;
   assert.deepEqual(places.map(p=>p.name),['ARZU ECZANESİ']);assert.match(places[0].address,/Kilis$/);
 });
+
+test('a ">" inside a quoted link attribute does not leak text that looks like a name',()=>{
+  const html=`<h2>BURDUR NÖBETÇİ ECZANELER 03-11-2026</h2><p><strong>AYTAR ECZANESİ</strong></p><p>MERKEZ<br>ATATÜRK MAH. ZEYNEL ABİDİN TONGUÇ CAD. NO:13/7<br><a href="tel:02482122626">02482122626</a><br>
+<a href="https://maps.google.com/maps?q=37.713223,30.231679" target="_blank" title="?=$eczane;?> Eczanesi Harita Konumu">Haritada görüntülemek için tıklayınız...</a></p>`;
+  const places=parseChamberPage(html,params('Burdur',37.72,30.29),evening,['Merkez']).places;
+  assert.deepEqual(places.map(p=>[p.name,p.lat]),[['AYTAR ECZANESİ',37.713223]]);
+});
+
+test('a side box repeating names without points is neither shown twice nor reported as unverifiable',()=>{
+  const html=`<h3>Bugün Nöbetçi Eczaneler</h3><ul><li>ZORLU ECZANESİ</li><li>(KIRKLARELİ)</li></ul>
+<h4>ZORLU ECZANESİ</h4><p>KARAKAS MAH. CUMHURİYET CAD. NO:154</p><a href="tel:02882122768">0288</a><a href="https://maps.google.com/?q=41.729474,27.220715">Harita</a>`;
+  const result=parseChamberPage(html,params('Kırklareli',41.73,27.22),evening,['Merkez']);
+  assert.deepEqual(result.places.map(p=>p.name),['ZORLU ECZANESİ']);assert.equal(result.warnings,undefined);
+});
