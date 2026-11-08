@@ -63,6 +63,8 @@ import { PharmacyCard } from "@/components/pharmacy-card";
 import { PharmacyDetail } from "@/components/pharmacy-detail";
 import { SiteFooter } from "@/components/site-footer";
 import { ProvinceDirectory } from "@/components/province-directory";
+import { OfficialDistrictList } from "@/components/official-district-list";
+import { officialListFor } from "@/lib/official-lists";
 import { MapBoundary } from "@/components/map-boundary";
 import {
   pharmacyDistance as distance,
@@ -557,6 +559,8 @@ export default function Home() {
     return () => document.removeEventListener("visibilitychange", resume);
   }, [locationChosen, online]);
   const unsupported = data?.coverageStatus === "unsupported";
+  // Provinces this server cannot read still get their official district lists, without any API.
+  const officialList = locationChosen ? officialListFor(location.city) : undefined;
   const expired = basePlaces.some(
     (p) => p.verifiedUntil && Date.parse(p.verifiedUntil) <= now,
   );
@@ -1048,6 +1052,12 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
+                ) : officialList && (error || unsupported) ? (
+                  <OfficialDistrictList
+                    key={location.city}
+                    list={officialList}
+                    label={location.label}
+                  />
                 ) : error ? (
                   <div className="empty-state">
                     <Info size={32} />

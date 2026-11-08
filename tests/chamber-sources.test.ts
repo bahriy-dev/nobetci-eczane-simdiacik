@@ -49,7 +49,10 @@ test('Rize: bare names and "3 Kasım 18:00 – 4 Kasım 08:00" intervals',()=>{
 
 test('Konya: names from the card grid are placed by a single same-name pharmacy, else the district town',async()=>{
   const card=(kind:string,name:string,region:string,no:string,hours='')=>`<article class="kart" data-kart data-tur="${kind}" data-lat="" data-lon="" data-ad="${name}" data-bolge="${region}" data-no="${no}" data-tel="">${hours?`<span> ${hours} </span>`:''}<h4>${name}<span> Eczanesi</span></h4></article>`;
-  const page=`<html><title>Konya Nöbetçi Eczaneler — 3 Kasım 2026 Salı</title>${card('merkez','Esra Ayhan','Selçuklu','1')}${card('ilce','İpek','Akşehir','','18:00 – 08:30')}</html>`;
+  // The page is dated with the running duty day, so the test holds on any day.
+  const [y,m,d]=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul'}).format(Date.now()-9*3_600_000).split('-');
+  const month=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][Number(m)-1];
+  const page=`<html><title>Konya Nöbetçi Eczaneler — ${Number(d)} ${month} ${y}</title>${card('merkez','Esra Ayhan','Selçuklu','1')}${card('ilce','İpek','Akşehir','','18:00 – 08:30')}</html>`;
   const answers:Record<string,unknown[]>={
     'Esra Ayhan Eczanesi, Konya':[{class:'amenity',type:'pharmacy',lat:'37.8845',lon:'32.4902',display_name:'Esra Ayhan Eczanesi, Selçuklu, Konya',address:{province:'Konya'}}],
     'Akşehir, Konya':[{class:'boundary',type:'administrative',lat:'38.35885',lon:'31.4202',display_name:'Akşehir, Konya, İç Anadolu Bölgesi',address:{province:'Konya'}}],
