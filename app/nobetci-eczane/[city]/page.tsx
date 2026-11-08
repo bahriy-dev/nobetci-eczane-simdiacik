@@ -11,13 +11,48 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { cityGuides, getCityGuide } from "@/lib/city-guides";
-import { siteOrigin } from "@/lib/site-config";
+import { siteOrigin, ogImage } from "@/lib/site-config";
 import { CityGuideSearch } from "@/components/city-guide-search";
 import { SiteFooter } from "@/components/site-footer";
+import { notFound } from "next/navigation";
+import { listRegions, type ProvinceDTO } from "@/lib/regions";
+import { normalized, type PlacesResult } from "@/lib/places";
+import { pharmacyProvider } from "@/lib/providers/pharmacies";
+import {
+  pharmacyDisplayAddress,
+  pharmacyDisplayName,
+  pharmacyPhoneDisplay,
+  pharmacyPhoneLink,
+  pharmacyTimestamp,
+} from "@/lib/pharmacy-presentation";
 
-export const dynamicParams = false;
+// Each guide carries today's duty list in its HTML (for people and search engines). Pages are made on
+// first request and refreshed at most every 15 minutes, never at build time (no source calls in builds).
+export const revalidate = 900;
 export function generateStaticParams() {
-  return cityGuides.map((city) => ({ city: city.slug }));
+  return [] as { city: string }[];
+}
+
+/** Today's official duty list for the province, or null when no source answers (the page still renders). */
+async function todaysDuty(name: string): Promise<PlacesResult | null> {
+  try {
+    const provinces = (await listRegions()).regions as ProvinceDTO[];
+    const province = provinces.find(
+      (row) => normalized(row.name) === normalized(name),
+    );
+    if (!province) return null;
+    return await pharmacyProvider.search({
+      city: province.name,
+      lat: province.lat,
+      lng: province.lng,
+      radius: 2000,
+      category: "Eczane",
+      query: "",
+      demo: false,
+    });
+  } catch {
+    return null;
+  }
 }
 
 export async function generateMetadata({
@@ -28,14 +63,15 @@ export async function generateMetadata({
   const { city: slug } = await params;
   const city = getCityGuide(slug);
   if (!city) return {};
-  const title = `${city.name} Nöbetçi Eczaneler | Şimdi Açık`;
-  const description = `${city.name} için güncel nöbetçi eczane kaynağına ulaş. İlçe veya konum seç, yakındaki eczaneleri haritada gör ve gitmeden önce telefonla teyit et.`;
+  const title = `${city.name} Nöbetçi Eczaneler — Bugün Açık Eczaneler | Şimdi Açık`;
+  const description = `${city.name} bugün ve bu gece nöbetçi eczaneler: adres, telefon ve harita. Liste resmî nöbet kaynaklarından alınır; gitmeden önce telefonla teyit et.`;
   const canonical = `/nobetci-eczane/${city.slug}`;
   return {
     title: { absolute: title },
     description,
     alternates: { canonical },
     openGraph: {
+      images: [ogImage],
       type: "website",
       locale: "tr_TR",
       url: siteOrigin + canonical,
@@ -53,7 +89,9 @@ export default async function CityGuidePage({
 }) {
   const { city: slug } = await params;
   const city = getCityGuide(slug);
-  if (!city) return null;
+  if (!city) notFound();
+  const duty = await todaysDuty(city.name);
+  const dutyPlaces = duty?.places.slice(0, 150) ?? [];
 
   const canonical = siteOrigin + `/nobetci-eczane/${city.slug}`;
   const schema = {
@@ -69,6 +107,30 @@ export default async function CityGuidePage({
       name: city.name,
       containedInPlace: { "@type": "Country", name: "Türkiye" },
     },
+    ...(dutyPlaces.length
+      ? {
+          mainEntity: {
+            "@type": "ItemList",
+            name: `${city.name} bugün nöbetçi eczaneler`,
+            numberOfItems: dutyPlaces.length,
+            itemListElement: dutyPlaces.map((place, index) => ({
+              "@type": "ListItem",
+              position: index + 1,
+              item: {
+                "@type": "Pharmacy",
+                name: pharmacyDisplayName(place.name),
+                address: pharmacyDisplayAddress(place.address),
+                ...(place.phone ? { telephone: place.phone } : {}),
+                geo: {
+                  "@type": "GeoCoordinates",
+                  latitude: place.lat,
+                  longitude: place.lng,
+                },
+              },
+            })),
+          },
+        }
+      : {}),
   };
 
   const otherCities = cityGuides.filter((item) => item.slug !== city.slug);
@@ -161,6 +223,46 @@ export default async function CityGuidePage({
               Aç <ArrowUpRight size={13} />
             </a>
           </div>
+        </section>
+
+        {/* Today's list, rendered on the server */}
+        <section className="city-duty" aria-labelledby="city-duty-title">
+          <h2 id="city-duty-title">{city.name} bugün nöbetçi eczaneler</h2>
+          {dutyPlaces.length ? (
+            <>
+              <p className="city-duty-meta">
+                {dutyPlaces.length} eczane · Kaynak: {duty!.source} · Son
+                kontrol {pharmacyTimestamp(duty!.fetchedAt)}. Gitmeden önce
+                telefonla teyit et.
+              </p>
+              <ol className="city-duty-list">
+                {dutyPlaces.map((place) => (
+                  <li key={place.id}>
+                    <strong>{pharmacyDisplayName(place.name)}</strong>
+                    <span>{pharmacyDisplayAddress(place.address)}</span>
+                    {place.phone && (
+                      <a href={pharmacyPhoneLink(place.phone)}>
+                        {pharmacyPhoneDisplay(place.phone)}
+                      </a>
+                    )}
+                    {place.closes && (
+                      <small>
+                        Nöbet bitişi: {pharmacyTimestamp(place.closes)}
+                      </small>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </>
+          ) : (
+            <p className="city-duty-meta">
+              Bugünün listesi şu an alınamadı. Güncel liste için{" "}
+              <a href={city.source.url} target="_blank" rel="noreferrer">
+                {city.source.name}
+              </a>{" "}
+              sayfasını aç.
+            </p>
+          )}
         </section>
 
         {/* Search & Location Card (only where the site has the live list) */}

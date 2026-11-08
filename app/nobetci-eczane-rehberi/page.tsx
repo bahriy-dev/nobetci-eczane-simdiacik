@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import type {Metadata} from 'next';
 import {Plus} from 'lucide-react';
-import {siteOrigin} from '@/lib/site-config';
+import {siteOrigin,ogImage} from '@/lib/site-config';
 import {cityGuides} from '@/lib/city-guides';
 import {SiteFooter} from '@/components/site-footer';
-export const metadata:Metadata={title:'Nöbetçi Eczane Nasıl Bulunur?',description:'Konum izni, il ve ilçe seçimi, nöbetçi eczane haritası ve telefonla teyit hakkında kısa rehber.',alternates:{canonical:'/nobetci-eczane-rehberi'},openGraph:{url:siteOrigin+'/nobetci-eczane-rehberi',title:'Nöbetçi Eczane Nasıl Bulunur?',description:'Yakınındaki nöbetçi eczaneye kolayca ulaş.'}};
+export const metadata:Metadata={title:'Nöbetçi Eczane Nasıl Bulunur?',description:'Konum izni, il ve ilçe seçimi, nöbetçi eczane haritası ve telefonla teyit hakkında kısa rehber.',alternates:{canonical:'/nobetci-eczane-rehberi'},openGraph:{images:[ogImage],url:siteOrigin+'/nobetci-eczane-rehberi',title:'Nöbetçi Eczane Nasıl Bulunur?',description:'Yakınındaki nöbetçi eczaneye kolayca ulaş.'}};
 const questions=[
  ['Yakınımdaki nöbetçi eczaneyi nasıl bulurum?','Ana sayfada konumunu kullanmayı onayla. Tarayıcının konum izniyle bulunduğun bölge belirlenir; güncel listede bulunan eczaneler yakınlık sırasıyla gösterilir. Konum izni vermek istemiyorsan il ve ilçe seçebilirsin.'],
  ['Konum iznini her seferinde vermem gerekir mi?','Tarayıcın önceden verdiğin izni hatırlıyorsa konum otomatik alınır. İzni tarayıcıdaki site ayarlarından değiştirebilirsin. Konum alınamazsa bölge seçimiyle devam edebilirsin.'],
