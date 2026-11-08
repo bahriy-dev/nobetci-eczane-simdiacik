@@ -26,9 +26,10 @@ import {
   pharmacyTimestamp,
 } from "@/lib/pharmacy-presentation";
 
-// Each guide carries today's duty list in its HTML (for people and search engines). Pages are made on
-// first request and refreshed at most every 15 minutes, never at build time (no source calls in builds).
-export const revalidate = 900;
+// Each guide carries today's duty list in its HTML (for people and search engines). It is rendered per
+// request: the sources are read live (no-store), and the providers' own caches (chamber pages 10 min,
+// EczaneAPI a day) keep that cheap. Nothing is built ahead, so builds never call the sources.
+export const dynamic = "force-dynamic";
 export function generateStaticParams() {
   return [] as { city: string }[];
 }
