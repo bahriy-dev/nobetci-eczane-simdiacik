@@ -29,7 +29,7 @@ const nextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=31536000" },
           {
             key: "Content-Security-Policy",
-            value: `default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org ${customTileOrigin}; connect-src 'self' https://api.turkiyeapi.dev https://nominatim.openstreetmap.org https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com; font-src 'self' data:; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests`,
+            value: `default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org ${customTileOrigin}; connect-src 'self' https://api.turkiyeapi.dev https://nominatim.openstreetmap.org https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com; font-src 'self' data:; frame-src https://www.googletagmanager.com https://ordu.eczanesistemi.net; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests`,
           },
         ],
       },
