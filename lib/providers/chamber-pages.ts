@@ -6,6 +6,7 @@ import {plateForCity} from './eczaneler-org';
 import {PHARMACY_CHAMBERS} from '../pharmacy-sources';
 import {cachedPharmacyPoint,type EstimatedPoint} from '../geocode';
 import {z} from 'zod';
+import {ORDU_DISTRICT_LISTS} from '../official-lists';
 
 /**
  * Public "nöbetçi eczaneler" pages of pharmacist chambers. Most run the same chamber website
@@ -89,10 +90,7 @@ export const CHAMBER_PAGES:Readonly<Record<string,ChamberPage>>=Object.freeze({
   malatya:page('https://www.malatyaeczaciodasi.org.tr/nobetci-eczaneler','Malatya Eczacı Odası',[38.3552,38.3095],undefined,{locate:true}),
   usak:page('https://usakeczaciodasi.org.tr/usak-nobetci-eczaneler','Uşak Eczacı Odası',[38.6823,29.4082],undefined,{locate:true,areaCode:'0276'}),
   tokat:page('https://tokateo.org/NobetciEczane.aspx','Tokat Eczacı Odası · Merkez',[40.3139,36.5544],undefined,{locate:true,schedule:true}),
-  ordu:page('https://ordueczaciodasi.org.tr/nobetci-eczaneler/','Ordu Eczacı Odası',[40.9862,37.8797],undefined,{parts:[
-    ['Altınordu',701],['Fatsa',706],['Ünye',718],['Perşembe',716],['Kumru',714],['Korgan',713],['Akkuş',700],['Aybastı',702],['Çamaş',703],['Çatalpınar',704],
-    ['Çaybaşı',705],['Gölköy',707],['Gülyalı',708],['Gürgentepe',709],['İkizce',710],['Kabadüz',711],['Kabataş',712],['Mesudiye',715],['Ulubey',717],
-  ].map(([district,id])=>[String(district),`https://ordu.eczanesistemi.net/list/${id}`])}),
+  ordu:page('https://ordueczaciodasi.org.tr/nobetci-eczaneler/','Ordu Eczacı Odası',[40.9862,37.8797],undefined,{parts:ORDU_DISTRICT_LISTS.map(({district,url})=>[district,url])}),
   sanliurfa:page('https://sanliurfaeo.org.tr/nobetci-eczaneler','Şanlıurfa Eczacı Odası',[37.1591,38.7969],undefined,{locate:true,lines:sanliurfaLines,
     request:days=>({url:`https://portal.sanliurfaeo.birodam.org.tr/auth-server/api/duty-rosters/list-grouped?page=0&size=200&sort=id,asc&dutyDateFrom=${days.at(-1)}&dutyDateTo=${days[0]}`})}),
   giresun:page('https://giresuneczaciodasi.org.tr/giresun_nobetci_eczaneler','Giresun Eczacı Odası',[40.9128,38.3895],undefined,{locate:true,lines:giresunLines,
