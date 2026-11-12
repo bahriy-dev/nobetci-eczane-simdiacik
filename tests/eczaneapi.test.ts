@@ -10,6 +10,7 @@ const params=(city:string,lat:number,lng:number)=>({city,lat,lng,radius:2000,cat
 const row=(id:number,day:string,extra:Record<string,unknown>={})=>({id,name:`ECZANE ${id}`,address:'Caferağa Mah. Moda Cad. No:1',phone:'0216 111 22 33',
   location:{latitude:40.99,longitude:29.03},city:{name:'İstanbul',slug:'istanbul'},district:{name:'Kadıköy'},duty:{date:`${day}T00:00:00.000Z`,isVerified:true},...extra});
 const body=(rows:unknown[])=>({success:true,data:{pharmacies:rows}});
+const isEczaneApi=(url:string)=>new URL(url).hostname==='eczaneapi.com';
 
 test('the three-day answer (data as an array of days) is read like a single day',()=>{
   const days={success:true,data:[{date:'2026-11-02',count:1,pharmacies:[row(1,'2026-11-02')]},{date:'2026-11-03',count:1,pharmacies:[row(2,'2026-11-03')]},{date:'2026-11-04',count:0,pharmacies:[]}],meta:{requestId:'x'}};
@@ -41,7 +42,7 @@ test('closed provinces use EczaneAPI once a day; Ordu falls back to it; other pr
     // A fresh cache folder per run; the answer is written there once asked.
     process.env.ECZANEAPI_CACHE_DIR=mkdtempSync(join(tmpdir(),'eczaneapi-test-'));
     globalThis.fetch=async input=>{const url=String(input);calls.push(url);
-      if(url.includes('eczaneapi.com')){const city=new URL(url).searchParams.get('city')!;
+      if(isEczaneApi(url)){const city=new URL(url).searchParams.get('city')!;
         const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul'}).format(Date.now()-9*3_600_000);
         return Response.json(body([row(7,today,{city:{name:city,slug:city},location:{latitude:city==='ordu'?40.98:41,longitude:city==='ordu'?37.88:29}})]));}
       if(url.includes('eczanesistemi'))return new Response('Forbidden',{status:403});
@@ -49,16 +50,16 @@ test('closed provinces use EczaneAPI once a day; Ordu falls back to it; other pr
       return new Response('<html></html>',{headers:{'content-type':'text/html'}});};
     // Without a key nothing changes: İstanbul stays an official link.
     assert.equal((await pharmacyProvider.search(params('İstanbul',41.01,28.98))).coverageStatus,'unsupported');
-    assert.equal(calls.filter(url=>url.includes('eczaneapi.com')).length,0);
+    assert.equal(calls.filter(isEczaneApi).length,0);
     process.env.ECZANEAPI_KEY='test-key';
     const first=await pharmacyProvider.search(params('İstanbul',41.01,28.98));
     await pharmacyProvider.search(params('İstanbul',41.02,28.99));
     assert.equal(first.source,'EczaneAPI');assert.equal(first.places.length,1);
-    assert.equal(calls.filter(url=>url.includes('eczaneapi.com/api/v1/pharmacies/on-duty?city=istanbul')).length,1);
+    assert.equal(calls.filter(url=>isEczaneApi(url)&&new URL(url).pathname==='/api/v1/pharmacies/on-duty'&&new URL(url).searchParams.get('city')==='istanbul').length,1);
     assert.deepEqual(readdirSync(process.env.ECZANEAPI_CACHE_DIR),['istanbul.json']);
     assert.equal((await pharmacyProvider.search(params('Ordu',40.99,37.88))).source,'EczaneAPI');
     await pharmacyProvider.search(params('Bursa',40.18,29.06)).catch(()=>undefined);
-    assert.ok(!calls.some(url=>url.includes('eczaneapi.com')&&url.includes('bursa')));
+    assert.ok(!calls.some(url=>isEczaneApi(url)&&new URL(url).searchParams.get('city')==='bursa'));
   }finally{
     globalThis.fetch=original;
     if(saved.key===undefined)delete process.env.ECZANEAPI_KEY;else process.env.ECZANEAPI_KEY=saved.key;

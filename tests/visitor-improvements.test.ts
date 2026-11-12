@@ -204,7 +204,7 @@ test("HTTP-success envelopes still require safe pharmacy records at runtime", ()
 });
 
 test("map provider configuration uses HTTPS and cannot inject attribution HTML", () => {
-  assert.match(mapTileConfig().url, /^https:\/\/tile.openstreetmap.org/);
+  assert.match(mapTileConfig().url, /^https:\/\/tile\.openstreetmap\.org\//);
   assert.throws(() =>
     mapTileConfig(
       "http://example.test/{z}/{x}/{y}.png",
