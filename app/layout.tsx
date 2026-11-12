@@ -2,11 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { AnalyticsConsent } from "@/components/analytics-consent";
 import { siteOrigin, siteDescription, siteIndexable } from "@/lib/site-config";
 import "./globals.css";
-import "./design-refresh.css";
+import "./signal.css";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#16302c",
+  themeColor: "#bc352d",
 };
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
