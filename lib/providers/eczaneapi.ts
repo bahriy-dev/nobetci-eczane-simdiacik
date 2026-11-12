@@ -1,6 +1,5 @@
 import {z} from 'zod';
-import {mkdir,readFile,writeFile} from 'node:fs/promises';
-import {tmpdir} from 'node:os';
+import {mkdir,readFile,rename,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {requestSource,SourceFailure} from '../source-request';
 import {distanceKm,normalized,type Place,type PlacesResult,type SearchParams} from '../places';
@@ -94,7 +93,9 @@ export function parseEczaneApi(raw:unknown,params:SearchParams,now=new Date()):P
 // so a province costs one request a day however many people look at it. A failed request (quota,
 // outage) is not retried for half an hour, so failures cannot use up the quota either.
 const turnover=(time:number)=>turkeyDay(time-30*60_000);
-const cacheDir=()=>process.env.ECZANEAPI_CACHE_DIR||join(tmpdir(),'simdiacik-eczaneapi');
+// The cache lives in the app's own folder, not the shared OS temp dir, so other local users cannot
+// pre-create or swap its files. Owner-only permissions keep it private either way.
+const cacheDir=()=>process.env.ECZANEAPI_CACHE_DIR||join(process.cwd(),'.cache','eczaneapi');
 const cache=new Map<string,{rows:unknown;day:string}>();
 const pending=new Map<string,Promise<unknown>>();
 const failedUntil=new Map<string,number>();
@@ -105,6 +106,14 @@ async function readStored(slug:string,day:string){
     const stored=JSON.parse(await readFile(cacheFile(slug),'utf8')) as {rows?:unknown;day?:string};
     return stored.day===day&&stored.rows!==undefined?stored.rows:undefined;
   }catch{return undefined;}
+}
+async function storeRows(slug:string,day:string,rows:unknown){
+  const file=cacheFile(slug),temporary=`${file}.${process.pid}.tmp`;
+  try{
+    await mkdir(cacheDir(),{recursive:true,mode:0o700});
+    await writeFile(temporary,JSON.stringify({day,rows}),{mode:0o600,flag:'wx'});
+    await rename(temporary,file);
+  }catch{/* The cache only saves quota; the answer is still served without it. */}
 }
 async function provinceRows(slug:string,key:string){
   const day=turnover(Date.now()),hit=cache.get(slug);
@@ -118,7 +127,7 @@ async function provinceRows(slug:string,key:string){
     try{
       const rows=await (await requestSource(`${ECZANEAPI_URL}?${new URLSearchParams({city:slug})}`,{headers:{Accept:'application/json','X-API-Key':key}})).json();
       cache.set(slug,{rows,day});
-      await mkdir(cacheDir(),{recursive:true}).then(()=>writeFile(cacheFile(slug),JSON.stringify({day,rows}))).catch(()=>undefined);
+      await storeRows(slug,day,rows);
       return rows;
     }catch(error){
       failedUntil.set(slug,Date.now()+retryAfterFailureMs);

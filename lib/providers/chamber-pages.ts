@@ -134,7 +134,7 @@ function rizeMarkup(html:string){
 function konyaLines(body:string,days:string[]){
   const title=body.match(/<title>[^<]*?(\d{1,2})\s+(\p{L}+)\s+(20\d\d)/u),day=title?isoOf(title[1],title[2],Number(title[3])):undefined;
   if(!day)return [];
-  const decodeAttr=(value:string)=>value.replace(/&amp;/g,'&').replace(/&#0?39;|&apos;/g,"'").replace(/&quot;/g,'"').trim();
+  const decodeAttr=(value:string)=>value.replace(/&#0?39;|&apos;/g,"'").replace(/&quot;/g,'"').replace(/&amp;/g,'&').trim();
   const rows:ApiRow[]=body.split(/<article\b/).slice(1).flatMap(card=>{
     const attr=(name:string)=>decodeAttr(card.match(new RegExp(`data-${name}="([^"]*)"`))?.[1]??'');
     const name=attr('ad'),region=attr('bolge'),kind=attr('tur'),number=attr('no');
@@ -198,7 +198,9 @@ const geoPattern=/(?:[?&](?:q|query|ll|daddr|destination)=|@|\/place\/|\/dir\/\/
 
 /** Page text as lines; phone and map links become ⟦TEL:…⟧ / ⟦GEO:lat,lng⟧ markers in reading order. */
 export function pageLines(html:string){
-  let h=html.replace(/<!--[\s\S]*?-->/g,'').replace(/<(script|style|noscript|svg|select)\b[\s\S]*?<\/\1\s*>/gi,' ');
+  // Repeat until stable: removing one block can join the halves of another.
+  let h=html,previous;
+  do{previous=h;h=h.replace(/<!--[\s\S]*?-->/g,'').replace(/<(script|style|noscript|svg|select)\b[\s\S]*?<\/\1\s*>/gi,' ');}while(h!==previous);
   // The shared chamber platform pre-fills its date picker with the day of the list on show.
   h=h.replace(/<input\b[^>]*>/gi,tag=>{
     const value=/type\s*=\s*["']?date/i.test(tag)&&/name\s*=\s*["']?tarih/i.test(tag)?tag.match(/value\s*=\s*["'](20\d\d-\d\d-\d\d)["']/)?.[1]:undefined;
