@@ -854,6 +854,7 @@ export default function Home() {
         {locationChosen && (
           <section className="pharmacy-results">
             <div className="results-toolbar">
+              <div className="results-overview">
               <div className="section-heading">
                 <div className="results-heading-copy">
                   <h2>Nöbetçi eczaneler</h2>
@@ -941,12 +942,12 @@ export default function Home() {
                   </span>
                 )}
               </div>
+              </div>
               {data?.partial && (
-                <p className="source-quality-note" role="status">
-                  {/* The source's own notes (e.g. "konumlar hazırlanıyor") say more than a generic line. */}
-                  {(data.warnings?.filter((w) => typeof w === "string").slice(0, 3) ?? []).join(" ") ||
-                    "Eksik veya doğrulanamayan kayıtlar gösterilmiyor."}
-                </p>
+                <details className="source-quality-disclosure">
+                  <summary><Info size={14} /><span>Liste ve konum bilgisi hakkında</span><ChevronDown size={13} /></summary>
+                  <p>{(data.warnings?.filter((w) => typeof w === "string").slice(0, 3) ?? []).join(" ") || "Eksik veya doğrulanamayan kayıtlar gösterilmiyor."}</p>
+                </details>
               )}
               {sourceDelayed && (
                 <p className="source-quality-note" role="status">
@@ -1010,7 +1011,6 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="distance-toolbar">
-                  <span className="distance-label">Arama mesafesi</span>
                   <div
                     className="quick-distances"
                     role="group"
