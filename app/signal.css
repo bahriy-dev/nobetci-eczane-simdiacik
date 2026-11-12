@@ -333,3 +333,24 @@ body {font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;l
 .signal-footer-top {padding:24px 0}.signal-footer-nav {gap:20px}.signal-footer-bottom {font-size:11px}.site-footer {margin-top:24px}
 .legal-title h1,.city-hero-title {font-weight:600;letter-spacing:-1px}.legal-article,.city-duty,.city-search-card,.city-districts,.city-faq {border-radius:8px}.detail-title {font-weight:600;letter-spacing:-.6px}.location-panel-heading h2 {font-weight:600}
 @media(max-width:800px) {.header {padding:16px 20px;min-height:70px}.header .brand-name {font-size:21px}.pharmacy-main {padding-top:20px}.location-start {padding:12px 0;margin:16px 0 36px;max-width:none}.location-start h2 {font-size:30px;letter-spacing:-.6px}.location-start-copy p {font-size:15px}.location-start-actions {flex-direction:column;align-items:stretch;margin-top:24px}.location-start-actions .primary,.location-start-actions .location-manual {font-size:15px}.results-overview h2 {font-size:25px}.results-overview .results-context-body strong {font-size:13px}.results-overview .results-context-updated {font-size:11px}.results-overview .results-summary {padding-left:42px}.pharmacy-search-row {border-radius:6px}.quick-distances button {min-height:44px;min-width:58px;font-size:13px}.pharmacy-card {padding:20px 16px}.pharmacy-name {font-size:20px}.pharmacy-address {font-size:14px}.pharmacy-actions a {min-height:46px;flex:1}.pharmacy-symbol {width:26px;height:26px}.map-column {border-radius:8px}.signal-cities {gap:12px 20px}}
+
+/* Keep the results visible above the fold; align information by purpose. */
+.pharmacy-main {padding-top:20px}.pharmacy-results {padding-top:8px}
+.results-toolbar {display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px;row-gap:0;padding-bottom:20px}
+.results-overview {grid-column:1/-1;grid-template-columns:minmax(0,1fr) auto;gap:10px 24px;padding:0 0 14px}
+.results-overview .section-heading {grid-column:1/-1;grid-row:1;min-height:36px}
+.results-overview .results-context-card {grid-column:1;grid-row:2}
+.results-overview .results-summary {grid-column:2;grid-row:2;justify-content:flex-end;padding:0;white-space:nowrap}
+.results-overview .results-context-icon {width:22px;height:24px}.results-overview .results-context-icon svg {width:16px;height:16px}
+.results-overview .results-context-body {gap:6px 14px}
+.results-overview .view-controls button {width:32px;height:32px;border:0;background:transparent}
+.source-quality-disclosure {grid-column:1/-1;margin:0 0 14px}.source-quality-disclosure summary {min-height:24px;padding:2px 0}
+.results-toolbar>.source-quality-note,.results-toolbar>.location-accuracy-note {grid-column:1/-1}
+.results-toolbar .pharmacy-search-row {grid-column:1;grid-row:auto;margin:0;min-width:0}
+.results-toolbar .distance-toolbar {grid-column:2;grid-row:auto;margin:0;padding:0;border:0;align-self:center}
+.pharmacy-search-row {min-height:48px}.quick-distances {gap:4px}.quick-distances button {min-width:48px;min-height:40px;padding:8px 10px;border:0;background:transparent}.quick-distances button.on {border:0;background:var(--accent);color:var(--primary)}
+.pharmacy-card {padding:18px 22px}.pharmacy-card-top {margin-bottom:10px}.pharmacy-address {margin-bottom:12px}.pharmacy-name {line-height:1.3}
+.pharmacy-actions {gap:10px}.pharmacy-actions a {min-height:42px;padding:9px 14px}
+.site-footer {margin-top:36px}.signal-footer-top {gap:24px;padding:24px 0}.signal-footer-nav {gap:20px}.signal-footer-top p {margin-top:10px}.signal-footer-bottom {gap:18px;padding:20px 0;line-height:1.8}.signal-footer-bottom nav {gap:10px 18px}
+@media(max-width:1050px) {.results-toolbar {grid-template-columns:minmax(0,1fr)}.results-toolbar .pharmacy-search-row,.results-toolbar .distance-toolbar {grid-column:1;grid-row:auto}.results-toolbar .distance-toolbar {margin-top:10px}.results-overview .results-context-body {display:grid;gap:3px}}
+@media(max-width:800px) {.pharmacy-main {padding-top:16px}.pharmacy-results {padding-top:4px}.results-overview {grid-template-columns:1fr auto;gap:10px 8px;padding-bottom:12px}.results-overview .results-context-card {grid-column:1;grid-row:2}.results-overview .results-context-body strong {font-size:12px}.results-overview .results-context-updated {font-size:10px}.results-overview .results-summary {grid-column:2;grid-row:2;display:grid;gap:3px;justify-items:end;padding:0}.results-overview .results-nearest {border:0;padding:0;font-size:10px}.results-overview .results-count {font-size:12px}.results-overview h2 {font-size:24px}.results-toolbar {padding-bottom:16px}.source-quality-disclosure {margin-bottom:12px}.quick-distances button {min-height:44px;min-width:54px}.pharmacy-card {padding:18px 16px}.pharmacy-actions a {min-height:44px}.signal-footer-top {padding:22px 0}.signal-footer-nav {gap:8px 20px}.signal-footer-bottom {display:block;padding-top:18px}.signal-footer-bottom nav {margin:12px 0;gap:8px 16px}}
