@@ -246,3 +246,14 @@ a {color:inherit}
 .pin,.map-pin,.legend-pharmacy {background:var(--primary);color:var(--primary-foreground);border-color:var(--card)}
 .pharmacy-main:focus-visible {outline:none}
 @media(max-width:800px) {.location-start p.signal-note {font-size:10px}}
+
+
+
+/* Secondary information stays editorial, rather than becoming another card grid. */
+.province-directory {background:transparent;color:var(--foreground);border-top:1px solid var(--border);border-bottom:1px solid var(--border);border-radius:0;padding:28px 0}
+.city-guide-search,.city-guide-search-card {background:transparent;border:0;box-shadow:none;padding:24px 0}
+.city-faq-section,.city-guide-related {margin-top:36px;padding-top:28px;border-top:1px solid var(--border)}
+.city-faq-section h2,.city-guide-related h2 {font-size:23px;letter-spacing:-.6px;margin-bottom:20px}
+.city-faq-list {display:grid;gap:22px}.city-faq-item {border:0;background:transparent;padding:0}
+.city-faq-item h3 {font-size:15px;margin-bottom:6px}.city-faq-item p {font-size:13px;line-height:1.8;color:var(--muted-foreground)}
+.city-related-grid {display:flex;flex-wrap:wrap;gap:12px 22px}.city-related-card {display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;padding:8px 0;font-size:13px}

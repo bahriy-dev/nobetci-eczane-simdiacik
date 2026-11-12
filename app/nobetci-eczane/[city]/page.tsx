@@ -4,10 +4,7 @@ import {
   ArrowLeft,
   ArrowUpRight,
   ChevronRight,
-  Clock,
-  PhoneCall,
   Plus,
-  ShieldAlert,
   ShieldCheck,
 } from "lucide-react";
 import { cityGuides, getCityGuide } from "@/lib/city-guides";
@@ -269,46 +266,6 @@ export default async function CityGuidePage({
         {/* Search & Location Card (only where the site has the live list) */}
         {city.live && <CityGuideSearch city={city.name} />}
 
-        {/* Trust & Safety Cards Grid */}
-        <section
-          className="city-trust-grid"
-          aria-label="Nöbetçi eczane önemli bilgiler"
-        >
-          <div className="city-trust-card">
-            <span className="city-trust-icon">
-              <Clock size={20} />
-            </span>
-            <h3>Nöbet Çalışma Saatleri</h3>
-            <p>
-              Nöbet saatleri bölgeye ve tarihe göre değişir. Başlangıç ve bitiş
-              bilgilerini resmî listeden ve eczaneyi arayarak doğrulayın.
-            </p>
-          </div>
-
-          <div className="city-trust-card">
-            <span className="city-trust-icon">
-              <PhoneCall size={20} />
-            </span>
-            <h3>Telefonla Teyit Önerisi</h3>
-            <p>
-              Nöbetçi eczaneye gitmeden önce listedeki numarayı arayarak
-              aradığınız ilacın stok durumunu sormanız acil durumlarda zaman
-              kazandırır.
-            </p>
-          </div>
-
-          <div className="city-trust-card">
-            <span className="city-trust-icon">
-              <ShieldAlert size={20} />
-            </span>
-            <h3>Acil Durumlarda 112</h3>
-            <p>
-              Hayati tehlike ve acil tıbbi müdahale gerektiren durumlarda vakit
-              kaybetmeden 112 Acil Çağrı Merkezi’ni arayınız.
-            </p>
-          </div>
-        </section>
-
         {/* FAQ Section */}
         <section className="city-faq-section" aria-labelledby="city-faq-title">
           <h2 id="city-faq-title">
@@ -349,3 +306,4 @@ export default async function CityGuidePage({
     </>
   );
 }
+
