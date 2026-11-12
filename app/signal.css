@@ -1,20 +1,20 @@
 /* Şimdi Açık / Signal — one visual layer for every public surface. */
 :root {
- --background:#f7f5f0; --foreground:#24252a; --card:#fffefa; --card-foreground:#24252a;
- --popover:#fffefa; --popover-foreground:#24252a; --primary:#bc352d; --primary-foreground:#fff;
- --secondary:#eeebe4; --secondary-foreground:#24252a; --muted:#eeebe4; --muted-foreground:#696a70;
- --accent:#f5e4df; --accent-foreground:#962820; --destructive:#b82e26; --border:#dedbd3;
- --input:#dedbd3; --ring:#bc352d; --radius:.85rem; --scene-bg:#f0e9df; --scene-line:#d5cdc0;
- --shadow-soft:0 8px 28px #24252a08; --shadow-float:0 20px 70px #24252a24;
+ --background:#f6f8fa; --foreground:#172b4d; --card:#ffffff; --card-foreground:#172b4d;
+ --popover:#ffffff; --popover-foreground:#172b4d; --primary:#2458b8; --primary-foreground:#fff;
+ --secondary:#edf1f5; --secondary-foreground:#172b4d; --muted:#edf1f5; --muted-foreground:#5e6b7b;
+ --accent:#edf3fd; --accent-foreground:#234f9c; --destructive:#b82e26; --border:#dce2e9;
+ --input:#dce2e9; --ring:#2458b8; --radius:.85rem; --scene-bg:#f0e9df; --scene-line:#d5cdc0;
+ --shadow-soft:0 8px 28px #172b4d08; --shadow-float:0 20px 70px #172b4d24;
  --color-brand-primary:var(--primary); --color-background:var(--background); --color-surface:var(--card);
  --color-text-primary:var(--foreground); --color-text-secondary:var(--muted-foreground); --color-border:var(--border);
  --color-healing:var(--primary); --color-sage:var(--secondary); --color-accent-gold:#b07931;
 }
 .dark {
  --background:#18191d; --foreground:#f5f1e9; --card:#222328; --card-foreground:#f5f1e9;
- --popover:#222328; --popover-foreground:#f5f1e9; --primary:#f08c7f; --primary-foreground:#211510;
+ --popover:#222328; --popover-foreground:#f5f1e9; --primary:#93b9ff; --primary-foreground:#11213b;
  --secondary:#2c2d33; --secondary-foreground:#f5f1e9; --muted:#2c2d33; --muted-foreground:#b2afa8;
- --accent:#3b2928; --accent-foreground:#ffb6a8; --border:#3b3b41; --input:#3b3b41; --ring:#f08c7f;
+ --accent:#21324c; --accent-foreground:#bad1ff; --border:#3b3b41; --input:#3b3b41; --ring:#93b9ff;
  --scene-bg:#2e2928; --scene-line:#50423c;
 }
 html {scroll-behavior:smooth;scroll-padding-top:100px}
@@ -287,7 +287,7 @@ a {color:inherit}
 .source-quality-disclosure summary>svg:last-child {transition:transform .15s}
 .source-quality-disclosure[open] summary>svg:last-child {transform:rotate(180deg)}
 .source-quality-disclosure p {padding:8px 0 4px 21px;max-width:760px;line-height:1.8;font-size:11px}
-.pharmacy-search-row {background:var(--card);padding:6px;border:1px solid var(--border);border-radius:16px;gap:12px;box-shadow:0 2px 6px #24252a03}
+.pharmacy-search-row {background:var(--card);padding:6px;border:1px solid var(--border);border-radius:16px;gap:12px;box-shadow:0 2px 6px #172b4d03}
 .pharmacy-search-row .search {border:0;background:transparent;box-shadow:none;min-height:42px;padding-left:12px;border-radius:10px;min-width:140px}
 .pharmacy-search-row .search input {min-height:42px;font-size:13px}
 .pharmacy-search-row .search:focus-within {outline:2px solid var(--ring);outline-offset:-2px}
@@ -306,3 +306,30 @@ a {color:inherit}
 }
 
 .distance-toolbar {gap:0;padding-top:0}.quick-distances {display:inline-flex;padding:3px;gap:3px;background:var(--secondary);border:0;border-radius:100px;width:fit-content}.quick-distances button {border:0;background:transparent;color:var(--muted-foreground);padding:7px 16px;min-height:32px;font-size:11px}.quick-distances button.on {background:var(--card);color:var(--foreground);box-shadow:0 1px 4px #0000000d}.quick-distances button:hover {color:var(--foreground);background:var(--card)}
+
+/* Task-first pharmacy search: restrained service interface. */
+body {font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;letter-spacing:0}
+.header {background:var(--card);max-width:none;padding-left:max(24px,calc((100vw - 1240px)/2));padding-right:max(24px,calc((100vw - 1240px)/2));min-height:76px;margin-bottom:0}
+.header .brand-name,.brand-name {font-size:23px;font-weight:650;letter-spacing:-.8px}.brand-name small {font-weight:500;letter-spacing:1.6px}
+.header .brand-icon,.brand-icon {border-radius:8px;width:34px;height:34px;box-shadow:none}
+.header .location {background:transparent;border:0;border-radius:6px;font-weight:500;font-size:13px}.header .icon {border:0}
+.pharmacy-main {padding-top:28px}
+.location-start {display:block;background:transparent;border:0;border-radius:0;min-height:0;max-width:700px;margin:36px auto 64px;padding:24px 0;overflow:visible}
+.location-start h2 {font-size:38px;line-height:1.2;font-weight:600;letter-spacing:-1px;max-width:none;margin:0 0 16px}
+.location-start-copy p {font-size:16px;max-width:530px;line-height:1.65}
+.location-start-actions {margin-top:28px;gap:12px}.location-start-actions .primary,.location-start-actions .location-manual {border-radius:6px;font-size:15px;font-weight:600;min-height:48px;padding:12px 20px}
+.location-start-actions .location-manual {background:transparent;border-color:var(--border);font-weight:500}
+.location-start p.signal-note {font-size:12px;margin-top:16px;line-height:1.6}.signal-cities {padding-top:24px;margin-top:30px;gap:10px 22px}.signal-cities>span {display:none}.signal-cities a {padding:4px 0;border:0;border-radius:0;background:none;color:var(--primary);font-size:13px}
+.results-overview {padding:0 0 20px;gap:12px 24px}.results-overview h2 {font-size:28px;font-weight:600;letter-spacing:-.6px}.results-overview .results-context-body strong {font-weight:500;font-size:14px}.results-overview .results-context-updated {font-size:12px}.results-overview .results-count {font-size:13px;font-weight:500}.results-overview .results-nearest b {font-weight:600}
+.pharmacy-search-row {border-radius:8px;padding:4px;box-shadow:none}.filter-options .filter-select {border-radius:5px;font-weight:400;background:transparent}.filter-options .switch-label {font-size:12px}
+.distance-toolbar {padding-bottom:20px;margin-top:12px}.quick-distances {border-radius:6px;background:transparent;padding:0;gap:6px}.quick-distances button {border-radius:5px;min-height:40px;min-width:56px;padding:8px 12px;font-size:12px;border:1px solid var(--border)}.quick-distances button.on {background:var(--accent);color:var(--primary);border-color:var(--primary);box-shadow:none;font-weight:600}
+.results-layout {grid-template-columns:minmax(340px,.85fr) minmax(0,1.15fr);gap:24px}.pharmacy-list {gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card)}
+.pharmacy-card {border:0;border-bottom:1px solid var(--border);border-radius:0;padding:22px 24px;box-shadow:none}.pharmacy-card:last-child {border-bottom:0}.pharmacy-card:hover,.pharmacy-card.highlight {background:var(--accent);box-shadow:inset 3px 0 var(--primary)}
+.pharmacy-symbol {width:28px;height:28px;border-radius:5px;font-size:12px;font-weight:500;background:var(--secondary);color:var(--muted-foreground);box-shadow:none}
+.pharmacy-name {font-size:20px;font-weight:600;letter-spacing:-.3px}.pharmacy-card-top {gap:12px;margin-bottom:12px}.card-status-row {font-size:12px;gap:10px}.status {border:0;border-radius:0;padding:0;background:transparent;font-size:11px;font-weight:400}.status.duty {color:#287448;background:transparent}.status.expired {color:#a23b2f;background:transparent}.closest {border:0;background:transparent;padding:0;font-size:11px;font-weight:500;color:var(--primary)}
+.pharmacy-address {font-size:14px;line-height:1.6;margin-bottom:14px}.pharmacy-actions {border:0;padding-top:0;gap:12px}.pharmacy-actions a {flex:0 1 auto;min-height:44px;border-radius:5px;font-size:13px;font-weight:500;padding:10px 16px}.pharmacy-actions .directions-button {background:var(--primary);border-color:var(--primary);color:var(--primary-foreground)}.pharmacy-actions .primary {background:transparent;border-color:var(--border);color:var(--foreground)}
+.map-column {border-radius:8px}.map-heading {border-radius:6px;box-shadow:0 2px 6px #0000000a;min-width:0;padding:10px 12px}.map-heading-icon {display:none}.map-tools {border-radius:6px}.map-legend {border-radius:5px}
+.place-marker>span,.place-marker.is-active>span {background:var(--primary);box-shadow:0 2px 6px #00000024}.pin-index {color:var(--foreground);border-color:var(--border)}
+.signal-footer-top {padding:24px 0}.signal-footer-nav {gap:20px}.signal-footer-bottom {font-size:11px}.site-footer {margin-top:24px}
+.legal-title h1,.city-hero-title {font-weight:600;letter-spacing:-1px}.legal-article,.city-duty,.city-search-card,.city-districts,.city-faq {border-radius:8px}.detail-title {font-weight:600;letter-spacing:-.6px}.location-panel-heading h2 {font-weight:600}
+@media(max-width:800px) {.header {padding:16px 20px;min-height:70px}.header .brand-name {font-size:21px}.pharmacy-main {padding-top:20px}.location-start {padding:12px 0;margin:16px 0 36px;max-width:none}.location-start h2 {font-size:30px;letter-spacing:-.6px}.location-start-copy p {font-size:15px}.location-start-actions {flex-direction:column;align-items:stretch;margin-top:24px}.location-start-actions .primary,.location-start-actions .location-manual {font-size:15px}.results-overview h2 {font-size:25px}.results-overview .results-context-body strong {font-size:13px}.results-overview .results-context-updated {font-size:11px}.results-overview .results-summary {padding-left:42px}.pharmacy-search-row {border-radius:6px}.quick-distances button {min-height:44px;min-width:58px;font-size:13px}.pharmacy-card {padding:20px 16px}.pharmacy-name {font-size:20px}.pharmacy-address {font-size:14px}.pharmacy-actions a {min-height:46px;flex:1}.pharmacy-symbol {width:26px;height:26px}.map-column {border-radius:8px}.signal-cities {gap:12px 20px}}

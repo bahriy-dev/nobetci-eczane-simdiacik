@@ -808,13 +808,11 @@ export default function Home() {
             aria-labelledby="location-start-title"
           >
             <div className="location-start-copy">
-              <span className="signal-kicker">İhtiyacın olduğunda, yakında.</span>
-              <h2 id="location-start-title">Gece de olsa,<br /><em>bir eczane var.</em></h2>
+              <h2 id="location-start-title">Nöbetçi eczane bul</h2>
               <p>
-                Yakınındaki nöbetçi eczaneyi bul. Adresine bak, telefonla ulaş ve yol tarifini aç.
+                Bulunduğun bölgeyi seç, nöbetçi eczanelerin adres ve telefonlarına ulaş.
               </p>
             </div>
-            <div className="signal-art" aria-hidden="true"><span className="signal-art-dot" /><span className="signal-cross">+</span><span className="signal-art-caption">YAKININDAKİ ECZANEYE BİR ADIM</span><span className="signal-art-dot" /></div>
             <div className="location-start-actions">
               <button
                 className="primary"
