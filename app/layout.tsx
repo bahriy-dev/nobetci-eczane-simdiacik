@@ -6,7 +6,7 @@ import "./signal.css";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#bc352d",
+  themeColor: "#2458b8",
 };
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
@@ -118,3 +118,4 @@ export default function RootLayout({
     </html>
   );
 }
+
