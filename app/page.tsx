@@ -62,7 +62,6 @@ import {
 import { PharmacyCard } from "@/components/pharmacy-card";
 import { PharmacyDetail } from "@/components/pharmacy-detail";
 import { SiteFooter } from "@/components/site-footer";
-import { ProvinceDirectory } from "@/components/province-directory";
 import { OfficialDistrictList } from "@/components/official-district-list";
 import { officialListFor } from "@/lib/official-lists";
 import { MapBoundary } from "@/components/map-boundary";
@@ -127,7 +126,7 @@ export default function Home() {
   const setRadius = (value: string) => updateFilters({ radius: value });
   const setSort = (value: string) => updateFilters({ sort: value });
   const [provinceOverview, setProvinceOverview] = useState(false);
-  const [locationPermissionGranted, setLocationPermissionGranted] =
+  const [, setLocationPermissionGranted] =
     useState(false);
   const locationOpener = useRef<HTMLElement | null>(null);
   const [rememberRegion, setRememberRegion] = useState(false);
@@ -774,6 +773,7 @@ export default function Home() {
           </span>
         </Link>
         <div className="header-actions">
+          <Link className="header-link" href="/nobetci-eczane-rehberi">Nasıl çalışır?</Link>
           <button
             className="location"
             onClick={() => setLocOpen(true)}
@@ -808,12 +808,13 @@ export default function Home() {
             aria-labelledby="location-start-title"
           >
             <div className="location-start-copy">
-              <h2 id="location-start-title">Yakınındaki nöbetçi eczaneler</h2>
+              <span className="signal-kicker">İhtiyacın olduğunda, yakında.</span>
+              <h2 id="location-start-title">Gece de olsa,<br /><em>bir eczane var.</em></h2>
               <p>
-                Konum izni yalnızca düğmeye dokunduğunda istenir. İstersen il ve
-                ilçe seç.
+                Yakınındaki nöbetçi eczaneyi bul. Adresine bak, telefonla ulaş ve yol tarifini aç.
               </p>
             </div>
+            <div className="signal-art" aria-hidden="true"><span className="signal-art-dot" /><span className="signal-cross">+</span><span className="signal-art-caption">YAKININDAKİ ECZANEYE BİR ADIM</span><span className="signal-art-dot" /></div>
             <div className="location-start-actions">
               <button
                 className="primary"
@@ -833,6 +834,8 @@ export default function Home() {
                 İl / ilçe seç
               </button>
             </div>
+            <p className="signal-note"><MapPin size={13} /> Konum paylaşmadan il ve ilçe seçebilirsin.</p>
+            <nav className="signal-cities" aria-label="Popüler şehirler"><span>ŞEHRİNDEN BAŞLA</span>{[["istanbul", "İstanbul"], ["ankara", "Ankara"], ["izmir", "İzmir"], ["bursa", "Bursa"], ["antalya", "Antalya"]].map(([slug, name]) => <Link key={slug} href={"/nobetci-eczane/" + slug}>{name} ↗</Link>)}</nav>
             {geoState && (
               <p className="location-start-status" role="status">
                 {geoState}
@@ -1243,13 +1246,6 @@ export default function Home() {
           </section>
         )}
       </main>
-      <ProvinceDirectory
-        locationGranted={locationPermissionGranted}
-        onSelect={(next) => {
-          selectRegion(next);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
-      />
       <SiteFooter
         sourceUrl={pharmacySource.url}
         onDiscover={() => {
@@ -1523,3 +1519,4 @@ export default function Home() {
     </>
   );
 }
+
