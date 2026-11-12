@@ -96,10 +96,20 @@ function pointFromLinks(hrefs: string[], province: 'Samsun' | 'Sinop') {
   return points[0];
 }
 
+/** Removes comments, scripts and styles, repeating until none is left (a removal can join a new one). */
+function stripNonContent(source: string) {
+  let html = source, previous;
+  do {
+    previous = html;
+    html = html.replace(/<!--[\s\S]*?-->/g, '').replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+  } while (html !== previous);
+  return html;
+}
+
 export function parseSamsunPharmacies(payload: unknown, params: SearchParams, now = new Date()): PlacesResult {
   if (!Number.isFinite(now.getTime()) || !Number.isFinite(params.lat) || !Number.isFinite(params.lng) || !Number.isFinite(params.radius) || params.radius <= 0) throw new Error('Samsun arama konumu geçersiz.');
   if (typeof payload !== 'string' || !payload || payload.length > 2_000_000) throw new Error('Samsun nöbet kaynağının veri biçimi değişmiş.');
-  const html = payload.replace(/<!--[\s\S]*?-->/g, '').replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+  const html = stripNonContent(payload);
   // The page is dated by the morning its list started; that list stays current until the next handover.
   const today = sourceDay(html);
   if (!activeDutyDates(now).includes(today)) throw new Error('Samsun kaynağının nöbet tarihi güncel değil. Eski kayıtlar gösterilmedi.');
