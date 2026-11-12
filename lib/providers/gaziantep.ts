@@ -103,10 +103,20 @@ function pointFromLinks(hrefs: string[]) {
   return points[0];
 }
 
+/** Removes comments, scripts and styles, repeating until none is left (a removal can join a new one). */
+function stripNonContent(source: string) {
+  let html = source, previous;
+  do {
+    previous = html;
+    html = html.replace(/<!--[\s\S]*?-->/g, '').replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+  } while (html !== previous);
+  return html;
+}
+
 export function parseGaziantepPharmacies(payload: unknown, params: SearchParams, now = new Date()): PlacesResult {
   if (!Number.isFinite(now.getTime()) || !Number.isFinite(params.lat) || !Number.isFinite(params.lng) || !Number.isFinite(params.radius) || params.radius <= 0) throw new Error('Gaziantep arama konumu geçersiz.');
   if (typeof payload !== 'string' || !payload || payload.length > 2_000_000) throw new Error('Gaziantep nöbet kaynağının veri biçimi değişmiş.');
-  const html = payload.replace(/<!--[\s\S]*?-->/g, '').replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+  const html = stripNonContent(payload);
   const today = sourceDay(html);
   if (!activeDutyDates(now).includes(today)) throw new Error('Gaziantep kaynağının nöbet tarihi güncel değil. Eski kayıtlar gösterilmedi.');
   if (params.city && normalized(params.city) !== 'gaziantep') throw new Error('Gaziantep kaynağı bu il için doğrulanmadı.');
