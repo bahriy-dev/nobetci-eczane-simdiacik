@@ -774,6 +774,7 @@ export default function Home() {
           </span>
         </Link>
         <div className="header-actions">
+          <Link className="header-link" href="/nobetci-eczane-rehberi">Nasıl çalışır?</Link>
           <button
             className="location"
             onClick={() => setLocOpen(true)}
@@ -808,12 +809,13 @@ export default function Home() {
             aria-labelledby="location-start-title"
           >
             <div className="location-start-copy">
-              <h2 id="location-start-title">Yakınındaki nöbetçi eczaneler</h2>
+              <span className="signal-kicker">İhtiyacın olduğunda, yakında.</span>
+              <h2 id="location-start-title">Gece de olsa,<br /><em>bir eczane var.</em></h2>
               <p>
-                Konum izni yalnızca düğmeye dokunduğunda istenir. İstersen il ve
-                ilçe seç.
+                Yakınındaki nöbetçi eczaneyi bul. Adresine bak, telefonla ulaş ve yol tarifini aç.
               </p>
             </div>
+            <div className="signal-art" aria-hidden="true"><span className="signal-art-dot" /><span className="signal-cross">+</span><span className="signal-art-caption">YAKININDAKİ ECZANEYE BİR ADIM</span><span className="signal-art-dot" /></div>
             <div className="location-start-actions">
               <button
                 className="primary"
@@ -833,6 +835,8 @@ export default function Home() {
                 İl / ilçe seç
               </button>
             </div>
+            <p className="signal-note"><MapPin size={13} /> Konum paylaşmadan il ve ilçe seçebilirsin.</p>
+            <nav className="signal-cities" aria-label="Popüler şehirler"><span>ŞEHRİNDEN BAŞLA</span>{[["istanbul", "İstanbul"], ["ankara", "Ankara"], ["izmir", "İzmir"], ["bursa", "Bursa"], ["antalya", "Antalya"]].map(([slug, name]) => <Link key={slug} href={"/nobetci-eczane/" + slug}>{name} ↗</Link>)}</nav>
             {geoState && (
               <p className="location-start-status" role="status">
                 {geoState}
