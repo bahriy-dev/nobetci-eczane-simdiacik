@@ -257,3 +257,6 @@ a {color:inherit}
 .city-faq-list {display:grid;gap:22px}.city-faq-item {border:0;background:transparent;padding:0}
 .city-faq-item h3 {font-size:15px;margin-bottom:6px}.city-faq-item p {font-size:13px;line-height:1.8;color:var(--muted-foreground)}
 .city-related-grid {display:flex;flex-wrap:wrap;gap:12px 22px}.city-related-card {display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;padding:8px 0;font-size:13px}
+
+.results-toolbar {display:block;margin-bottom:0}
+.quick-distances {padding:0;border:0;background:transparent}

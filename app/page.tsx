@@ -62,7 +62,6 @@ import {
 import { PharmacyCard } from "@/components/pharmacy-card";
 import { PharmacyDetail } from "@/components/pharmacy-detail";
 import { SiteFooter } from "@/components/site-footer";
-import { ProvinceDirectory } from "@/components/province-directory";
 import { OfficialDistrictList } from "@/components/official-district-list";
 import { officialListFor } from "@/lib/official-lists";
 import { MapBoundary } from "@/components/map-boundary";
@@ -127,7 +126,7 @@ export default function Home() {
   const setRadius = (value: string) => updateFilters({ radius: value });
   const setSort = (value: string) => updateFilters({ sort: value });
   const [provinceOverview, setProvinceOverview] = useState(false);
-  const [locationPermissionGranted, setLocationPermissionGranted] =
+  const [, setLocationPermissionGranted] =
     useState(false);
   const locationOpener = useRef<HTMLElement | null>(null);
   const [rememberRegion, setRememberRegion] = useState(false);
@@ -1247,13 +1246,6 @@ export default function Home() {
           </section>
         )}
       </main>
-      <ProvinceDirectory
-        locationGranted={locationPermissionGranted}
-        onSelect={(next) => {
-          selectRegion(next);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
-      />
       <SiteFooter
         sourceUrl={pharmacySource.url}
         onDiscover={() => {
@@ -1527,3 +1519,4 @@ export default function Home() {
     </>
   );
 }
+
