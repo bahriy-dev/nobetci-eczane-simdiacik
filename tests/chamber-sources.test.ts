@@ -93,3 +93,12 @@ test('a side box repeating names without points is neither shown twice nor repor
   const result=parseChamberPage(html,params('Kırklareli',41.73,27.22),evening,['Merkez']);
   assert.deepEqual(result.places.map(p=>p.name),['ZORLU ECZANESİ']);assert.equal(result.warnings,undefined);
 });
+
+test('a Kilis row carrying Gaziantep coordinates is not shown there; an address estimate replaces the point',async()=>{
+  const {parseGaziantepChamber}=await import('../lib/providers/gaziantep-chamber');
+  const feed={tarih:['2026-11-03'],unvan:['DERMAN ECZANESİ'],enlem:['37.06675'],boylam:['37.38321'],telefon:['0348 813 10 10'],adres:['Aşıt Mah. Cumhuriyet Cad. No:5'],ilce:['KİLİS MERKEZ'],il:['KİLİS'],id:['9']};
+  const plain=parseGaziantepChamber(feed,params('Kilis',36.72,37.12),evening);
+  assert.equal(plain.places.length,0);assert.ok(plain.warnings?.some(w=>/konumu kaynakta hatalı/.test(w)));
+  const [place]=parseGaziantepChamber(feed,params('Kilis',36.72,37.12),evening,new Map([[0,{lat:36.7165,lng:37.115,precision:'neighbourhood' as const}]])).places;
+  assert.equal(place.lat,36.7165);assert.equal(place.locationEstimate,'neighbourhood');
+});
