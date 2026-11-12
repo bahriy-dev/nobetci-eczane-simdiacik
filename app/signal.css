@@ -260,3 +260,49 @@ a {color:inherit}
 
 .results-toolbar {display:block;margin-bottom:0}
 .quick-distances {padding:0;border:0;background:transparent}
+
+/* Header, search summary and filters share one quiet navigation rhythm. */
+.header {min-height:88px;padding-top:20px;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.header .brand {gap:10px}.header .brand-icon {width:40px;height:40px;border-radius:12px}
+.header .brand-name {font-size:25px;letter-spacing:-1.2px}.header .brand-name small {font-size:7px;letter-spacing:2px}
+.header-actions {gap:9px}.header .location {border-radius:100px;background:var(--card);padding:10px 16px;gap:10px;font-weight:600}
+.header .location>svg:first-child {color:var(--primary)}.header .icon {border-radius:50%;background:transparent}
+.header-link {padding:10px 4px;margin-right:12px}.header .location:hover,.header .icon:hover {background:var(--secondary)}
+.results-overview {display:grid;grid-template-columns:1fr auto;gap:12px 24px;align-items:center;padding:10px 0 24px}
+.results-overview .section-heading {grid-column:1/-1;margin:0;align-items:center}
+.results-overview h2 {font-size:32px;letter-spacing:-1.1px;line-height:1.2}
+.results-overview .view-controls button {width:36px;height:36px;border-radius:50%;background:transparent;border-color:var(--border)}
+.results-overview .results-context-card {margin:0;gap:10px}
+.results-overview .results-context-icon {width:32px;height:32px;background:transparent;color:var(--primary)}
+.results-overview .results-context-body {gap:5px 12px;display:flex;align-items:center;flex-wrap:wrap}
+.results-overview .results-context-body strong {font-size:13px;font-weight:650}
+.results-overview .results-context-updated {font-size:11px;color:var(--muted-foreground)}
+.results-overview .results-summary {margin:0;gap:14px;align-items:center;font-variant-numeric:tabular-nums}
+.results-overview .results-count {background:transparent;padding:0;font-size:12px;color:var(--foreground);font-weight:650;border:0}
+.results-overview .results-nearest {border:0;border-left:1px solid var(--border);border-radius:0;padding:0 0 0 14px;gap:6px;font-size:11px;background:transparent}
+.results-overview .results-nearest b {font-size:13px}
+.source-quality-disclosure {margin:0 0 18px;color:var(--muted-foreground);font-size:11px}
+.source-quality-disclosure summary {display:flex;align-items:center;gap:7px;cursor:pointer;width:fit-content;list-style:none;padding:5px 0;min-height:30px}
+.source-quality-disclosure summary::-webkit-details-marker {display:none}
+.source-quality-disclosure summary>svg:last-child {transition:transform .15s}
+.source-quality-disclosure[open] summary>svg:last-child {transform:rotate(180deg)}
+.source-quality-disclosure p {padding:8px 0 4px 21px;max-width:760px;line-height:1.8;font-size:11px}
+.pharmacy-search-row {background:var(--card);padding:6px;border:1px solid var(--border);border-radius:16px;gap:12px;box-shadow:0 2px 6px #24252a03}
+.pharmacy-search-row .search {border:0;background:transparent;box-shadow:none;min-height:42px;padding-left:12px;border-radius:10px;min-width:140px}
+.pharmacy-search-row .search input {min-height:42px;font-size:13px}
+.pharmacy-search-row .search:focus-within {outline:2px solid var(--ring);outline-offset:-2px}
+.filter-options {gap:14px;padding-right:2px}
+.filter-options .switch-label {padding:0 14px 0 0;border-right:1px solid var(--border);font-size:11px;gap:9px}
+.filter-options [aria-label="Arama mesafesi"] {display:none}
+.filter-options .filter-select {border:0;border-radius:10px;background:var(--secondary);box-shadow:none;font-size:12px;min-height:40px;padding:10px 12px}
+.distance-toolbar {margin:12px 0 0;padding:0 0 18px;gap:14px;border-bottom:1px solid var(--border)}
+.distance-label {font-size:10px;font-weight:500;letter-spacing:.02em}
+.quick-distances {gap:5px}.quick-distances button {min-height:32px;padding:6px 13px;border-color:transparent;font-size:11px;box-shadow:none;color:var(--muted-foreground)}
+.quick-distances button:hover {background:var(--secondary)}.quick-distances button.on {background:var(--foreground);color:var(--background);box-shadow:none}
+@media(max-width:800px) {
+ .header {padding:17px 20px;min-height:78px;margin-bottom:6px}.header .brand-name {font-size:22px}.header .brand-icon {width:35px;height:35px;border-radius:10px}.header .location {padding:8px 10px;gap:6px;min-height:38px}.header .icon {width:38px;min-height:38px}
+ .results-overview {gap:12px;padding:6px 0 18px;grid-template-columns:1fr}.results-overview h2 {font-size:27px;letter-spacing:-.8px}.results-overview .results-context-body {display:grid;gap:3px}.results-overview .results-summary {padding-left:42px;gap:12px;grid-column:1}.results-overview .results-context-updated {font-size:10px}.results-overview .view-controls {gap:6px}.results-overview .view-controls .mobile-filter {border-radius:100px}
+ .pharmacy-search-row {padding:4px;border-radius:13px}.pharmacy-search-row .search {min-height:42px}.distance-toolbar {flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;padding-bottom:16px}.distance-label {font-size:9px}.quick-distances button {padding:7px 12px;min-height:34px}.source-quality-disclosure {margin-bottom:12px;font-size:10px}
+}
+
+.distance-toolbar {gap:0;padding-top:0}.quick-distances {display:inline-flex;padding:3px;gap:3px;background:var(--secondary);border:0;border-radius:100px;width:fit-content}.quick-distances button {border:0;background:transparent;color:var(--muted-foreground);padding:7px 16px;min-height:32px;font-size:11px}.quick-distances button.on {background:var(--card);color:var(--foreground);box-shadow:0 1px 4px #0000000d}.quick-distances button:hover {color:var(--foreground);background:var(--card)}
