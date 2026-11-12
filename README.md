@@ -102,3 +102,7 @@ Yerel üretim kontrolü:
 npm run build:railway
 PORT=3000 npm run start:railway
 ```
+
+## Lisans
+
+Kaynak kod [MIT](LICENSE) lisanslıdır. Bu lisans yalnızca bu depodaki kodu kapsar. Uygulamanın kullandığı nöbet verileri, harita katmanları ve üçüncü taraf API'ler kendi koşullarına tabidir (bkz. [Veri kaynakları ve sınırlar](#veri-kaynakları-ve-sınırlar)).
