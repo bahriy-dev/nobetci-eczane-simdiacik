@@ -1,5 +1,7 @@
 # Şimdi Açık
 
+**Canlı:** [simdiacik.com](https://simdiacik.com)
+
 Yakınındaki nöbetçi eczaneyi bulmak, resmî nöbet kaynağını görmek, telefonla teyit etmek ve yol tarifi almak için Türkiye odaklı, mobil uyumlu uygulama. 81 ilin nöbet listesi lisanslı [Eczaneler.org API](https://eczaneler.org/nobetci-eczane-api) üzerinden gelir; anahtar tanımlı değilse uygulama resmî kaynaklarla sınırlı çalışır.
 
 ## Özellikler
@@ -65,9 +67,9 @@ npm run build
 
 ## Mimari
 
-React + TypeScript + Tailwind; Next uyumlu Vinext; REST sunucu rotaları; Cloudflare Worker. Arayüz `/api/places`, `/api/location` ve `/api/regions` üzerinden veri alır. Tema tercihi cihazda saklanır; favori özelliği bulunmaz. Önbellek, Worker içinde sınırlı ve kısa ömürlü tamamlanmış değerlerden oluşur. Kullanıcı hesabı veya PostgreSQL kullanılmaz. RapidAPI/CollectAPI bağlantısı ve anahtar gereksinimi kaldırılmıştır.
+React + TypeScript + Tailwind; Next.js uygulama yapısı ve REST sunucu rotaları. Üretimde uygulama Railway üzerinde Node.js sunucusu olarak çalışır (bkz. [Üretim dağıtımı](#üretim-dağıtımı-railway)). Yerel geliştirmede `npm run dev` Next uyumlu Vinext'i, `npm start` ise derlenmiş çıktıyı yerel Cloudflare Worker ortamında (wrangler) çalıştırır; bu yol üretimde kullanılmaz. Arayüz `/api/places`, `/api/location` ve `/api/regions` üzerinden veri alır. Tema tercihi cihazda saklanır; favori özelliği bulunmaz. Önbellek, sunucu sürecinde sınırlı ve kısa ömürlü tamamlanmış değerlerden oluşur. Kullanıcı hesabı veya PostgreSQL kullanılmaz. RapidAPI/CollectAPI bağlantısı ve anahtar gereksinimi kaldırılmıştır.
 
-Ücretsiz veri şartı, alan adı veya gelecekte seçilecek barındırma hizmetlerinin fiyatına dair bir taahhüt değildir. `simdiacik.com` alan adı satın alınmamış veya bağlanmamıştır.
+Ücretsiz veri şartı, barındırma hizmetlerinin fiyatına dair bir taahhüt değildir.
 
 ## Kaynaklar
 
@@ -88,9 +90,9 @@ React + TypeScript + Tailwind; Next uyumlu Vinext; REST sunucu rotaları; Cloudf
 - [Harita katmanı kullanım ilkeleri](https://operations.osmfoundation.org/policies/tiles/)
 - [Nominatim kullanım ilkeleri](https://operations.osmfoundation.org/policies/nominatim/)
 
-Yayımlanan sürüm sahibiyle sınırlı özel erişimdedir. Paylaşım kitlesi kullanıcı talebi olmadan genişletilmez.
+## Üretim dağıtımı (Railway)
 
-## Railway dağıtımı
+`simdiacik.com` Railway üzerinde yayındadır; `www` alt alan adı 301 ile ana alan adına yönlenir. Alan adı ve DNS ayrıntıları [`docs/OPERATIONS.md`](docs/OPERATIONS.md) içindedir.
 
 Depoda `railway.json` bulunur. Railway servisini bu GitHub deposuna bağlayınca derleme komutu `npm run build:railway`, başlatma komutu `npm run start:railway` olarak uygulanır. Node sunucusu Railway'in `PORT` değerinde ve `0.0.0.0` adresinde dinler. `/api/health` sağlık kontrolü için kullanılır. Railway servisinin Variables bölümüne `ECZANELER_API_KEY` eklenmelidir.
 
@@ -100,3 +102,7 @@ Yerel üretim kontrolü:
 npm run build:railway
 PORT=3000 npm run start:railway
 ```
+
+## Lisans
+
+Kaynak kod [MIT](LICENSE) lisanslıdır. Bu lisans yalnızca bu depodaki kodu kapsar. Uygulamanın kullandığı nöbet verileri, harita katmanları ve üçüncü taraf API'ler kendi koşullarına tabidir (bkz. [Veri kaynakları ve sınırlar](#veri-kaynakları-ve-sınırlar)).
