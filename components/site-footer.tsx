@@ -1,14 +1,15 @@
 "use client";
 import Link from "next/link";
-import { Plus, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { legalLinks } from "@/lib/legal-content";
+import { SiteMark } from "@/components/site-mark";
 type Props = { sourceUrl?: string; onDiscover?: () => void; onMap?: () => void; onLocation?: () => void; onHelp?: () => void };
 export function SiteFooter({sourceUrl = "https://teb.org.tr/odalar", onDiscover, onMap, onLocation, onHelp}: Props) {
  const router = useRouter();
  return <footer className="site-footer">
   <div className="signal-footer-top">
-   <div><Link className="brand" href="/" aria-label="Şimdi Açık ana sayfa"><span className="brand-icon"><Plus size={24} strokeWidth={3}/></span><span className="brand-name">şimdi<span>açık</span><small>NÖBETÇİ ECZANE</small></span></Link><p>İhtiyacın olduğunda, yakınındaki eczaneye.</p></div>
+   <div><SiteMark /><p>İhtiyacın olduğunda, yakınındaki eczaneye. Gitmeden önce ara.</p></div>
    <nav className="signal-footer-nav" aria-label="Eczane ve yardım">
     <button type="button" onClick={() => onDiscover ? onDiscover() : router.push("/#eczaneler")}>Eczane bul</button>
     <button type="button" onClick={() => onMap ? onMap() : router.push("/?view=map")}>Harita</button>

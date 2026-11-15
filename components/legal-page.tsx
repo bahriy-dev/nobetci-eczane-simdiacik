@@ -1,22 +1,15 @@
 import Link from "next/link";
-import { Plus, ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { legalDocuments, legalLinks } from "@/lib/legal-content";
 import { CookieSettingsButton } from "@/components/cookie-settings-button";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteMark } from "@/components/site-mark";
 export function LegalPage({ documentKey }: { documentKey: string }) {
   const doc = legalDocuments[documentKey];
   return (
     <>
       <header className="header legal-header">
-        <Link className="brand" href="/" aria-label="Şimdi Açık ana sayfa">
-          <span className="brand-icon">
-            <Plus size={25} strokeWidth={3} />
-          </span>
-          <span className="brand-name">
-            şimdi<span>açık</span>
-            <small>NÖBETÇİ ECZANE</small>
-          </span>
-        </Link>
+        <SiteMark />
         <Link className="legal-back" href="/">
           <ArrowLeft size={16} />
           Eczane bul

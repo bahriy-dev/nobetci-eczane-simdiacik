@@ -4,9 +4,9 @@ import {
   ArrowLeft,
   ArrowUpRight,
   ChevronRight,
-  Plus,
   ShieldCheck,
 } from "lucide-react";
+import { SiteMark } from "@/components/site-mark";
 import { cityGuides, getCityGuide } from "@/lib/city-guides";
 import { siteOrigin, ogImage } from "@/lib/site-config";
 import { CityGuideSearch } from "@/components/city-guide-search";
@@ -18,6 +18,7 @@ import { pharmacyProvider } from "@/lib/providers/pharmacies";
 import {
   pharmacyDisplayAddress,
   pharmacyDisplayName,
+  pharmacyDirections,
   pharmacyPhoneDisplay,
   pharmacyPhoneLink,
   pharmacyTimestamp,
@@ -163,15 +164,7 @@ export default async function CityGuidePage({
         }}
       />
       <header className="header city-guide-header">
-        <Link className="brand" href="/" aria-label="Şimdi Açık ana sayfa">
-          <span className="brand-icon" aria-hidden="true">
-            <Plus size={25} strokeWidth={3} />
-          </span>
-          <span className="brand-name">
-            şimdi<span>açık</span>
-            <small>NÖBETÇİ ECZANE</small>
-          </span>
-        </Link>
+        <SiteMark />
         <div className="header-actions">
           <Link className="legal-back" href="/">
             <ArrowLeft size={15} />
@@ -238,11 +231,20 @@ export default async function CityGuidePage({
                   <li key={place.id}>
                     <strong>{pharmacyDisplayName(place.name)}</strong>
                     <span>{pharmacyDisplayAddress(place.address)}</span>
-                    {place.phone && (
-                      <a href={pharmacyPhoneLink(place.phone)}>
-                        {pharmacyPhoneDisplay(place.phone)}
+                    <span className="city-duty-actions">
+                      {place.phone && (
+                        <a href={pharmacyPhoneLink(place.phone)}>
+                          {pharmacyPhoneDisplay(place.phone)}
+                        </a>
+                      )}
+                      <a
+                        href={pharmacyDirections(place)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Yol tarifi
                       </a>
-                    )}
+                    </span>
                     {place.closes && (
                       <small>
                         Nöbet bitişi: {pharmacyTimestamp(place.closes)}

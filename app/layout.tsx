@@ -1,12 +1,24 @@
 import type { Metadata, Viewport } from "next";
+import { Fraunces, Outfit } from "next/font/google";
 import { AnalyticsConsent } from "@/components/analytics-consent";
 import { siteOrigin, siteDescription, siteIndexable } from "@/lib/site-config";
 import "./globals.css";
 import "./signal.css";
+
+const display = Fraunces({
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-display-file",
+});
+const sans = Outfit({
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-sans-file",
+});
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#2458b8",
+  themeColor: "#0d6b3f",
 };
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
@@ -96,7 +108,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr" suppressHydrationWarning>
+    <html
+      lang="tr"
+      className={`${display.variable} ${sans.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{

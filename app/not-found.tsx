@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import type {Metadata} from 'next';
-import {Plus,ArrowLeft,MapPin} from 'lucide-react';
+import {ArrowLeft,MapPin} from 'lucide-react';
 import {SiteFooter} from '@/components/site-footer';
+import {SiteMark} from '@/components/site-mark';
 
 export const metadata:Metadata={
   title:'Sayfa bulunamadı | Şimdi Açık',
@@ -14,10 +15,7 @@ export default function NotFound(){
   return (
     <>
       <header className="header legal-header">
-        <Link className="brand" href="/" aria-label="Şimdi Açık ana sayfa">
-          <span className="brand-icon"><Plus size={25} strokeWidth={3}/></span>
-          <span className="brand-name">şimdi<span>açık</span><small>NÖBETÇİ ECZANE</small></span>
-        </Link>
+        <SiteMark />
         <Link className="legal-back" href="/"><ArrowLeft size={16}/>Eczane bul</Link>
       </header>
       <main className="legal-main">

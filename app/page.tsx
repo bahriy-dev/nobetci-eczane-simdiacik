@@ -15,7 +15,6 @@ import {
   Search,
   MapPin,
   Pill,
-  Plus,
   Moon,
   Sun,
   SlidersHorizontal,
@@ -62,6 +61,7 @@ import {
 import { PharmacyCard } from "@/components/pharmacy-card";
 import { PharmacyDetail } from "@/components/pharmacy-detail";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteMark } from "@/components/site-mark";
 import { OfficialDistrictList } from "@/components/official-district-list";
 import { officialListFor } from "@/lib/official-lists";
 import { MapBoundary } from "@/components/map-boundary";
@@ -763,15 +763,7 @@ export default function Home() {
         Eczane sonuçlarına geç
       </a>
       <header className="header">
-        <Link className="brand" href="/" aria-label="Şimdi Açık ana sayfa">
-          <span className="brand-icon">
-            <Plus size={25} strokeWidth={3} />
-          </span>
-          <span className="brand-name">
-            şimdi<span>açık</span>
-            <small>NÖBETÇİ ECZANE</small>
-          </span>
-        </Link>
+        <SiteMark />
         <div className="header-actions">
           <Link className="header-link" href="/nobetci-eczane-rehberi">Nasıl çalışır?</Link>
           <button
@@ -801,39 +793,85 @@ export default function Home() {
         </div>
       </header>
       <main className="pharmacy-main" id="eczaneler" tabIndex={-1}>
-        <h1 className="sr-only">Yakınındaki nöbetçi eczaneleri bul</h1>
+        {locationChosen && (
+          <h1 className="sr-only">Yakınındaki nöbetçi eczaneleri bul</h1>
+        )}
         {!locationChosen && (
-          <section
-            className="location-start"
-            aria-labelledby="location-start-title"
-          >
-            <div className="location-start-copy">
-              <h2 id="location-start-title">Nöbetçi eczane bul</h2>
+          <section className="desk" aria-labelledby="location-start-title">
+            <div className="desk-copy">
+              <p className="desk-kicker">
+                <span className="live-dot" aria-hidden="true" />
+                Bugünün nöbeti
+              </p>
+              <h1 id="location-start-title">
+                Yakınındaki nöbetçi eczaneyi bul.
+              </h1>
               <p>
-                Bulunduğun bölgeyi seç, nöbetçi eczanelerin adres ve telefonlarına ulaş.
+                Konumunu kullan ya da ilini seç. Liste resmî nöbet
+                kaynaklarından gelir; gitmeden önce telefonla teyit et.
+              </p>
+              <div className="location-start-actions">
+                <button
+                  className="primary"
+                  disabled={locationPending}
+                  onClick={requestDeviceLocation}
+                >
+                  <LocateFixed size={17} />
+                  {locationPending ? "Konum aranıyor…" : "Konumumu kullan"}
+                </button>
+                <button
+                  className="location-manual"
+                  onClick={() => {
+                    setLocationTab("region");
+                    setLocOpen(true);
+                  }}
+                >
+                  İl / ilçe seç
+                </button>
+              </div>
+              <p className="signal-note">
+                <MapPin size={13} /> Konum paylaşmadan il ve ilçe seçebilirsin.
               </p>
             </div>
-            <div className="location-start-actions">
-              <button
-                className="primary"
-                disabled={locationPending}
-                onClick={requestDeviceLocation}
-              >
-                <LocateFixed size={17} />
-                {locationPending ? "Konum aranıyor…" : "Konumumu kullan"}
-              </button>
-              <button
-                className="location-manual"
-                onClick={() => {
-                  setLocationTab("region");
-                  setLocOpen(true);
-                }}
-              >
-                İl / ilçe seç
-              </button>
-            </div>
-            <p className="signal-note"><MapPin size={13} /> Konum paylaşmadan il ve ilçe seçebilirsin.</p>
-            <nav className="signal-cities" aria-label="Popüler şehirler"><span>ŞEHRİNDEN BAŞLA</span>{[["istanbul", "İstanbul"], ["ankara", "Ankara"], ["izmir", "İzmir"], ["bursa", "Bursa"], ["antalya", "Antalya"]].map(([slug, name]) => <Link key={slug} href={"/nobetci-eczane/" + slug}>{name} ↗</Link>)}</nav>
+            <aside className="desk-panel" aria-label="Nasıl çalışır">
+              <ol>
+                <li>
+                  <span className="step-index">1</span>
+                  <span>
+                    <b>Konum</b>
+                    Cihazın ya da seçtiğin ilçe.
+                  </span>
+                </li>
+                <li>
+                  <span className="step-index">2</span>
+                  <span>
+                    <b>Liste</b>
+                    Bugünün kayıtları, en yakından.
+                  </span>
+                </li>
+                <li>
+                  <span className="step-index">3</span>
+                  <span>
+                    <b>Teyit</b>
+                    Önce ara, sonra yol tarifi al.
+                  </span>
+                </li>
+              </ol>
+            </aside>
+            <nav className="signal-cities" aria-label="Popüler şehirler">
+              <span>Şehrinden başla</span>
+              {[
+                ["istanbul", "İstanbul"],
+                ["ankara", "Ankara"],
+                ["izmir", "İzmir"],
+                ["bursa", "Bursa"],
+                ["antalya", "Antalya"],
+              ].map(([slug, name]) => (
+                <Link key={slug} href={"/nobetci-eczane/" + slug}>
+                  {name}
+                </Link>
+              ))}
+            </nav>
             {geoState && (
               <p className="location-start-status" role="status">
                 {geoState}

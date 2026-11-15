@@ -86,6 +86,14 @@ export function PharmacyCard({
         </button>
       </p>
       <div className="pharmacy-actions">
+        {p.phone ? (
+          <a className="primary" href={pharmacyPhoneLink(p.phone)}>
+            <Phone size={16} />
+            Eczaneyi ara
+          </a>
+        ) : (
+          <span className="no-phone">Telefon paylaşılmamış</span>
+        )}
         <a
           className="directions-button"
           href={pharmacyDirections(p)}
@@ -95,14 +103,6 @@ export function PharmacyCard({
           <Navigation size={16} />
           Yol tarifi
         </a>
-        {p.phone ? (
-          <a className="primary" href={pharmacyPhoneLink(p.phone)}>
-            <Phone size={16} />
-            Eczaneyi ara
-          </a>
-        ) : (
-          <span className="no-phone">Telefon paylaşılmamış</span>
-        )}
       </div>
     </article>
   );
