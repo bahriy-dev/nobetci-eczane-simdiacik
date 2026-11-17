@@ -1,5 +1,6 @@
 import { distanceKm, normalized, type Place, type PlacesProvider, type PlacesResult, type SearchParams } from '../places';
 import { activeDutyDates, dutyListEnds } from '../duty-day';
+import { httpFailure } from '../source-request';
 
 export const SAMSUN_SOURCE_URL = 'https://www.samsuneczaciodasi.org.tr/nobetci-eczaneler';
 const source = 'Samsun Eczacı Odası';
@@ -154,7 +155,7 @@ export function parseSamsunPharmacies(payload: unknown, params: SearchParams, no
 
 export async function searchSamsunPharmacies(params: SearchParams): Promise<PlacesResult> {
   const response = await fetch(SAMSUN_SOURCE_URL, { headers: { Accept: 'text/html' }, cache: 'no-store', signal: AbortSignal.timeout(12_000) });
-  if (!response.ok) throw new Error('Samsun Eczacı Odası nöbet kaynağına ulaşılamadı.');
+  if (!response.ok) throw httpFailure(response);
   return parseSamsunPharmacies(await response.text(), params, new Date());
 }
 

@@ -993,7 +993,7 @@ export default function Home() {
                   </button>
                 </p>
               )}
-              {location.accuracy && location.accuracy > 1000 && (
+              {(location.accuracy ?? 0) > 1000 && (
                 <p className="location-accuracy-note" role="status">
                   Konumun yaklaşık görünüyor.{" "}
                   <button
