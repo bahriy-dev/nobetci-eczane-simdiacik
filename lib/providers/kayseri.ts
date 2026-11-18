@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import {distanceKm, normalized, type Place, type PlacesProvider, type SearchParams} from '../places';
+import { httpFailure } from '../source-request';
 
 export const KAYSERI_SOURCE_URL = 'https://cbs.kayseri.bel.tr/kayseri-nobetci-eczaneler';
 const mapEndpoint = 'https://cbs.kayseri.bel.tr/KentRehberi.aspx/JSNobetciEczaneler';
@@ -142,7 +143,7 @@ class KayseriAccessError extends Error {}
 async function publicResponse(url: string, signal: AbortSignal, init?: RequestInit) {
   const response = await fetch(url, {...init, cache: 'no-store', signal});
   if (response.status === 401 || response.status === 403) throw new KayseriAccessError('Kayseri Belediyesi nöbet kaynağına erişim reddedildi.');
-  if (!response.ok) throw new Error('Kayseri Belediyesi nöbet kaynağına ulaşılamadı.');
+  if (!response.ok) throw httpFailure(response);
   return response;
 }
 

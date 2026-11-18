@@ -1,4 +1,5 @@
 import { distanceKm, normalized, type Place, type PlacesProvider, type PlacesResult, type SearchParams } from '../places';
+import { httpFailure } from '../source-request';
 
 export const ANKARA_SOURCE_URL = 'https://www.aeo.org.tr/nobetci-eczaneler';
 const source = 'Ankara Eczacı Odası';
@@ -147,7 +148,7 @@ export function parseAnkaraPharmacies(payload: unknown, params: SearchParams, no
 export async function searchAnkaraPharmacies(params: SearchParams): Promise<PlacesResult> {
   const requestedAt = new Date();
   const response = await fetch(`https://www.aeo.org.tr/getPharmacies/${turkeyDate(requestedAt)}`, { cache: 'no-store', signal: AbortSignal.timeout(12_000), headers: { Accept: 'application/json' } });
-  if (!response.ok) throw new Error('Ankara Eczacı Odası nöbet kaynağına ulaşılamadı.');
+  if (!response.ok) throw httpFailure(response);
   // The official endpoint labels its JSON body as text/html.
   return parseAnkaraPharmacies(await response.json(), params, new Date());
 }

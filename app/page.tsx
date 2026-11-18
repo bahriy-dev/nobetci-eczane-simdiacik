@@ -114,6 +114,33 @@ type Location = {
 
 const noLocation: Location = { label: "", city: "", lat: 0, lng: 0 };
 
+/**
+ * Radix returns focus to a dialog's Trigger, and these dialogs open from state without one, so
+ * focus fell to <body> on close. Remember what opened the dialog and focus it again.
+ */
+function useReturnFocus(fallbackSelector: string) {
+  const opener = useRef<HTMLElement | null>(null);
+  return useMemo(
+    () => ({
+      onOpenAutoFocus: () => {
+        const active = document.activeElement;
+        opener.current =
+          active instanceof HTMLElement && active !== document.body
+            ? active
+            : null;
+      },
+      onCloseAutoFocus: (event: Event) => {
+        event.preventDefault();
+        const target = opener.current?.isConnected
+          ? opener.current
+          : document.querySelector<HTMLElement>(fallbackSelector);
+        target?.focus({ preventScroll: true });
+      },
+    }),
+    [fallbackSelector],
+  );
+}
+
 export default function Home() {
   const { filters, updateFilters } = useSearchFilters();
   const { query, hasPhone, radius, sort } = filters;
@@ -128,7 +155,9 @@ export default function Home() {
   const [provinceOverview, setProvinceOverview] = useState(false);
   const [, setLocationPermissionGranted] =
     useState(false);
-  const locationOpener = useRef<HTMLElement | null>(null);
+  const locationFocus = useReturnFocus(".header .location");
+  const detailFocus = useReturnFocus("#eczaneler");
+  const filterFocus = useReturnFocus('[aria-label="Eczane filtrelerini aç"]');
   const [rememberRegion, setRememberRegion] = useState(false);
   // Nothing is searched until the visitor shares a location or picks a province.
   const [location, setLocationValue] = useState<Location>(noLocation),
@@ -993,7 +1022,7 @@ export default function Home() {
                   </button>
                 </p>
               )}
-              {location.accuracy && location.accuracy > 1000 && (
+              {(location.accuracy ?? 0) > 1000 && (
                 <p className="location-accuracy-note" role="status">
                   Konumun yaklaşık görünüyor.{" "}
                   <button
@@ -1329,19 +1358,7 @@ export default function Home() {
         <DialogContent
           responsiveBottom
           className="location-dialog"
-          onOpenAutoFocus={() => {
-            locationOpener.current =
-              document.activeElement instanceof HTMLElement
-                ? document.activeElement
-                : null;
-          }}
-          onCloseAutoFocus={(event) => {
-            event.preventDefault();
-            const target = locationOpener.current?.isConnected
-              ? locationOpener.current
-              : document.querySelector<HTMLElement>(".header .location");
-            target?.focus({ preventScroll: true });
-          }}
+          {...locationFocus}
           showCloseButton={false}
         >
           <div className="panel-handle" aria-hidden="true" />
@@ -1500,6 +1517,7 @@ export default function Home() {
           side="bottom"
           className="detail-sheet"
           showCloseButton={false}
+          {...detailFocus}
         >
           {selected && (
             <PharmacyDetail
@@ -1516,7 +1534,11 @@ export default function Home() {
         </SheetContent>
       </Sheet>
       <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
-        <SheetContent side="bottom" className="filter-sheet">
+        <SheetContent
+          side="bottom"
+          className="filter-sheet"
+          {...filterFocus}
+        >
           <SheetTitle>Eczane filtreleri</SheetTitle>
           <SheetDescription>
             Arama mesafesini ve telefon bilgisini seç.
