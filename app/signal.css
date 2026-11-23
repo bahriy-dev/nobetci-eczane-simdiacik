@@ -566,6 +566,8 @@ a { color: inherit; }
   .legal-nav a { white-space: nowrap; }
 }
 @media (max-width: 800px) {
+  .header { flex-wrap: wrap; gap: 8px; }
+  .header-actions { margin-left: auto; max-width: 100%; }
   .header-link { display: none; }
   .header .location span { max-width: 120px; }
   .pharmacy-main, .legal-main, .city-guide-main, .site-footer { width: min(var(--page), calc(100% - 28px)); }

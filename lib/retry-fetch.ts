@@ -20,6 +20,16 @@ export function requestDeadline(parent: AbortSignal, timeoutMs: number) {
   return { signal: controller.signal, dispose };
 }
 
+/** Retry-After accepts either seconds or an HTTP date. */
+function retryAfterDelay(value: string | null): number {
+  if (!value?.trim()) return 0;
+  const text = value.trim();
+  const delay = /^\d+$/.test(text)
+    ? Number(text) * 1000
+    : Date.parse(text) - Date.now();
+  return Number.isFinite(delay) ? Math.min(30000, Math.max(0, delay)) : 0;
+}
+
 class HttpFailure extends Error {
   constructor(
     public status: number,
@@ -68,18 +78,25 @@ export async function fetchJsonWithRetry<T>(
         signal: deadline.signal,
         cache: "no-store",
       });
-      const payload = (await response.json()) as T & { error?: string };
-      if (!response.ok)
+      // Gate retries on HTTP status even when a proxy returns HTML or no body.
+      if (!response.ok) {
+        let message = "Güncel listeye ulaşılamadı.";
+        try {
+          const body: unknown = await response.json();
+          if (
+            body && typeof body === "object" && "error" in body &&
+            typeof body.error === "string" && body.error.trim()
+          ) message = body.error;
+        } catch {
+          // The response status remains authoritative for malformed error bodies.
+        }
         throw new HttpFailure(
           response.status,
-          payload.error || "Güncel listeye ulaşılamadı.",
-          Math.min(
-            30000,
-            Math.max(0, Number(response.headers.get("Retry-After")) || 0) *
-              1000,
-          ),
+          message,
+          retryAfterDelay(response.headers.get("Retry-After")),
         );
-      return payload;
+      }
+      return (await response.json()) as T;
     } catch (error) {
       deadline.dispose();
       if (signal.aborted) throw signal.reason;
