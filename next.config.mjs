@@ -5,9 +5,10 @@ const customTileOrigin = process.env.NEXT_PUBLIC_MAP_TILE_URL
 // React needs eval() only for development callstacks; production never gets it.
 const devEval = process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'";
 // DevControl usage analytics: its script and collector are allowed only when a site key is configured.
-const devControl = process.env.NEXT_PUBLIC_DEVCONTROL_KEY
-  ? " " + new URL(process.env.NEXT_PUBLIC_DEVCONTROL_ORIGIN || "https://devcontrol.up.railway.app").origin
-  : "";
+// The key itself is public and has a built-in default in lib/devcontrol.ts; set it to "off" to disable.
+const devControl = process.env.NEXT_PUBLIC_DEVCONTROL_KEY === "off"
+  ? ""
+  : " " + new URL(process.env.NEXT_PUBLIC_DEVCONTROL_ORIGIN || "https://devcontrol.up.railway.app").origin;
 // Google tags (GTM, GA4) follow Google's documented CSP host list; ads hosts stay out (ads consent is denied).
 const nextConfig = {
   poweredByHeader: false,

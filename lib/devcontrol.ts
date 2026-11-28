@@ -5,7 +5,9 @@
  * result-count bucket — never coordinates, addresses or what was typed. Nothing loads or is sent until the
  * visitor allows analytics; choosing "essential only" stops it and clears its queue.
  */
-export const DEVCONTROL_KEY = process.env.NEXT_PUBLIC_DEVCONTROL_KEY ?? "";
+const configuredKey = process.env.NEXT_PUBLIC_DEVCONTROL_KEY || "pk_rVEejCy4JrG1E3BENOuo4zfe";
+/** Public site key (not a secret); NEXT_PUBLIC_DEVCONTROL_KEY=off disables the tracker. */
+export const DEVCONTROL_KEY = configuredKey === "off" ? "" : configuredKey;
 export const DEVCONTROL_ORIGIN = (
   process.env.NEXT_PUBLIC_DEVCONTROL_ORIGIN ?? "https://devcontrol.up.railway.app"
 ).replace(/\/$/, "");
