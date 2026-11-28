@@ -251,6 +251,7 @@ export default async function CityGuidePage({
                       )}
                       <a
                         href={pharmacyDirections(place)}
+                        data-dc-event="directions_clicked"
                         target="_blank"
                         rel="noreferrer"
                       >

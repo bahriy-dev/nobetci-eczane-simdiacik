@@ -13,6 +13,7 @@ import {
   saveAnalyticsChoice,
   type AnalyticsChoice,
 } from "@/lib/analytics-consent";
+import { loadDevControl, stopDevControl } from "@/lib/devcontrol";
 
 const tagManager =
   "(function(w,d,s,l,i){w[l]=w[l]||[];w.gtag=w.gtag||function(){w[l].push(arguments)};w.gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',functionality_storage:'granted',security_storage:'granted'});w.gtag('consent','update',{analytics_storage:'granted'});w.gtag('set',{page_location:w.location.origin+w.location.pathname});w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!=='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-W9HWBWGB');";
@@ -113,6 +114,8 @@ export function AnalyticsConsent() {
   useEffect(() => {
     if (!choice) return;
     updateTagConsent(choice);
+    if (choice === "analytics") loadDevControl();
+    else stopDevControl();
     if (choice === "essential") {
       clearAnalyticsCookies();
       if (previousChoice.current === "analytics") window.location.reload();

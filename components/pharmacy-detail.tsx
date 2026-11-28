@@ -155,6 +155,7 @@ export function PharmacyDetail({
         <a
           className="primary"
           href={pharmacyDirections(p)}
+          data-dc-event="directions_clicked"
           target="_blank"
           rel="noreferrer"
         >

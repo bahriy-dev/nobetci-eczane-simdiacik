@@ -71,6 +71,7 @@ import {
 } from "@/lib/pharmacy-presentation";
 import { getPharmacySource } from "@/lib/pharmacy-sources";
 import { fetchJsonWithRetry } from "@/lib/retry-fetch";
+import { countBucket, track } from "@/lib/devcontrol";
 import { SelectionGuard } from "@/lib/selection-guard";
 import { getPositionWithTimeoutRetry } from "@/lib/geolocation";
 import {
@@ -243,6 +244,7 @@ export default function Home() {
   const requestDeviceLocation = useCallback(() => {
     if (locationPending) return;
     initialLocationRequest.current = true;
+    track("pharmacy_search_started", { method: "gps" });
     const attempt = selectionGuard.current.begin();
     if (!navigator.geolocation) {
       setGeoState(
@@ -434,6 +436,10 @@ export default function Home() {
       .then((raw) => {
         if (controller.signal.aborted) return;
         const d = parsePlacesResult(raw);
+        track("pharmacy_search_completed", {
+          result: d.places.length ? "results" : "empty",
+          count: countBucket(d.places.length),
+        });
         setResource({
           key: requestKey,
           context: searchContext,
@@ -447,6 +453,7 @@ export default function Home() {
       })
       .catch((e) => {
         if (!controller.signal.aborted) {
+          track("pharmacy_search_completed", { result: "error", count: "0" });
           setSelected(null);
           setResource({
             key: requestKey,
@@ -602,6 +609,7 @@ export default function Home() {
     setLocLoading(false);
   };
   const selectRegion = (next: Location) => {
+    track("pharmacy_search_started", { method: "manual" });
     if (rememberRegion) saveRegion(next);
     else clearSavedRegion();
     setLocation(next);
@@ -627,6 +635,7 @@ export default function Home() {
     toast.success("Kayıtlı konum silindi.");
   };
   const searchLocation = async () => {
+    track("pharmacy_search_started", { method: "address" });
     locationRequest.current?.abort();
     const controller = new AbortController();
     locationRequest.current = controller;
