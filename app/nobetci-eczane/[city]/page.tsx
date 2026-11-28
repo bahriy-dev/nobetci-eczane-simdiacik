@@ -63,7 +63,7 @@ export async function generateMetadata({
   const city = getCityGuide(slug);
   if (!city) return {};
   const title = `${city.name} Nöbetçi Eczaneler — Bugün Açık Eczaneler | Şimdi Açık`;
-  const description = `${city.name} bugün ve bu gece nöbetçi eczaneler: adres, telefon ve harita. Liste resmî nöbet kaynaklarından alınır; gitmeden önce telefonla teyit et.`;
+  const description = `${city.name} bugün ve bu gece nöbetçi eczaneler: adres, telefon ve harita. Güncel nöbet kaynaklarını kontrol edin; gitmeden önce telefonla teyit edin.`;
   const canonical = `/nobetci-eczane/${city.slug}`;
   return {
     title: { absolute: title },
@@ -92,7 +92,16 @@ export default async function CityGuidePage({
   const duty = await todaysDuty(city.name);
   const dutyPlaces = duty?.places.slice(0, 150) ?? [];
 
+  const hasList = dutyPlaces.length > 0;
   const canonical = siteOrigin + `/nobetci-eczane/${city.slug}`;
+  const breadcrumbs = {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Ana sayfa', item: siteOrigin },
+      { '@type': 'ListItem', position: 2, name: 'Nöbetçi eczane rehberi', item: siteOrigin + '/nobetci-eczane-rehberi' },
+      { '@type': 'ListItem', position: 3, name: city.name, item: canonical },
+    ],
+  };
   const schema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -149,9 +158,9 @@ export default async function CityGuidePage({
     },
     {
       q: "Yola çıkmadan önce eczaneyi telefonla aramak neden önerilir?",
-      a: city.live
+      a: hasList
         ? `Liste resmî nöbet kaynaklarından otomatik alınsa da nöbet yerini ve ihtiyaç duyduğunuz ilacın stokta olduğunu doğrulamak için gitmeden önce telefonla aramanız tavsiye edilir.`
-        : `${city.source.name} nöbet listesini yalnızca kendi sayfasında yayımlıyor. Listeyi oradan açın ve gitmeden önce eczaneyi telefonla arayarak doğrulayın.`,
+        : `Güncel listeyi ${city.source.name} sayfasından açın ve gitmeden önce eczaneyi telefonla arayarak doğrulayın.`,
     },
   ];
 
@@ -163,6 +172,7 @@ export default async function CityGuidePage({
           __html: JSON.stringify(schema).replace(/</g, "\\u003c"),
         }}
       />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs).replace(/</g, "\\u003c") }} />
       <header className="header city-guide-header">
         <SiteMark />
         <div className="header-actions">
@@ -195,9 +205,9 @@ export default async function CityGuidePage({
           <h1 className="city-hero-title">{city.name} Nöbetçi Eczaneleri</h1>
 
           <p className="city-hero-description">
-            {city.live
+            {hasList
               ? `${city.name} genelinde bugün ve bu gece nöbetçi olan eczaneleri harita üzerinde bulun, telefonla arayarak teyit edin ve yol tarifi alın.`
-              : `${city.name} için resmî nöbet listesi yalnızca kaynağın kendi sayfasında yayımlanıyor. Aşağıdaki bağlantıdan güncel listeyi açabilirsiniz.`}
+              : `${city.name} için güncel liste bu sayfada şu an gösterilemiyor. Resmî kaynak bağlantısından nöbet listesini kontrol edebilirsiniz.`}
           </p>
 
           <div className="city-hero-source-pill">
@@ -226,6 +236,8 @@ export default async function CityGuidePage({
                 kontrol {pharmacyTimestamp(duty!.fetchedAt)}. Gitmeden önce
                 telefonla teyit et.
               </p>
+              {duty!.places.length > dutyPlaces.length && <p className="city-duty-meta">Bu sayfada {duty!.places.length} kaydın ilk {dutyPlaces.length} tanesi gösteriliyor. İlçe ve konumla aramak için aşağıdaki arama bölümünü kullanın.</p>}
+              {duty!.warnings?.length ? <aside className="city-duty-meta" aria-label="Veri kapsamı"><ul>{duty!.warnings.map(warning => <li key={warning}>{warning}</li>)}</ul></aside> : null}
               <ol className="city-duty-list">
                 {dutyPlaces.map((place) => (
                   <li key={place.id}>
@@ -266,8 +278,9 @@ export default async function CityGuidePage({
         </section>
 
         {/* Search & Location Card (only where the site has the live list) */}
-        {city.live && <CityGuideSearch city={city.name} />}
+        {(city.live || hasList) && <CityGuideSearch city={city.name} />}
 
+        <p className="city-duty-meta"><Link href="/veri-kaynaklari">Veri kaynakları, güncellik ve doğrulama yöntemi</Link></p>
         {/* FAQ Section */}
         <section className="city-faq-section" aria-labelledby="city-faq-title">
           <h2 id="city-faq-title">

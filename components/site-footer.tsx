@@ -15,6 +15,8 @@ export function SiteFooter({sourceUrl = "https://teb.org.tr/odalar", onDiscover,
     <button type="button" onClick={() => onMap ? onMap() : router.push("/?view=map")}>Harita</button>
     <button type="button" onClick={() => onLocation ? onLocation() : router.push("/?selectLocation=1")}>Şehir seç</button>
     <button type="button" onClick={() => onHelp ? onHelp() : router.push("/nobetci-eczane-rehberi")}>Nasıl çalışır?</button>
+    <Link href="/nobetci-eczane-rehberi">Nöbetçi eczane rehberi</Link>
+    <Link href="/veri-kaynaklari">Veri kaynakları</Link>
     <a href={sourceUrl} target="_blank" rel="noreferrer">Resmî kaynak <ArrowUpRight size={13}/></a>
    </nav>
   </div>

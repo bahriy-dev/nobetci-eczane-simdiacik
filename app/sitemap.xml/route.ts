@@ -1,5 +1,5 @@
 import {siteOrigin} from '@/lib/site-config';
 import {cityGuides} from '@/lib/city-guides';
 // Only indexable pages: /kvkk is noindex, so it stays out of the sitemap.
-const paths=['/','/nobetci-eczane-rehberi',...cityGuides.map(city=>`/nobetci-eczane/${city.slug}`),'/gizlilik','/cerez-politikasi','/kullanim-kosullari','/iletisim'];
+const paths=['/','/veri-kaynaklari','/nobetci-eczane-rehberi',...cityGuides.map(city=>`/nobetci-eczane/${city.slug}`),'/gizlilik','/cerez-politikasi','/kullanim-kosullari','/iletisim'];
 export function GET(){const entries=paths.map(path=>`  <url>\n    <loc>${siteOrigin}${path}</loc>\n  </url>`).join('\n');return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>\n`,{headers:{'Content-Type':'application/xml; charset=utf-8'}});}
