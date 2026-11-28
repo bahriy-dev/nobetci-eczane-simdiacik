@@ -15,7 +15,12 @@ export async function requestSource(url:string|URL,init?:RequestInit):Promise<Re
  // Only the fixed official URLs in provider adapters reach this helper. TLS defaults stay enabled.
  try{
   const response=await fetch(url,{...init,cache:'no-store',signal:AbortSignal.timeout(12000)});
-  if(!response.ok){const retry=Number(response.headers.get('Retry-After'));throw new SourceFailure(response.status===429?'rate-limited':'upstream',response.status,Number.isFinite(retry)&&retry>0?Math.min(retry,60):undefined);}
+  if(!response.ok)throw httpFailure(response);
   return response;
  }catch(error){throw classifySourceFailure(error);}
+}
+/** Classifies a non-OK upstream response so the API reports its status and Retry-After. */
+export function httpFailure(response:Response):SourceFailure{
+ const retry=Number(response.headers.get('Retry-After'));
+ return new SourceFailure(response.status===429?'rate-limited':'upstream',response.status,Number.isFinite(retry)&&retry>0?Math.min(retry,60):undefined);
 }

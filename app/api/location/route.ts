@@ -7,7 +7,7 @@ import {
   rateLimitResponse,
   requestRateLimitKey,
 } from "@/lib/request-rate-limit";
-import { claimNominatimSlot, NOMINATIM_USER_AGENT } from "@/lib/nominatim";
+import { claimNominatimSlotWithin, NOMINATIM_USER_AGENT } from "@/lib/nominatim";
 const cache = new Map<string, { value: unknown; expires: number }>();
 const allowLocation = createRequestRateLimiter({ limit: 12, windowMs: 60_000 });
 export async function GET(request: Request) {
@@ -33,7 +33,8 @@ export async function GET(request: Request) {
     return Response.json(cached.value, {
       headers: { "Cache-Control": "no-store" },
     });
-  if (!claimNominatimSlot())
+  // Waits briefly behind other visitors instead of failing while background geocoding runs.
+  if (!(await claimNominatimSlotWithin(5000)))
     return Response.json(
       { error: "Konum hizmeti meşgul. Biraz sonra tekrar dene." },
       {

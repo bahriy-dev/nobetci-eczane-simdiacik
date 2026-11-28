@@ -44,6 +44,32 @@ export function waitNominatimSlot(urgentUntil = 0) {
   });
 }
 
+/**
+ * For a visitor waiting on the answer: takes the slot now if it is free, otherwise queues ahead of
+ * background lookups for at most `maxWaitMs`. Resolves false (and leaves the queue) when it times out,
+ * so a long background geocoding run cannot starve "use my location".
+ */
+export function claimNominatimSlotWithin(maxWaitMs: number) {
+  if (!waiting.length && claimNominatimSlot()) return Promise.resolve(true);
+  return new Promise<boolean>((resolve) => {
+    const item: Waiting = {
+      urgentUntil: Date.now() + maxWaitMs,
+      release: () => {
+        clearTimeout(timer);
+        resolve(true);
+      },
+    };
+    const timer = setTimeout(() => {
+      const index = waiting.indexOf(item);
+      if (index < 0) return;
+      waiting.splice(index, 1);
+      resolve(false);
+    }, maxWaitMs);
+    waiting.push(item);
+    if (!pumping) pump();
+  });
+}
+
 export const NOMINATIM_USER_AGENT = "SimdiAcik/1.0 (https://simdiacik.com)";
 
 export async function nominatimSearch(params: Record<string, string>, urgentUntil = 0) {

@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import {distanceKm,normalized,type Place,type PlacesProvider,type PlacesResult,type SearchParams} from '../places';
+import { httpFailure } from '../source-request';
 
 // Linked directly from the Konya Eczacı Odası website. The nonce is published
 // by its normal public page; it is not an API key or an account credential.
@@ -52,9 +53,9 @@ export function parseKonyaPharmacies(html:string,payload:unknown,params:SearchPa
 
 export const konyaPharmacyProvider:PlacesProvider={async search(params){
   const page=await fetch(KONYA_SOURCE_URL,{cache:'no-store',signal:AbortSignal.timeout(10_000)});
-  if(!page.ok)throw new Error('Konya Eczacı Odası nöbet sayfasına ulaşılamadı.');
+  if(!page.ok)throw httpFailure(page);
   const html=await page.text();const {token}=konyaRequest(html);
   const response=await fetch(new URL('/nobet/onyuz/veri.php',KONYA_SOURCE_URL),{method:'POST',body:new URLSearchParams({j:token,cf:''}),cache:'no-store',signal:AbortSignal.timeout(10_000)});
-  if(!response.ok)throw new Error('Konya Eczacı Odası nöbet verisine ulaşılamadı.');
+  if(!response.ok)throw httpFailure(response);
   return parseKonyaPharmacies(html,await response.json(),params,new Date());
 }};

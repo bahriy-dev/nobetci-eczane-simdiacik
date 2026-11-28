@@ -376,6 +376,8 @@ h1, h2, h3, p {
   align-items: center;
   gap: 10px;
   margin-left: auto;
+  /* Lets the location pill shrink so the theme button never leaves a narrow screen. */
+  min-width: 0;
 }
 
 .header .location {
@@ -385,6 +387,7 @@ h1, h2, h3, p {
   font-size: 13.5px;
   font-weight: 600;
   height: 42px;
+  min-width: 0;
   max-width: 260px;
   padding: 0 16px;
   border: 1px solid var(--border);
@@ -434,6 +437,7 @@ h1, h2, h3, p {
 }
 
 .header .location span {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
